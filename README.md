@@ -1,6 +1,6 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.6.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.6.1-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
@@ -127,7 +127,7 @@ folder-backup restore genesis-template-20260803-3.tar.gz /tmp/genesis-restore
 - [folder-backup](https://github.com/cloudgen/folder-backup) — this product
 - [CIAO Defensive Programming](https://github.com/cloudgen/ciao)
 - [CIAO-Lite](https://github.com/cloudgen/ciao-lite)
-- [selfmanaged](https://github.com/cloudgen/selfmanaged) — bootstrap parent architecture
+- [cli-template](https://github.com/cloudgen/cli-template) — bootstrap parent architecture (Type 0 local-only template)
 
 ## Contributing
 
@@ -139,4 +139,4 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
-2026-08-03 — version **1.2.1** (repository identity SSOT `REPO_USER`/`REPO_NAME` for cloudgen/folder-backup).
+2026-08-13 — version **1.6.1** (bootstrap origin retarget: cli-template → folder-backup).

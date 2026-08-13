@@ -2,14 +2,14 @@
 
 Authoritative specialized product law for **folder-backup** lives here.
 
-**Current state (2026-08-03):** Specialized **software-development** product. Left genesis. Bootstrap parent is external **selfmanaged** with **online install trimmed**. Registry is populated — see `index.md`.
+**Current state (2026-08-13):** Specialized **software-development** product. Left genesis. Bootstrap parent is sibling **cli-template** (Type 0 local-only). Domain extend: folder archive backup. Registry is populated — see `index.md`.
 
 ## Product identity (summary)
 
 | Field | Value |
 |-------|--------|
 | Product / `APP_NAME` | `folder-backup` |
-| Version SSOT | `1.0.0` (ship unit hard-assign) |
+| Version SSOT | `1.6.1` (ship unit hard-assign) |
 | Ship unit | `src/folder-backup` |
 | Default install | `~/.local/bin/folder-backup` |
 | Install mode | **Local-only** |

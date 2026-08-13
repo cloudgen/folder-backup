@@ -45,7 +45,7 @@ Type O (online-install empty-argv = install-ensure) does **not** apply.
 | **Product** | `folder-backup` |
 | **Type** | **Type N** |
 | **Default COMMAND** | `help` |
-| **Contrast parent** | selfmanaged is Type O — **not** inherited after bootstrap trim |
+| **Contrast parent** | cli-template is already Type N — **inherited**. (Historical: selfmanaged Type O was trimmed in 2026-08-03; not live origin.) |
 
 ### 2.4 Why This Requirement Exists (CIAO)
 
@@ -69,7 +69,7 @@ Type O (online-install empty-argv = install-ensure) does **not** apply.
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
 1. Change empty argv to install-ensure while the product remains local-only.  
-2. Copy selfmanaged Type O empty-argv law wholesale without updating this file and install mode.  
+2. Copy a Type O empty-argv parent wholesale without updating this file and install mode.  
 3. Make bare invocation run domain `backup`.
 
 **Violating this rule is a critical dispatcher regression.**

@@ -83,7 +83,7 @@ This product ships as a **POSIX shell script** (interpreted). Execution by any n
 | Variable | Role | Default / note |
 |----------|------|----------------|
 | `APP_NAME` | Binary basename SSOT | hard-assign `folder-backup` |
-| `VERSION` | Local version SSOT | hard-assign `1.0.0` |
+| `VERSION` | Local version SSOT | hard-assign `1.6.1` |
 | `GLOBAL_BIN` | System-wide bin | `/usr/local/bin` |
 | `USER_BIN` | Per-user bin | `${HOME}/.local/bin` |
 | `FORCE` | Replace / skip confirm | `0` |
@@ -100,7 +100,7 @@ This product ships as a **POSIX shell script** (interpreted). Execution by any n
 | **Primary install path story** | Type 0 day-to-day: `${HOME}/.local/bin/folder-backup`; production elevation: `/usr/local/bin/folder-backup` |
 | **Handlers** | `inst_local_install`, `inst_local_uninstall`, `app_where_is_me`, `app_version` |
 | **Detect** | `inst_is_installed` / privilege-correct path helpers |
-| **Online package** | **Absent by design** (bootstrap trim) |
+| **Online package** | **Absent by design** (inherited from cli-template) |
 
 ### 2.8 Why This Requirement Exists (CIAO)
 

@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] - 2026-08-13
+
+### Changed
+
+- **Bootstrap origin** is now sibling **cli-template** (Type 0 local-only template). Direction **A → B only**. `selfmanaged` is retired history, not a live hop.
+- Ship unit Type 0 body rebuilt from `cli-template`, then domain (`fb_*`) re-extended. Online / Type O remain absent (already absent on A).
+- Law: `requirement-bootstrap-chain` **2.0.0**; class / domain / shell notes retargeted.
+
 ## [1.6.0] - 2026-08-12
 
 ### Added

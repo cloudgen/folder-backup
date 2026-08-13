@@ -5,8 +5,9 @@
 #
 # FULL FEATURED LOCAL TYPE 0 + DOMAIN BACKUP (CIAO / CIAO-Lite Compliant)
 #
-# Bootstrap parent: cloudgen/selfmanaged (architecture inheritance).
-# Online install / remote self-update / channel checksum: TRIMMED by design.
+# Bootstrap origin: cli-template (Type 0 local-only template, hop 0).
+# Specialize: A=cli-template → B=folder-backup (domain extend). Do not reverse-copy.
+# Online install / remote self-update / channel checksum: absent on A; remain absent.
 #
 # Project requirements (docs/requirements/ only — never cite templates here):
 # - requirement-class-software-dev.md
@@ -29,7 +30,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.6.0"
+# VERSION: hard-assign VERSION="1.6.1"
 #
 # =============================================================================
 
@@ -46,8 +47,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.6.0"
-: "${VERSION:=1.6.0}"
+VERSION="1.6.1"
+: "${VERSION:=1.6.1}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -497,36 +498,15 @@ inst_is_installed() {
 #
 # GENERAL PURPOSE:
 # Safely reads the VERSION constant from the installed script.
-# Used by --version-check and --self-update.
+# Used by about / install diagnostics (local Type 0). Not a remote version-check.
 #
 # Safe Variable Defaults
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # Designed to be reusable in other projects.
 #
-# CRITICAL WARNING - VERSION EXTRACTION IS ESSENTIAL FOR SELF-UPDATE:
-# Knowing the exact installed version is not optional — it is the foundation
-# of safe self-update and version-check logic.
-#
-# Without a reliable inst_get_version(), self-update cannot properly
-# compare local version against remote, leading to:
-# - Unnecessary re-downloads
-# - Failed updates
-# - Silent failures
-# - Potential downgrade or broken installation
-#
-# AI assistants frequently fail to respect this importance. They often
-# overlook, simplify, or remove version extraction logic because they
-# consider it "minor" or try to replace the entire self-update flow with
-# a simpler approach. This always breaks the self-update mechanism.
-#
-# This function is battle-field tested and intentionally simple/robust
-# (grep + cut on the VERSION= line). Any attempt to rewrite or bypass it
-# risks destroying the self-update safety net.
-#
-# We must intentionally preserve and reuse this exact function instead of
-# replacing it. Respecting version awareness is a core part of CIAO
-# Caution and Anti-fragility.
+# CRITICAL: installed-version extraction must stay grep '^VERSION="' + cut.
+# about/install compare managed binaries this way. Do not invent a parser.
 #
 # PRINTF/ECHO EXCEPTION (class B – function return-via-stdout):
 # echo "unknown" / echo "not installed" / grep|cut pipeline output are data
@@ -1420,11 +1400,10 @@ app_where_is_me() {
     fi
 }
 
-
-
 # =============================================================================
 # Domain helpers (fb_*) — folder-backup
 # ALIGNMENT: requirement-domain-folder-backup.md
+# Specialized from cli-template Type 0; do not copy this block onto A.
 # =============================================================================
 
 # =============================================================================
@@ -1973,7 +1952,7 @@ fb_backup() {
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${HOME:=/tmp}"
     : "${USERNAME:=unknown}"
-    : "${VERSION:=1.6.0}"
+    : "${VERSION:=1.6.1}"
     : "${MAX_DAILY_BACKUPS:=5}"
     : "${MAX_TOTAL_BACKUPS:=30}"
 
@@ -3212,12 +3191,13 @@ EOF
     return 0
 }
 
+
 # =============================================================================
 # app_version() - Local version only (no network)
 # =============================================================================
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.6.0}"
+    : "${VERSION:=1.6.1}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         out_json "version" "" "app" "${APP_NAME}" "version" "${VERSION}"
@@ -3241,7 +3221,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.6.0}"
+    : "${VERSION:=1.6.1}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"
@@ -3476,7 +3456,7 @@ app_help() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Single dispatcher for folder-backup (local Type 0 + domain).
+# Single dispatcher for folder-backup (specialized from cli-template; local Type 0 + domain).
 # Empty argv = Type N help (not install-ensure).
 #
 # ALIGNMENT:

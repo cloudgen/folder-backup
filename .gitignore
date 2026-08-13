@@ -96,6 +96,7 @@ AGENTS.md
 
 # --- Local harness backup dumps (never product surface) ---
 .h1-backup-*/
+.h2-backup-*/
 
 # --- Docs layer: ignore all docs, re-include requirements only ---
 # Includes docs/policies/ (policy-*.md), skills, terminologies, templates, etc.

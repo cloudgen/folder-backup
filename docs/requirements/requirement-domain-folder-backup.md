@@ -92,7 +92,7 @@ folder-backup backup /path/to/project
 | **Primary user install** | `~/.local/bin/folder-backup` |
 | **Backup operations SSOT** | `requirement-folder-archive-backup` |
 | **Privilege / sudoers SSOT** | `requirement-three-layer-privilege-model` |
-| **Bootstrap** | Specialized from selfmanaged architecture; online install **trimmed** |
+| **Bootstrap** | Specialized from **cli-template** Type 0 architecture; online install already absent on A |
 
 ### 2.6 Why This Requirement Exists (CIAO)
 
@@ -117,7 +117,7 @@ folder-backup backup /path/to/project
 
 1. Duplicate full create/name/deposit/verify law here once `requirement-folder-archive-backup` is Active.  
 2. Add online install or remote upload as silent domain behavior without new requirements.  
-3. Put domain law into bootstrap parent selfmanaged.  
+3. Put domain law into bootstrap parent `cli-template`.  
 4. Leave help listing `backup` without an Active operational backup requirement.  
 5. Create a second Active `requirement-domain-*` without superseding this one.
 
@@ -145,7 +145,7 @@ folder-backup backup /path/to/project
 | `requirement-folder-archive-backup` | **Operational backup SSOT** |
 | `requirement-three-layer-privilege-model` | Elevation + sudoers |
 | `requirement-shell-cli-interface` | Routes domain verbs |
-| `requirement-bootstrap-chain` | Domain extend after trim |
+| `requirement-bootstrap-chain` | Domain extend from cli-template |
 | `docs/requirements/index.md` | Registry |
 
 ---
@@ -169,9 +169,10 @@ folder-backup backup /path/to/project
 | 2026-08-03 | Active 1.0.0 | Domain SSOT: folder tar.gz backup + sudoers deposit |
 | 2026-08-03 | Active 1.1.0 | Verification rules (later moved to backup ops REQ) |
 | 2026-08-03 | Active 1.2.0 | **Thin domain surface**; ops SSOT → `requirement-folder-archive-backup` |
+| 2026-08-13 | Active 1.2.0 | Origin notes retarget: specialize from **cli-template** (not selfmanaged) |
 
 ---
 
-**Last Updated**: 2026-08-03  
+**Last Updated**: 2026-08-13  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

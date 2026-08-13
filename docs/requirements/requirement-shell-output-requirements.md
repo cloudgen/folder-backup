@@ -8,7 +8,7 @@
 
 This requirement is the **project Single Source of Truth** for **all CLI output** of folder-backup: human messages, machine JSON, channel split (stdout vs stderr), and mode behavior (normal / quiet / JSON / debug).
 
-Inherited architecture from bootstrap parent **selfmanaged** (`out_*` family); retargeted for this product’s identity and domain messages.
+Inherited architecture from bootstrap parent **cli-template** (`out_*` family); retargeted for this product’s identity and domain messages.
 
 ---
 
@@ -81,7 +81,7 @@ Rules:
 | **Ship unit** | `src/folder-backup` |
 | **Human prefixes** | `[INFO]`, `[OK]`, `[WARN]`, `[ERROR]` (or equivalent consistent set) |
 | **Domain messages** | Backup progress/results and sudoers-print status **must** use `out_*` |
-| **Bootstrap inheritance** | Same `out_*` family as selfmanaged |
+| **Bootstrap inheritance** | Same `out_*` family as cli-template |
 
 ### 2.6 Why This Requirement Exists (CIAO)
 

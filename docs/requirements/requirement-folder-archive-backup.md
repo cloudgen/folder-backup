@@ -288,7 +288,7 @@ Errors **MUST** use structured error emission with stable codes when feasible (e
 |------|--------|
 | **Product / APP_NAME** | `folder-backup` |
 | **Ship unit** | `src/folder-backup` |
-| **VERSION** | `1.6.0` |
+| **VERSION** | `1.6.1` |
 | **CLI verbs** | `backup` → `fb_backup`; `restore` → `fb_restore` |
 | **Handlers** | `fb_deposit_archive`, `fb_verify_archive_counts`, `fb_count_*`, `fb_tar_list_stream`, `fb_fetch_archive_readable` |
 | **BACKUP_ROOT** | `/var/backup` |
@@ -303,7 +303,7 @@ Errors **MUST** use structured error emission with stable codes when feasible (e
 | **Elevated Cmnds** | deposit cp/install; `tar -tzf` list; restore `cp` deposit→stage |
 | **Restore dest gate** | **Whitelist** §2.6b.2a (`fb_refuse_restore_dest` must align: W-ETC-USER `/etc/{{username}}`; never `/etc/passwd`) |
 | **W-ETC-USER example (host)** | Invoker `sudo-adm` → allow `/etc/sudo-adm` (+ children); refuse `/etc/passwd`, `/etc/nginx-adm` |
-| **Incident** | `docs/incidents/incident-20260812-001-restore-blocklist-refuses-home-under-etc.md` |
+| **Incident** | INC-20260812-001 (restore dest whitelist; see product incidents surface) |
 | **Suite** | `tests/test_domain_folder_backup.sh` (TP-FOLDER-BACKUP-*) |
 | **Primary TP map** | `reviews/test-plan.md` · `reviews/requirement-test-matrix.md` |
 
@@ -418,4 +418,4 @@ Errors **MUST** use structured error emission with stable codes when feasible (e
 
 **Last Updated**: 2026-08-12  
 **Owner**: project maintainers  
-**Alignment**: Registry `docs/requirements/index.md`; incident `docs/incidents/incident-20260812-001-restore-blocklist-refuses-home-under-etc.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
+**Alignment**: Registry `docs/requirements/index.md`; INC-20260812-001; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

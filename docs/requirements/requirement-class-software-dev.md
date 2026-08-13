@@ -85,8 +85,8 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | **Architectures supported** | any arch with POSIX sh and the external tools the script invokes |
 | **Git surface** | used when product is published |
 | **Ship unit / install** | yes — `src/folder-backup` → `${USER_BIN}/folder-backup` (default `~/.local/bin/folder-backup`); **local-only** install (no online channel) |
-| **Product version SSOT** | `VERSION="1.0.0"` hard-assign in `src/folder-backup` |
-| **Bootstrap origin** | external product **selfmanaged** (`https://github.com/cloudgen/selfmanaged`) with **online install surfaces trimmed** |
+| **Product version SSOT** | `VERSION="1.6.1"` hard-assign in `src/folder-backup` |
+| **Bootstrap origin** | sibling product **cli-template** (`/home/leolio/prjs/cli-template`) — Type 0 local-only template; domain extend only |
 
 **Residual ownership table:**
 
@@ -95,7 +95,7 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | Project class membership | **this file** | Fixed |
 | Primary language + toolchain policy | **this file** | posix-sh, unconstrained |
 | Package/build tool + lockfile | **this file** | none / not used |
-| Bootstrap lineage / keep-trim | `requirement-bootstrap-chain` | A→B + online trim |
+| Bootstrap lineage / keep-extend | `requirement-bootstrap-chain` | A=cli-template → B + domain extend |
 | Project layout / ship path | `requirement-project-folder` | `src/` + bin targets |
 | Type 0 CLI surface / flags / dispatch | `requirement-shell-cli-interface` | Do not duplicate |
 | Empty argv Type N help | `requirement-shell-cli-zero-arguments` | Local-only |
@@ -108,7 +108,7 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | Privilege layers + sudoers **files** (emit/install/fail-closed) | `requirement-three-layer-privilege-model` | Type 0 + narrow Type 1 deposit; §2.3 sudoers SSOT |
 | Folder archive **backup operations** | `requirement-folder-archive-backup` | Create / name / deposit / verify (not domain) |
 | Domain surface (verbs, help, about) | `requirement-domain-folder-backup` | Four pillars only; ops pointer |
-| Online install / remote self-management / companion checksum | **intentionally absent** | Trimmed from bootstrap parent |
+| Online install / remote self-management / companion checksum | **intentionally absent** | Absent on A; remain absent on B |
 
 ---
 
@@ -166,7 +166,7 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 
 | Key | Relationship |
 |-----|--------------|
-| `requirement-bootstrap-chain` | Lineage A=selfmanaged → B=folder-backup (trim online) |
+| `requirement-bootstrap-chain` | Lineage A=cli-template → B=folder-backup (domain extend) |
 | `requirement-project-folder` | Layout and install locations |
 | `requirement-shell-cli-interface` | Command surface, flags, dispatch |
 | `requirement-shell-cli-zero-arguments` | Type N empty argv |
@@ -187,10 +187,11 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 
 | Date | Status | Note |
 |------|--------|------|
-| 2026-08-03 | Active | Specialized class law for folder-backup (left genesis; bootstrap trim from selfmanaged) |
+| 2026-08-03 | Active | Specialized class law for folder-backup (left genesis; then named selfmanaged as origin) |
+| 2026-08-13 | Active | Origin retarget: A=cli-template → B=folder-backup |
 
 ---
 
-**Last Updated**: 2026-08-03  
+**Last Updated**: 2026-08-13  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

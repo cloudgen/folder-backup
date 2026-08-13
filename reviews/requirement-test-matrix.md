@@ -1,8 +1,8 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-08-09  
-**Product VERSION:** 1.6.0  
-**Suite:** `tests/run.sh` (PASS=138 FAIL=0 SKIP=2)
+**Updated:** 2026-08-13  
+**Product VERSION:** 1.6.1  
+**Suite:** `tests/run.sh` (PASS=157 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|

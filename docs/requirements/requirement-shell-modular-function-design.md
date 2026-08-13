@@ -68,7 +68,7 @@ Critical sections (output SSOT, install place/remove, storage resolve, domain ar
 |------|--------|
 | **Ship unit** | `src/folder-backup` |
 | **Domain prefix** | `fb_` |
-| **Bootstrap inheritance** | Prefix discipline from selfmanaged; domain prefix added |
+| **Bootstrap inheritance** | Prefix discipline from cli-template; domain prefix `fb_` added |
 | **Multi-file authoring** | Optional later only if pack still yields one installable artifact and this requirement is updated |
 
 ### 2.6 Why This Requirement Exists (CIAO)

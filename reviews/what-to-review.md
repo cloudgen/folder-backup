@@ -29,7 +29,7 @@
 | Surface | Path | Review focus |
 |---------|------|--------------|
 | Class | `requirement-class-software-dev.md` | posix-sh, local-only residual |
-| Bootstrap chain | `requirement-bootstrap-chain.md` | A=selfmanaged → B trim online |
+| Bootstrap chain | `requirement-bootstrap-chain.md` | A=cli-template → B domain extend |
 | Project folder | `requirement-project-folder.md` | `src/`, bins, `/var/backup` |
 | **Privilege / sudoers** | `requirement-three-layer-privilege-model.md` | Type 0/1; **trust tiers S13**; print-sudoers; **install-script**; **remove-project-sudoers**; no ALL ALL |
 | CLI interface | `requirement-shell-cli-interface.md` | Commands, flags, dispatch |
