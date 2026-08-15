@@ -1,6 +1,6 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.6.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.7.1-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
@@ -15,6 +15,7 @@ POSIX `/bin/sh` local CLI that archives a folder to gzip tar, deposits it under 
 - **Restore**: `restore <archive|prefix> [dest]` — default dest is hard-disk `${PROJECTS_ROOT}/<project>`
 - **Restore dest whitelist**: allow `/etc/{{username}}` (invoking user); always refuse `/etc/passwd` and other non-whitelisted system paths
 - **Narrow sudoers**: `print-sudoers` emits deposit / verify-list / restore-stage allowlist (admin installs to `/etc/sudoers.d/`)
+- **Sudoer approval submit**: detects `sudoer-cli` + `sudoer-adm` + public inbound `/var/sudoer-cli/sudoer-request`; `submit-sudoer-request` lets sudoer-cli allocate a JSON request (does not write `/etc`, does not `mkdir` inbound)
 - **Fail-closed**: missing source, unauthorized deposit, verify mismatch, non-empty restore without `--force`
 - **CIAO / CIAO-Lite** defensive design (Protection Zones, `out_*` output SSOT)
 
@@ -83,6 +84,7 @@ folder-backup restore NAME-YYYYMMDD-N.tar.gz /explicit/dest
 folder-backup restore project-name --force      # allow non-empty dest
 
 folder-backup print-sudoers
+folder-backup submit-sudoer-request   # JSON request into /var/sudoer-cli/sudoer-request (if present)
 folder-backup uninstall --force
 ```
 
@@ -98,7 +100,9 @@ folder-backup uninstall --force
 | `PROJECTS_ROOT` | Hard-disk projects tree for restore default |
 | `RAM_ROOT` | RAM projects root (default `/dev/shm`) |
 | `RESTORE_HOST_DEFAULT` | `hard-disk` (default) or `ram-drive` |
-| `ALLOW_TEST_LOCAL_SUDOERS` | `1` = allow test-mode `print-sudoers` without `--allow-test-local` |
+| `ALLOW_TEST_LOCAL_SUDOERS` | `1` = allow test-mode `print-sudoers` / `submit-sudoer-request` without `--allow-test-local` |
+| `SUDOER_CLI` | Override path to `sudoer-cli` |
+| `SUDOER_ADM_USER` | Approver login to detect (default `sudoer-adm`) |
 
 ## Examples
 
@@ -139,4 +143,4 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
-2026-08-13 — version **1.6.1** (bootstrap origin retarget: cli-template → folder-backup).
+2026-08-15 — version **1.7.1** (public inbound `/var/sudoer-cli/sudoer-request`; TP-21/21b).

@@ -23,7 +23,7 @@ This requirement is the **project Single Source of Truth** for how folder-backup
 
 | Signal | Variable / check | Meaning |
 |--------|------------------|---------|
-| TTY | `TTY=1` when stdin and stdout are terminals | Interactive UX possible |
+| TTY | `TTY=1` when stdin **and** stdout are terminals | Interactive UX possible |
 | Quiet | `QUIET=1` | Suppress non-essential human chatter |
 | JSON | `JSON=1` (implies quiet) | Machine output; no human hang |
 | Debug | `DEBUG=1` | Extra stderr diagnostics |
@@ -31,9 +31,59 @@ This requirement is the **project Single Source of Truth** for how folder-backup
 
 Rules:
 
-1. Prompt decisions **MUST** use shared `prompt_*` helpers — not ad-hoc `read` in domain logic.  
-2. After flags are parsed in `app_main`, subsequent code **MUST** see updated mode globals.  
-3. Do **not** invent a second parallel mode system per command.
+1. **Measure `[ -t 0 ]` and `[ -t 1 ]` for interactive capability in the main process, outside functions** (script top-level or a direct setter that assigns `TTY`). Default `TTY=0`; set `TTY=1` only when both are terminals.  
+2. `prompt_*`, `out_*` confirm paths, and `about` **MUST consume `TTY`**. **MUST NOT** re-test live `[ -t` inside those helpers as the policy gate.  
+3. Prompt decisions **MUST** use shared `prompt_*` helpers — not ad-hoc `read` in domain logic.  
+4. After flags are parsed in `app_main`, subsequent code **MUST** see updated mode globals.  
+5. Do **not** invent a second parallel mode system per command.
+
+**Complete `prompt_yes_no` sample** (consume `TTY` / `JSON` / `QUIET`; not live `[ -t`):
+
+```sh
+prompt_yes_no() {
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    : "${TTY:=0}"
+    message="$1"
+    if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ]; then
+        return 1
+    fi
+    if [ "${TTY}" -ne 1 ]; then
+        return 1
+    fi
+    out_msg_n "${message} (y/N)? "
+    answer=""
+    read -r answer || true
+    case "${answer}" in
+        [Yy]*|[Yy][Ee][Ss]*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+```
+
+**Complete `prompt_ask` sample** (same consume-`TTY` rule):
+
+```sh
+prompt_ask() {
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    : "${TTY:=0}"
+    message="${1-}"
+    default="${2-}"
+    if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ] || [ "${TTY}" -ne 1 ]; then
+        printf '%s' "${default}"
+        return 0
+    fi
+    out_msg_n "${message}: "
+    answer=""
+    read -r answer || true
+    if [ -z "${answer}" ]; then
+        printf '%s' "${default}"
+    else
+        printf '%s' "${answer}"
+    fi
+}
+```
 
 ### 2.3 Behavioral matrix (this product)
 
@@ -43,6 +93,7 @@ Rules:
 | `install` | May inform; no required confirm for first install | Proceed without hang |
 | `backup` | May show progress via `out_*` | No prompts; fail loud on missing operands / sudo failure |
 | `print-sudoers` | Print fragment | Print fragment (stdout/file); no `/etc` write |
+| `submit-sudoer-request` | May show detect/submit via `out_*` | No prompts; fail closed if sudoer-cli / inbound missing; no hang |
 | Missing required operand | Clear error | Clear error; non-zero exit |
 
 ### 2.4 Implementation Notes (this project)
@@ -77,6 +128,7 @@ Rules:
 1. Hang on stdin in non-interactive/json modes.  
 2. Auto-yes destructive uninstall without `--force` in non-interactive mode.  
 3. Scatter unguarded `read` calls outside `prompt_*`.  
+4. Re-test live `[ -t 0 ]` / `[ -t 1 ]` inside `prompt_*` as the interactive-capability gate (helpers consume `TTY`).  
 4. Treat non-interactive as license to skip required validation.
 
 **Violating this rule is a critical interaction-mode regression.**
@@ -112,6 +164,6 @@ Rules:
 
 ---
 
-**Last Updated**: 2026-08-03  
+**Last Updated**: 2026-08-15  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

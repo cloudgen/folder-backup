@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-three-layer-privilege-model.md  
-**Status**: Active (Version 1.3.0)  
+**Status**: Active (Version 1.5.0)  
 **Area**: architecture  
 **Key**: `requirement-three-layer-privilege-model`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -8,7 +8,7 @@
 
 This requirement is the **project Single Source of Truth** for the **three-layer privilege model** as applied to **folder-backup**: which operations run as the invoking user, which use **narrow elevated sudo**, and what is out of scope.
 
-It is also the **product law SSOT for working with sudoers fragment files**: how the CLI **emits** a draft, what the fragment **must / must not** contain, how an **admin** validates and installs under `/etc/sudoers.d/`, how **runtime deposit** uses allowlisted `sudo -n`, and how **fail-closed** behaves when elevation is missing.
+It is also the **product law SSOT for working with sudoers fragment files**: how the CLI **emits** a draft, what the fragment **must / must not** contain, how an **admin** validates and installs under `/etc/sudoers.d/`, how **`submit-sudoer-request`** hands a fragment to sibling **sudoer-cli** so a **JSON request** lands in the **public inbound**, how **runtime deposit** uses allowlisted `sudo -n`, and how **fail-closed** behaves when elevation is missing.
 
 Domain backup semantics (naming, tar, pillars) live in `requirement-domain-folder-backup.md`. Agent procedure for security-gated create is **`SK-CREATE-SUDOERS-FILE`** (not product-source authority).
 
@@ -78,7 +78,8 @@ Domain backup semantics (naming, tar, pillars) live in `requirement-domain-folde
 | 2 | User | Run `folder-backup print-sudoers` **or** `folder-backup print-sudoers <draft-path>` (test_local requires `--allow-test-local` or `ALLOW_TEST_LOCAL_SUDOERS=1`) |
 | 3 | CLI (Type 0) | Emit **narrow** fragment for the **invoking user**; print trust tier + warnings |
 | 4 | User | Optionally run `folder-backup print-sudoers-install-script` → admin script under `/dev/shm` (or temp) |
-| 5 | **Admin** | Review draft (and TEST MODE banner if present); either manual `visudo -c` + `install -m 0440`, **or** `sudo sh <admin-script> install` / `replace` |
+| 4b | User (when sudoer-cli + sudoer-adm are present) | Optionally run `folder-backup submit-sudoer-request` to hand the fragment to sudoer-cli, which **allocates a JSON request** in the **public inbound** (Type 0; no `/etc` write; no inbound `mkdir`). Approver still must approve. |
+| 5 | **Admin** | Review draft (and TEST MODE banner if present); either manual `visudo -c` + `install -m 0440`, **or** `sudo sh <admin-script> install` / `replace`, **or** approve a queued request via sudoer-cli |
 | 6 | **Admin** | Optional: ensure `/var/backup/folder-backup` exists with safe ownership/mode (script `install` may mkdir) |
 | 7 | User | Run `folder-backup backup <dir>`; deposit uses **only** allowlisted `sudo -n` commands |
 | 8 | Admin (test_local / leave elev) | **Uninstall soon**: `sudo sh <admin-script> uninstall` (or `sudo rm /etc/sudoers.d/folder-backup-<user>`) |
@@ -131,6 +132,48 @@ Domain backup semantics (naming, tar, pillars) live in `requirement-domain-folde
    - **Any present** → **MUST** warn that host elevation is still active (draft ≠ installed elev); **MUST** list present paths; **MUST** point to admin leave-elev for this user and/or `print-sudoers-install-script` then `sudo sh <script> uninstall`.  
    - **None present** → **SHOULD** state host fragment also absent (no “if any” hedge; no false elev lecture).  
 7. JSON **SHOULD** include `path`, `status` (`removed` \| `already_absent`), `installed_path`, `host_fragment_present` (`0` \| `1`).
+
+#### 2.3.3c `submit-sudoer-request` (Type 0) product rules
+
+**Purpose:** This product is a **Type 0 sudoers-grant submitter**. When the sibling approval CLI and approver account are present, it hands a self-scoped sudoers fragment (or file) to that CLI so the CLI **allocates a JSON request file** in the sibling’s **public inbound**. This product remains Type 0: it **MUST NOT** write `/etc`, **MUST NOT** `mkdir` the production inbound, **MUST NOT** approve or reject, and **MUST NOT** choose the queued dest basename.
+
+**Roles (this verb):**
+
+| Role | Who | May | Must not |
+|------|-----|-----|----------|
+| **Submitter** | Invoking login via this CLI | Detect approval CLI + inbound; emit or pass a self-scoped fragment; invoke sibling submit | `mkdir` inbound; write `/etc`; pick dest basename; approve |
+| **Allocator** | Sibling approval CLI (`{{APPROVAL_APP}}`) | Allocate `request_id`; exclusive-create JSON in inbound; `chmod 0640` | Trust a caller-supplied dest basename |
+| **Approver** | Sibling LPU (`{{APPROVER}}`) | Move inbound → accepted/declined; install dest | This product’s Type 0 path |
+
+**Inbound detect (mandatory order — first existing directory wins):**
+
+| Priority | Candidate | When |
+|----------|-----------|------|
+| 1 | `SUDOER_QUEUE_INBOUND` | Set **and** is an existing directory (tests / explicit override) |
+| 2 | `/var/{{APPROVAL_APP}}/{{INBOUND_BASENAME}}` | **Preferred production public inbound** (must already exist) |
+| 3 | `{{approver-home}}/{{INBOUND_BASENAME}}` | F4 **view** (symlink to the public real dir) |
+| 4 | Legacy only: `{{approver-home}}/sudoer-approving`, `/etc/{{APPROVER}}/sudoer-approving`, `/home/{{APPROVER}}/sudoer-approving` | Transitional hosts; **not** the preferred real dir |
+
+Filled conventional names for this compose live in §2.5. Core rules **MUST NOT** treat a home-only `sudoer-approving` directory as the preferred real inbound.
+
+**Normative rules:**
+
+1. **MUST** detect the approval CLI (`{{APPROVAL_APP}}`): env `SUDOER_CLI` if executable, else global bin, else user bin, else `PATH`. Missing → fail closed with install hint.  
+2. **MUST** detect the approver login (`{{APPROVER}}`, override `SUDOER_ADM_USER`) via `id`. Missing → fail closed with setup hint (`sudo {{APPROVAL_APP}} setup`).  
+3. **MUST** detect inbound using the table above. Missing → fail closed with setup hint. Not writable for exclusive create → fail closed (production inbound is create-only for others: mode **3773**, no other-readdir).  
+4. **MUST NOT** `mkdir` (or `mkdir -p`) the production inbound, its public parent, or any F4 view.  
+5. **MUST NOT** treat this product’s deposit directory as an inbound.  
+6. **MUST** report detections on `about` (human + JSON): approval CLI path or `not_found`; approver or `absent`; inbound path or `not_found`; writable flag. About inbound **SHOULD** name the preferred public path when reporting `not_found`.  
+7. Default input is the same fragment `print-sudoers` would emit (same trust-tier gate). Optional file operand submits that file instead (refuse symlink / missing).  
+8. **MUST** invoke the detected approval CLI `add-sudoer-request` (or `update-sudoer-request` with `--update`) with `--service` equal to this product’s `APP_NAME` and a purpose string (`--purpose` or product default). That sibling call **is** what creates the queued **JSON** file.  
+9. **MUST NOT** invent or pass a dest basename for the queued file. `request_id` is whatever the sibling allocator returns.  
+10. When pointing the sibling at a queue root, **MUST** use the **parent of the real public inbound** (or leave the sibling on its public default). **MUST NOT** export a home directory that still uses the legacy `sudoer-approving` child as if it were the public queue root.  
+11. **MUST NOT** write `/etc/sudoers.d` or `/etc/passwd` from this verb.  
+12. Product `--json` status **SHOULD** include `request_id`, `action`, `service`, `sudoer_cli`, `sudoer_adm`, `inbound`. That status object is **not** the queued request file.
+
+**Queued JSON (sibling-owned shape — this product must produce input that converts):**
+
+The queued artifact lives **in the inbound directory**. Filename grammar and closed schema are **owned by the sibling approval product**. This product **MUST** pass a self-scoped sudoers text dual (or already-valid request JSON) that the sibling can convert and queue. Worked basename + body for **this** product’s grant are in §2.5.
 
 #### 2.3.4 Fragment content constraints (mandatory)
 
@@ -274,7 +317,17 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | **Admin install path** | `/etc/sudoers.d/folder-backup-<user>` (per-user) |
 | **Admin install script (default)** | `/dev/shm/folder-backup-<user>-sudoers-admin.sh` via `print-sudoers-install-script` |
 | **Type 2 system user** | None |
-| **CLI commands** | `print-sudoers` → `fb_print_sudoers`; `print-sudoers-install-script` → `fb_print_sudoers_install_script`; `remove-project-sudoers` → `fb_remove_project_sudoers`; deposit → `fb_deposit_archive` |
+| **CLI commands** | `print-sudoers` → `fb_print_sudoers`; `print-sudoers-install-script` → `fb_print_sudoers_install_script`; `remove-project-sudoers` → `fb_remove_project_sudoers`; `submit-sudoer-request` → `fb_submit_sudoer_request`; deposit → `fb_deposit_archive` |
+| **Sibling approval CLI** | `sudoer-cli` (`SUDOER_CLI` override) |
+| **Sibling approver** | `sudoer-adm` (`SUDOER_ADM_USER` override); this host home `/etc/sudoer-adm` |
+| **Preferred public inbound** | `/var/sudoer-cli/sudoer-request` (mode **3773**, owner `sudoer-adm:sudoer-adm`) |
+| **Test public root** | `SUDOER_PUBLIC_ROOT` (default `/var/sudoer-cli`) — tests only; production create remains Type 1 setup |
+| **F4 view** | `/etc/sudoer-adm/sudoer-request` → public inbound |
+| **Public queue root** | `/var/sudoer-cli` (sibling default) |
+| **Legacy inbound names** | `…/sudoer-approving` — last-fallback only |
+| **Queued basename (sibling allocator)** | `sudoer-{{YYYYMMDD}}-folder-backup-{{user}}-add-{{n}}.json` (or `update`) |
+| **Worked sample basename** | `sudoer-20260815-folder-backup-leolio-add-1.json` |
+| **Worked dest after approve** | `/etc/sudoers.d/folder-backup-leolio` |
 | **Term** | `project-sudoers-file` · `sudoers-fragment` |
 | **Whitelist meaning** | **Sudoers command allowlist** (narrow lines) — not server-maintenance ops registry |
 | **Applied host record** | `docs/whitelists/external-sudoers/records/WS-20260803-001-folder-backup.md` |
@@ -283,6 +336,114 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | **Example fragment** | §2.3.4a (full text); live draft often `${HOME}/.config/folder-backup/sudoers.fragment-<user>` |
 | **Test emit gate** | `--allow-test-local` or `ALLOW_TEST_LOCAL_SUDOERS=1` when tier ≠ production |
 | **Global install for production** | `sudo sh src/folder-backup install` or root/`--global` → `/usr/local/bin/folder-backup` |
+
+**Paired text dual + queued JSON** (same grant; sibling closed schema). Live submit usually hands the **text**; sudoer-cli converts. `--json` CLI status from `submit-sudoer-request` is **not** the queued file.
+
+**Worked add basename:** `sudoer-20260815-folder-backup-leolio-add-1.json`  
+**Worked update basename:** `sudoer-20260815-folder-backup-leolio-update-1.json`
+
+Paired sudoers text (add and update share this body; `--update` only changes `action` / basename):
+
+```text
+# Purpose: Narrow folder-backup deposit/verify/restore-stage grant for leolio
+leolio ALL=(root) NOPASSWD: /usr/bin/mkdir -p /var/backup/folder-backup
+leolio ALL=(root) NOPASSWD: /usr/bin/cp /dev/shm/folder-backup-leolio/* /var/backup/folder-backup/
+leolio ALL=(root) NOPASSWD: /usr/bin/tar -tzf /var/backup/folder-backup/*
+```
+
+Add JSON:
+
+```json
+{
+  "schema_version": 1,
+  "purpose": "Narrow folder-backup deposit/verify/restore-stage grant for leolio",
+  "username": "leolio",
+  "service": "folder-backup",
+  "action": "add",
+  "commands": [
+    {
+      "runas": "root",
+      "tags": ["NOPASSWD"],
+      "path": "/usr/bin/mkdir",
+      "args": ["-p", "/var/backup/folder-backup"]
+    },
+    {
+      "runas": "root",
+      "tags": ["NOPASSWD"],
+      "path": "/usr/bin/cp",
+      "args": ["/dev/shm/folder-backup-leolio/*", "/var/backup/folder-backup/"]
+    },
+    {
+      "runas": "root",
+      "tags": ["NOPASSWD"],
+      "path": "/usr/bin/tar",
+      "args": ["-tzf", "/var/backup/folder-backup/*"]
+    }
+  ]
+}
+```
+
+Update JSON (same commands; `action` is `update`):
+
+```json
+{
+  "schema_version": 1,
+  "purpose": "Narrow folder-backup deposit/verify/restore-stage grant for leolio",
+  "username": "leolio",
+  "service": "folder-backup",
+  "action": "update",
+  "commands": [
+    {
+      "runas": "root",
+      "tags": ["NOPASSWD"],
+      "path": "/usr/bin/mkdir",
+      "args": ["-p", "/var/backup/folder-backup"]
+    },
+    {
+      "runas": "root",
+      "tags": ["NOPASSWD"],
+      "path": "/usr/bin/cp",
+      "args": ["/dev/shm/folder-backup-leolio/*", "/var/backup/folder-backup/"]
+    },
+    {
+      "runas": "root",
+      "tags": ["NOPASSWD"],
+      "path": "/usr/bin/tar",
+      "args": ["-tzf", "/var/backup/folder-backup/*"]
+    }
+  ]
+}
+```
+
+**Admin install script (worked shape).** Live emit is `print-sudoers-install-script` → `/dev/shm/folder-backup-<user>-sudoers-admin.sh`. Complete verb skeleton (values filled for this product):
+
+```sh
+#!/bin/sh
+# folder-backup — admin sudoers install / uninstall
+# RUN: sudo sh /dev/shm/folder-backup-leolio-sudoers-admin.sh install|uninstall|replace|status
+set -u
+PROJECT_SUDOERS_FILE="${HOME}/.config/folder-backup/sudoers.fragment-leolio"
+INSTALLED_SUDOERS="/etc/sudoers.d/folder-backup-leolio"
+die() { printf '%s\n' "ERROR: $*" >&2; exit 1; }
+require_root() { [ "$(id -u)" -eq 0 ] || die "Must run as root"; }
+cmd_install() {
+    require_root
+    [ -f "${PROJECT_SUDOERS_FILE}" ] || die "missing draft"
+    visudo -c -f "${PROJECT_SUDOERS_FILE}" || die "visudo -c draft"
+    install -m 0440 -o root -g root "${PROJECT_SUDOERS_FILE}" "${INSTALLED_SUDOERS}"
+    visudo -c -f "${INSTALLED_SUDOERS}" || die "visudo -c installed"
+}
+cmd_uninstall() { require_root; rm -f "${INSTALLED_SUDOERS}"; }
+cmd_replace() { cmd_uninstall; cmd_install; }
+cmd_status() { ls -la "${INSTALLED_SUDOERS}" "${PROJECT_SUDOERS_FILE}" 2>/dev/null || true; }
+case "${1:-}" in
+    install) cmd_install ;;
+    uninstall) cmd_uninstall ;;
+    replace) cmd_replace ;;
+    status) cmd_status ;;
+    *) printf '%s\n' "Usage: sudo sh $0 {install|uninstall|replace|status}"; exit 1 ;;
+esac
+```
 
 ### 2.6 Why This Requirement Exists (CIAO)
 
@@ -318,7 +479,11 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 10. Cite templates/skills as product-source behavioral authority (source cites **this** requirement and peers).  
 11. Claim **production-secure** sudoers when only `${USER_BIN}/folder-backup` (user-rewritable) exists.  
 12. Emit test_local fragments **without** TEST MODE warnings and uninstall-soon guidance.  
-13. Elevate `${USER_BIN}/folder-backup` under a production Pass.
+13. Elevate `${USER_BIN}/folder-backup` under a production Pass.  
+14. `mkdir` the sibling production inbound (or its public parent) from this Type 0 CLI.  
+15. Treat `/var/backup/folder-backup` (deposit) as the sudoer inbound.  
+16. Probe **only** `{{approver-home}}/sudoer-approving` as the preferred real inbound when `/var/sudoer-cli/sudoer-request` is the public dest.  
+17. Invent the queued JSON dest basename instead of calling the sibling allocator.
 
 **Violating this rule is a critical privilege regression.**
 
@@ -343,6 +508,10 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | AC-13 | `remove-project-sudoers` deletes draft only; refuses `/etc`; confirm/`--force`; probes host path and warns when elev still active |
 | AC-14 | Draft default and installed path include **user suffix**; multi-user installs do not share one `/etc/sudoers.d/folder-backup` basename |
 | AC-15 | `remove-project-sudoers` with multiple drafts lists and chooses interactively; non-interactive requires explicit path |
+| AC-16 | `submit-sudoer-request` detect order: env override → public `/var/sudoer-cli/sudoer-request` → F4 `…/sudoer-request` → optional legacy `sudoer-approving` |
+| AC-17 | Submit **MUST NOT** `mkdir` inbound; missing dir fails closed with `sudo sudoer-cli setup` hint |
+| AC-18 | Submit creates the queued artifact **only** by invoking sibling `add-sudoer-request` / `update-sudoer-request`; dest basename is sibling-allocated JSON under the public inbound |
+| AC-19 | About reports sudoer-cli / sudoer-adm / inbound (path or `not_found`) and writable flag |
 
 ---
 
@@ -351,8 +520,8 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | Key | Relationship |
 |-----|--------------|
 | `requirement-folder-archive-backup` | Backup ops that invoke Type 1 deposit/verify |
-| `requirement-domain-folder-backup` | Domain surface; print-sudoers verb |
-| `requirement-shell-cli-interface` | Command privilege labels (`backup`, `print-sudoers`) |
+| `requirement-domain-folder-backup` | Domain surface; submit-sudoer-request verb |
+| `requirement-shell-cli-interface` | Command privilege labels (`backup`, `print-sudoers`, `submit-sudoer-request`) |
 | `requirement-project-folder` | `/var/backup` deposit paths; config draft location |
 | `requirement-shell-cli-storage` | Staging roots that must match sudoers wildcards |
 | `requirement-shell-output-requirements` | `out_*` for print-sudoers and deposit errors |
@@ -371,6 +540,10 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | **TP-FOLDER-BACKUP-05** | same | have — deposit fail-closed without working sudo |
 | **TP-FOLDER-BACKUP-07** | same | have — elevated deposit (root **or** allowlisted `sudo -n`) |
 | **TP-FOLDER-BACKUP-08** | same | have — next-N after elevated deposit |
+| **TP-FOLDER-BACKUP-19** | same | have — submit fail-closed when sudoer-cli missing |
+| **TP-FOLDER-BACKUP-20** | same | have — stub cli writes a file (env inbound override) |
+| **TP-FOLDER-BACKUP-21** | same | have — detect prefers public inbound; Type 0 does not mkdir |
+| **TP-FOLDER-BACKUP-21b** | same | have — `SUDOER_QUEUE_INBOUND` wins over public |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -382,9 +555,11 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | 2026-08-03 | Active 1.0.0 | Privilege + basic sudoers fragment workflow for folder-backup |
 | 2026-08-03 | Active 1.1.0 | Full **working with sudoers files** law: roles, content, admin install, fail-closed, agent security gate, RTM elev cases |
 | 2026-08-03 | Active 1.1.1 | §2.3.4a **example sudoers fragment** (folder-backup deposit allowlist) |
+| 2026-08-14 | Active 1.4.0 | `submit-sudoer-request` compose (§2.3.3c) |
+| 2026-08-15 | Active 1.5.0 | Submit = JSON via sibling allocator into **public inbound** `/var/sudoer-cli/sudoer-request`; no Type 0 mkdir; legacy `sudoer-approving` last |
 
 ---
 
-**Last Updated**: 2026-08-03  
+**Last Updated**: 2026-08-15  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; mold `template-three-layer-privilege-model.md` (**`LM-THREE-LAYER-PRIVILEGE-MODEL`**); **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

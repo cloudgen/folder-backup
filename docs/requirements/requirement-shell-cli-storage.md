@@ -37,7 +37,36 @@ First match that is available and writable:
 
 1. Paths **MUST** include **`${APP_NAME}`** and **`${USERNAME}`**.  
 2. **MUST NOT** use a single shared world-writable directory for all users.  
-3. Live product **MUST** export `TMPDIR=${EFFECTIVE_STORAGE_DIR}` so `mktemp` inherits the isolated root.
+3. Live product **MUST** export `TMPDIR=${EFFECTIVE_STORAGE_DIR}` so `mktemp` inherits the isolated root.  
+4. New scratch files **MUST** be created via **`util_mktemp`** (or `mktemp` under a path `util_resolve_storage` returned).  
+5. **MUST NOT** use predictable `$$` names (forbidden: `/tmp/${APP_NAME}.$$`, `${EFFECTIVE_STORAGE_DIR}/${APP_NAME}.$$`).
+
+**Complete `util_mktemp` sample:**
+
+```sh
+util_mktemp() {
+    : "${APP_NAME:=folder-backup}"
+    : "${EFFECTIVE_STORAGE_DIR:=}"
+    _suffix="${1:-tmp}"
+    case "${_suffix}" in
+        *\$\$*) out_die "util_mktemp: refuse predictable \$\$ name template" ;;
+    esac
+    if [ -z "${EFFECTIVE_STORAGE_DIR}" ]; then
+        EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
+        export EFFECTIVE_STORAGE_DIR
+    fi
+    mktemp "${EFFECTIVE_STORAGE_DIR}/${APP_NAME}.${_suffix}.XXXXXX" \
+        || mktemp
+}
+```
+
+**Forbidden:**
+
+```sh
+# MUST NOT
+tmp="/tmp/${APP_NAME}.$$"
+tmp="${EFFECTIVE_STORAGE_DIR}/${APP_NAME}.$$"
+```
 
 ### 2.4 Wire and diagnostics
 
@@ -89,7 +118,8 @@ First match that is available and writable:
 3. Scatter hard-coded `/tmp/folder-backup` roots outside the resolver.  
 4. Leave the resolver dead with no call sites while claiming storage is product law.  
 5. Echo a tier path without creating it.  
-6. Stage durable deposits only in world-writable shared paths by design.
+6. Stage durable deposits only in world-writable shared paths by design.  
+7. Use predictable `$$` scratch names instead of `util_mktemp` / `mktemp` XXXXXX.
 
 **Violating this rule is a critical storage isolation regression.**
 
@@ -103,6 +133,7 @@ First match that is available and writable:
 | AC-2 | Priority matches §2.2 |
 | AC-3 | `app_main` sets `EFFECTIVE_STORAGE_DIR` / `TMPDIR` early |
 | AC-4 | Backup staging uses the resolver root and cleans up |
+| AC-5 | Scratch files use `util_mktemp` / `mktemp` XXXXXX; no `$$` names |
 
 ---
 
@@ -122,9 +153,10 @@ First match that is available and writable:
 | Date | Status | Note |
 |------|--------|------|
 | 2026-08-03 | Active | Storage resolve for folder-backup staging |
+| 2026-08-15 | Active | `util_mktemp` sample; forbid `$$` scratch names |
 
 ---
 
-**Last Updated**: 2026-08-03  
+**Last Updated**: 2026-08-15  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

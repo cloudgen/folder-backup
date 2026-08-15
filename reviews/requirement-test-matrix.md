@@ -1,15 +1,15 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-08-13  
-**Product VERSION:** 1.6.1  
-**Suite:** `tests/run.sh` (PASS=157 FAIL=0 SKIP=2)
+**Updated:** 2026-08-15 (1.7.1)  
+**Product VERSION:** 1.7.1  
+**Suite:** `tests/run.sh` (PASS=175 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
 | requirement-class-software-dev | class | TP-CLI-01, TP-CLI-11 | Syntax + stack residual; no online package |
 | requirement-bootstrap-chain | architecture | TP-CLI-04, TP-CLI-10 | Online surface absent |
 | requirement-project-folder | architecture | TP-LC-01, TP-FOLDER-BACKUP-06 | src ship unit; deposit path naming |
-| requirement-three-layer-privilege-model | architecture | TP-FOLDER-BACKUP-01, **01b**, 01c, 02, 05, **14**, **15**, **15b** | Trust tiers **S13**; per-user draft/host paths **AC-14**; install-script §2.3.3a; multi-draft remove choose **AC-15**; deposit fail-closed |
+| requirement-three-layer-privilege-model | architecture | TP-FOLDER-BACKUP-01, **01b**, 01c, 02, 05, **14**, **15**, **15b**, **19**, **20**, **21**, **21b** | Trust tiers **S13**; submit JSON into public inbound **AC-16–19**; env override wins |
 | requirement-folder-archive-backup | backup | TP-FOLDER-BACKUP-03..08, 10..13, **16** | Source/name/deposit/verify/next-N/**restore** + dest whitelist W-ETC-USER (ops SSOT) |
 | requirement-folder-archive-backup-retention-total | backup | TP-FOLDER-BACKUP-17, 17b | Max **30** per basename; oldest-first prune |
 | requirement-folder-archive-backup-retention-daily | backup | TP-FOLDER-BACKUP-18, 18b | Max **5** per basename per day; lowest-`N` same-day prune |
@@ -21,7 +21,7 @@
 | requirement-shell-idempotency | shell | TP-LC-03,07 · TP-FOLDER-BACKUP-06,08 | Re-install; next-N |
 | requirement-shell-interactive-vs-noninteractive | shell | TP-LC-05 · TP-FOLDER-BACKUP-15 · **15b** | Uninstall / remove-project-sudoers confirm; multi-draft non-interactive path required |
 | requirement-shell-cli-storage | shell | TP-CLI-12 · domain staging | Isolation + per-user stage roots |
-| requirement-domain-folder-backup | domain | TP-FOLDER-BACKUP-01,02,09,14,15 · TP-CLI-04,06 | Surface verbs/help/about; privilege peers three-layer |
+| requirement-domain-folder-backup | domain | TP-FOLDER-BACKUP-01,02,09,14,15,19,20,**21**,**21b** · TP-CLI-04,06 | Surface verbs/help/about; submit public inbound |
 
 **Checklist / mold (harness, not product suite):** **S11–S12** elev tables (when claimed); **S13** trust tier — agent path `SK-CREATE-SUDOERS-FILE` / `CL-CREATE-SUDOERS-SECURITY`.
 

@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-domain-folder-backup.md  
-**Status**: Active (Version 1.2.0)  
+**Status**: Active (Version 1.4.0)  
 **Area**: domain  
 **Key**: `requirement-domain-folder-backup`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -26,6 +26,7 @@ This file remains the sole Active **`requirement-domain-*`** (four pillars).
 | `print-sudoers` | optional output path; `--allow-test-local` when test_local | `fb_*` | Emit **project-sudoers-file** (draft; no `/etc` write) | **`requirement-three-layer-privilege-model`** |
 | `print-sudoers-install-script` | optional script path; same trust gate | `fb_*` | Admin handoff script under `/dev/shm` or temp (`install`/`uninstall`/`replace`/`status`) | **`requirement-three-layer-privilege-model`** §2.3.3a |
 | `remove-project-sudoers` | optional path; `--force` | `fb_*` | Remove **project-sudoers-file** draft only (not `/etc`) | **`requirement-three-layer-privilege-model`** §2.3.3b |
+| `submit-sudoer-request` | optional sudoers file; `--purpose`; `--update`; `--allow-test-local` | `fb_*` | Type 0 submitter: detect sudoer-cli + sudoer-adm + **public inbound**; sibling allocates a **JSON** request file (no `/etc` write; no inbound `mkdir`) | **`requirement-three-layer-privilege-model`** §2.3.3c |
 
 **Routing:** Dispatcher in `app_main` (CLI interface) **MUST** route these verbs; unknown operands fail closed.
 
@@ -40,6 +41,7 @@ This file remains the sole Active **`requirement-domain-*`** (four pillars).
 | Sudoers draft print | Expose `print-sudoers` | `requirement-three-layer-privilege-model` |
 | Admin sudoers install script | Expose `print-sudoers-install-script` | `requirement-three-layer-privilege-model` §2.3.3a · term `project-sudoers-file` |
 | Remove project-sudoers draft | Expose `remove-project-sudoers` | `requirement-three-layer-privilege-model` §2.3.3b |
+| Submit sudoers for approval | Expose `submit-sudoer-request` — JSON request into sibling public inbound | `requirement-three-layer-privilege-model` §2.3.3c |
 
 Domain **MUST NOT** restate full operational backup rules in a second competing SSOT. Pointers and verb catalog only.
 
@@ -54,6 +56,7 @@ Domain **MUST NOT** restate full operational backup rules in a second competing 
 | `print-sudoers` | Emit **project-sudoers-file** (draft) for admin install |
 | `print-sudoers-install-script` | Write admin script (`/dev/shm` or temp) for sudo install/uninstall/replace of project-sudoers-file |
 | `remove-project-sudoers [path]` | Delete project-sudoers-file draft only (list/choose if multiple; confirm / `--force`; not `/etc`) |
+| `submit-sudoer-request [file]` | Queue a JSON sudoers-grant request via sudoer-cli into `/var/sudoer-cli/sudoer-request` (no `/etc` write; no inbound mkdir) |
 | Env note | `BACKUP_*`, `PROJECTS_ROOT`, `RAM_ROOT`, `RESTORE_HOST_DEFAULT` |
 | Privilege note | Archive as user; deposit/restore-stage need allowlisted sudo after admin installs fragment |
 
@@ -65,6 +68,8 @@ folder-backup print-sudoers-install-script
 # admin (sudo): sudo sh /dev/shm/folder-backup-<user>-sudoers-admin.sh install
 # leave test elev: sudo sh …/…-sudoers-admin.sh uninstall
 folder-backup backup /path/to/project
+folder-backup submit-sudoer-request
+# sibling writes: /var/sudoer-cli/sudoer-request/sudoer-YYYYMMDD-folder-backup-<user>-add-N.json
 ```
 
 ### 2.4 Pillar D — Specialized project about items
@@ -77,6 +82,9 @@ folder-backup backup /path/to/project
 | Backup notation | effective `BACKUP_NOTATION` |
 | Deposit directory | `${BACKUP_ROOT}/${BACKUP_NOTATION}` |
 | Sudo deposit status | best-effort probe; honest if not fully probeable |
+| sudoer-cli | Detected path or `not_found` |
+| sudoer-adm | Detected login or `absent` |
+| sudoer inbound | Detected inbound dir or `not_found`; plus writable flag. Preferred: `/var/sudoer-cli/sudoer-request` |
 | Domain version note | Product `VERSION` remains Type 0 local version SSOT |
 
 **About is not** a remote version-check and **must not** advertise online install channels.
@@ -92,6 +100,9 @@ folder-backup backup /path/to/project
 | **Primary user install** | `~/.local/bin/folder-backup` |
 | **Backup operations SSOT** | `requirement-folder-archive-backup` |
 | **Privilege / sudoers SSOT** | `requirement-three-layer-privilege-model` |
+| **Submit verb** | `submit-sudoer-request` → `fb_submit_sudoer_request` |
+| **Public inbound (sibling)** | `/var/sudoer-cli/sudoer-request` (3773) |
+| **Worked queued basename** | `sudoer-20260815-folder-backup-leolio-add-1.json` |
 | **Bootstrap** | Specialized from **cli-template** Type 0 architecture; online install already absent on A |
 
 ### 2.6 Why This Requirement Exists (CIAO)
@@ -119,7 +130,9 @@ folder-backup backup /path/to/project
 2. Add online install or remote upload as silent domain behavior without new requirements.  
 3. Put domain law into bootstrap parent `cli-template`.  
 4. Leave help listing `backup` without an Active operational backup requirement.  
-5. Create a second Active `requirement-domain-*` without superseding this one.
+5. Create a second Active `requirement-domain-*` without superseding this one.  
+6. Document inbound as `sudoer-approving` (home dropbox) as the preferred dest.  
+7. Let Type 0 `mkdir` `/var/sudoer-cli/sudoer-request`.
 
 **Violating this rule is a critical domain regression.**
 
@@ -130,11 +143,12 @@ folder-backup backup /path/to/project
 | ID | Criterion |
 |----|-----------|
 | AC-1 | Four pillars present (subcommands, feature map, help, about) |
-| AC-2 | `backup`, `print-sudoers`, `print-sudoers-install-script`, and `remove-project-sudoers` listed with peer SSOT pointers |
-| AC-3 | Help lists backup + print-sudoers + install-script + remove-project-sudoers |
-| AC-4 | About lists backup root / notation / deposit dir |
+| AC-2 | `backup`, `print-sudoers`, `print-sudoers-install-script`, `remove-project-sudoers`, and `submit-sudoer-request` listed with peer SSOT pointers |
+| AC-3 | Help lists backup + print-sudoers + install-script + remove-project-sudoers + submit-sudoer-request |
+| AC-4 | About lists backup root / notation / deposit dir + sudoer-cli / sudoer-adm / inbound (preferred public path) |
 | AC-5 | Registered as sole Active domain SSOT |
 | AC-6 | No competing full backup ops body (defers to folder-archive-backup) |
+| AC-7 | Help/about describe submit as JSON into sibling public inbound, not a home `sudoer-approving` mkdir |
 
 ---
 
@@ -157,6 +171,9 @@ folder-backup backup /path/to/project
 | **TP-FOLDER-BACKUP-01,02** | `tests/test_domain_folder_backup.sh` | have | print-sudoers surface (privilege peer) |
 | **TP-FOLDER-BACKUP-09** | same | have | about domain fields |
 | **TP-CLI-04,06** | `tests/test_cli.sh` | have | help/about list domain verbs |
+| **TP-FOLDER-BACKUP-19,20** | `tests/test_domain_folder_backup.sh` | have | submit fail-closed / stub inbound (privilege peer) |
+| **TP-FOLDER-BACKUP-21** | same | have | public inbound preferred over leftover `sudoer-approving`; no Type 0 mkdir |
+| **TP-FOLDER-BACKUP-21b** | same | have | env inbound override wins over public |
 | **TP-FOLDER-BACKUP-03..08,10** | `tests/test_domain_folder_backup.sh` | have | **Primary map:** `requirement-folder-archive-backup` |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
@@ -170,9 +187,11 @@ folder-backup backup /path/to/project
 | 2026-08-03 | Active 1.1.0 | Verification rules (later moved to backup ops REQ) |
 | 2026-08-03 | Active 1.2.0 | **Thin domain surface**; ops SSOT → `requirement-folder-archive-backup` |
 | 2026-08-13 | Active 1.2.0 | Origin notes retarget: specialize from **cli-template** (not selfmanaged) |
+| 2026-08-14 | Active 1.3.0 | `submit-sudoer-request` surface |
+| 2026-08-15 | Active 1.4.0 | Submit = JSON into `/var/sudoer-cli/sudoer-request`; no inbound mkdir |
 
 ---
 
-**Last Updated**: 2026-08-13  
+**Last Updated**: 2026-08-15  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

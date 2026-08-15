@@ -47,6 +47,9 @@ run_test_cli() {
     assert_contains "TP-CLI-04 help print-sudoers" "$_out" "print-sudoers"
     assert_contains "TP-CLI-04 help install-script" "$_out" "print-sudoers-install-script"
     assert_contains "TP-CLI-04 help remove-project-sudoers" "$_out" "remove-project-sudoers"
+    assert_contains "TP-CLI-04 help submit-sudoer-request" "$_out" "submit-sudoer-request"
+    assert_contains "TP-CLI-04 help public inbound" "$_out" "/var/sudoer-cli/sudoer-request"
+    assert_contains "TP-CLI-04 help SUDOER_PUBLIC_ROOT" "$_out" "SUDOER_PUBLIC_ROOT"
     assert_contains "TP-CLI-04 help hard-disk default" "$_out" "hard-disk"
     assert_contains "TP-CLI-04 help --json" "$_out" "--json"
     assert_not_contains "TP-CLI-04 no self-update" "$_out" "self-update"
@@ -68,6 +71,9 @@ run_test_cli() {
     assert_contains "TP-CLI-06 effective_storage" "$_out" '"effective_storage"'
     assert_contains "TP-CLI-06 backup_notation" "$_out" '"backup_notation"'
     assert_contains "TP-CLI-06 deposit_dir" "$_out" '"deposit_dir"'
+    assert_contains "TP-CLI-06 sudoer_cli" "$_out" '"sudoer_cli"'
+    assert_contains "TP-CLI-06 sudoer_adm" "$_out" '"sudoer_adm"'
+    assert_contains "TP-CLI-06 sudoer_inbound" "$_out" '"sudoer_inbound"'
     assert_contains "TP-CLI-06 restore_host_default" "$_out" '"restore_host_default"'
     assert_not_contains "TP-CLI-06 no CHECKSUM" "$_out" "CHECKSUM"
     assert_not_contains "TP-CLI-06 no SCRIPT_URL" "$_out" "SCRIPT_URL"

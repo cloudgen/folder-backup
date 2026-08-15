@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.0.0)  
+**Status**: Active (Version 1.1.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -64,7 +64,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | **Primary executable** | `src/folder-backup` (POSIX `/bin/sh`, single-file ship unit) |
 | **Dispatcher** | `app_main` |
 | **Output SSOT** | `out_text` + wrappers (`out_info`, `out_success`, `out_warn`, `out_error`, `out_die`, `out_plain`, `out_json`, …) |
-| **Version SSOT** | `VERSION="1.6.1"` hard-assign in ship unit |
+| **Version SSOT** | `VERSION="1.7.1"` hard-assign in ship unit |
 | **Install paths** | Global: `GLOBAL_BIN` default `/usr/local/bin`; User: `USER_BIN` default `${HOME}/.local/bin` |
 | **Primary install story** | User bin: `~/.local/bin/folder-backup` |
 | **Online channel env** | **Not product UX** (absent; inherited from cli-template) |
@@ -84,6 +84,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
 | `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
 | `print-sudoers` | Type 0 | `fb_print_sudoers` (domain) | Emit sudoers fragment for admin to install under `/etc/sudoers.d/` — **does not** write `/etc` itself |
+| `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | Detect sudoer-cli + sudoer-adm + public inbound `/var/sudoer-cli/sudoer-request`; sibling allocates a JSON request — **does not** write `/etc` or `mkdir` inbound |
 
 #### Global flags (normative wiring)
 
@@ -106,6 +107,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 - Online: `version-check`, `self-update`, `self-uninstall`, channel `install` via URL  
 - Type 1 host bootstrap beyond **narrow deposit** and **sudoers fragment generation**  
+- Creating the sibling inbound (`sudo sudoer-cli setup` is not this CLI)  
 - Type 2 app runtime under a dedicated system user  
 
 ### 2.6 Why This Requirement Exists (Direct CIAO Alignment)
@@ -140,7 +142,8 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 3. List commands in help that are not routed (or route commands not listed).  
 4. Bypass `out_*` for product user messages.  
 5. Run the entire CLI as root by default instead of narrow deposit elevation.  
-6. Put full domain archive semantics only here and omit the domain SSOT.
+6. Put full domain archive semantics only here and omit the domain SSOT.  
+7. Add a second submit verb (`submit-sudoer`) without routing + help, or invent inbound `mkdir` as this CLI’s job.
 
 **Violating this rule is a critical CLI interface regression.**
 
@@ -155,6 +158,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | AC-3 | Empty argv is help (Type N) |
 | AC-4 | No online self-management verbs on the surface |
 | AC-5 | Domain verbs point to domain requirement for deep semantics |
+| AC-6 | `submit-sudoer-request` is Type 0, routed, listed in help; does not write `/etc` or create inbound |
 
 ---
 
@@ -184,10 +188,11 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 | Date | Status | Note |
 |------|--------|------|
-| 2026-08-03 | Active | CLI surface for local-only folder-backup + domain backup |
+| 2026-08-03 | Active 1.0.0 | CLI surface for local-only folder-backup + domain backup |
+| 2026-08-15 | Active 1.1.0 | `submit-sudoer-request` listed as Type 0 JSON submit into sibling public inbound |
 
 ---
 
-**Last Updated**: 2026-08-03  
+**Last Updated**: 2026-08-15  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

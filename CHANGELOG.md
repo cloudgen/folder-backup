@@ -5,6 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - 2026-08-15
+
+### Changed
+
+- **`submit-sudoer-request`** targets sudoer-cli’s **public inbound** `/var/sudoer-cli/sudoer-request` (mode 3773). Sibling CLI allocates the JSON request. This CLI does **not** write `/etc` and does **not** `mkdir` inbound.
+- Detect order: `SUDOER_QUEUE_INBOUND` → `${SUDOER_PUBLIC_ROOT}/sudoer-request` → F4 `…/sudoer-request` → legacy `sudoer-approving` last.
+- Help/about name the public inbound; `prompt_*` consume `TTY`; submit scratch uses `util_mktemp`.
+- Law: three-layer **1.5.0** (AC-16–19) · domain **1.4.0** · CLI interface **1.1.0**
+- Suite **TP-FOLDER-BACKUP-21 / 21b** (public preferred; env override wins; no Type 0 mkdir)
+
+## [1.7.0] - 2026-08-14
+
+### Added
+
+- **Detect sudoer-cli and sudoer-adm** on `about` (human + `--json`): path / absent / inbound writable.
+- **`submit-sudoer-request`** (Type 0): queue this product's sudoers fragment into the inbound approval folder via sudoer-cli. Does **not** write `/etc`. Requires sudoer-cli + sudoer-adm + writable `sudoer-approving`. Flags: `--purpose`, `--update`, optional file operand, same `--allow-test-local` gate as `print-sudoers`.
+- Law: `requirement-domain-folder-backup` 1.3.0 · `requirement-three-layer-privilege-model` 1.4.0 §2.3.3c
+- Suite **TP-FOLDER-BACKUP-19 / 20** · help/about **TP-CLI-04 / 06** fields
+
+### Changed
+
+- Version SSOT **1.7.0**
+- `print-sudoers` fragment now starts with `# Purpose:` (shared helper for submit)
+
 ## [1.6.1] - 2026-08-13
 
 ### Changed

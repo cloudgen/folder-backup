@@ -63,6 +63,9 @@ After successful deposit + verify, product **MUST** enforce those peers (daily p
 ${SOURCE_FOLDER_NAME}-YYYYMMDD-N.tar.gz
 ```
 
+**Worked sample basename:** `genesis-template-20260803-3.tar.gz`  
+(`SOURCE_FOLDER_NAME=genesis-template`, `YYYYMMDD=20260803`, `N=3`)
+
 | Token | Meaning |
 |-------|---------|
 | `SOURCE_FOLDER_NAME` | Path-safe basename of the source directory |
@@ -299,6 +302,7 @@ Errors **MUST** use structured error emission with stable codes when feasible (e
 | **RAM_ROOT** | `/dev/shm` |
 | **Stage roots** | `/dev/shm/folder-backup-<user>`, `/tmp/folder-backup-<user>`, cache fallback |
 | **Archive pattern** | `${SOURCE_FOLDER_NAME}-YYYYMMDD-N.tar.gz` |
+| **Worked sample basename** | `genesis-template-20260803-3.tar.gz` |
 | **Verify modes implemented** | `dest_tar_list+size`, `stage_counts+dest_size` |
 | **Elevated Cmnds** | deposit cp/install; `tar -tzf` list; restore `cp` deposit→stage |
 | **Restore dest gate** | **Whitelist** §2.6b.2a (`fb_refuse_restore_dest` must align: W-ETC-USER `/etc/{{username}}`; never `/etc/passwd`) |
@@ -416,6 +420,6 @@ Errors **MUST** use structured error emission with stable codes when feasible (e
 
 ---
 
-**Last Updated**: 2026-08-12  
+**Last Updated**: 2026-08-15  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; INC-20260812-001; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

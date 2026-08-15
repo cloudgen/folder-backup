@@ -4,9 +4,9 @@
 **Class:** software-development · domain SSOT present · **local-only** install channel (online package intentionally absent).  
 **Always load first:** `reviews/lessons.md`
 
-**Last plan update:** 2026-08-09  
-**Ship unit VERSION:** 1.4.1  
-**Suite baseline:** PASS=131 (see `reviews/test-plan.md`)
+**Last plan update:** 2026-08-15  
+**Ship unit VERSION:** 1.7.1  
+**Suite baseline:** PASS=172+ (see `reviews/test-plan.md`)
 
 ---
 
@@ -15,11 +15,11 @@
 | # | Check | Notes |
 |---|--------|--------|
 | P1 | Read `docs/requirements/index.md` | Class + architecture + shell + domain + three-layer |
-| P2 | Confirm ship unit `src/folder-backup` | `APP_NAME` / `VERSION` hard-assign (**1.4.1+**) |
+| P2 | Confirm ship unit `src/folder-backup` | `APP_NAME` / `VERSION` hard-assign (**1.7.1+**) |
 | P3 | Load `reviews/lessons.md` and re-check every open L-* | Mandatory (esp. **L-SUDOERS-01/02**) |
 | P4 | Run `./tests/run.sh` | Record PASS/FAIL/SKIP in report |
 | P5 | Confirm install **channel** still local-only | No SCRIPT_URL product UX |
-| P6 | Privilege law version | `requirement-three-layer-privilege-model` **≥1.2.1** (S13 + §2.3.3a/b) |
+| P6 | Privilege law version | `requirement-three-layer-privilege-model` **≥1.5.0** (S13 + submit public inbound AC-16–19) |
 | P7 | Host elev posture (if reviewing runtime) | Global vs local binary; trust tier; `/etc/sudoers.d/` status |
 
 ---
@@ -31,7 +31,7 @@
 | Class | `requirement-class-software-dev.md` | posix-sh, local-only residual |
 | Bootstrap chain | `requirement-bootstrap-chain.md` | A=cli-template → B domain extend |
 | Project folder | `requirement-project-folder.md` | `src/`, bins, `/var/backup` |
-| **Privilege / sudoers** | `requirement-three-layer-privilege-model.md` | Type 0/1; **trust tiers S13**; print-sudoers; **install-script**; **remove-project-sudoers**; no ALL ALL |
+| **Privilege / sudoers** | `requirement-three-layer-privilege-model.md` | Type 0/1; **trust tiers S13**; print-sudoers; **install-script**; **remove-project-sudoers**; **submit-sudoer-request** public inbound; no ALL ALL |
 | CLI interface | `requirement-shell-cli-interface.md` | Commands, flags, dispatch |
 | Empty argv Type N | `requirement-shell-cli-zero-arguments.md` | Empty = help |
 | Local self-management | `requirement-shell-local-self-management.md` | install/uninstall; global preferred for elev |
@@ -70,6 +70,7 @@
 | `fb_remove_project_sudoers` | Deletes `/etc` as Type 0; silent without force; multi-draft wrong pick | TP-FOLDER-BACKUP-15 · **15b** |
 | `fb_next_archive_name` | Overwrite archives | L-OVERWRITE-01 · TP-08 |
 | `util_resolve_storage` | Isolation break / stage mismatch vs sudoers | L-STOR-01 · TP-CLI-12 · TP-02 |
+| `fb_detect_sudoer_inbound` | Home-only `sudoer-approving` or Type 0 inbound `mkdir` | L-INBOUND-01 · TP-FOLDER-BACKUP-21/21b |
 | Config `HOME` under `set -u` | nounset crash | L-SETU-01 · TP-CLI-11 |
 
 ---

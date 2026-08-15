@@ -424,6 +424,87 @@ run_test_domain_folder_backup() {
     # print-sudoers includes retention rm allowlist
     _out=$(HOME="${CI_HOME}" sh "${SCRIPT}" print-sudoers --allow-test-local 2>&1)
     assert_contains "TP-FOLDER-BACKUP-01d retention rm allowlist" "$_out" "rm -f"
+
+    # TP-FOLDER-BACKUP-19 submit fail-closed when sudoer-cli missing
+    _err=$(HOME="${CI_HOME}" SUDOER_CLI="${CI_HOME}/no-such-sudoer-cli" \
+        sh "${SCRIPT}" submit-sudoer-request --allow-test-local 2>&1 >/dev/null)
+    _ec19=$?
+    assert_eq "TP-FOLDER-BACKUP-19 submit missing cli exit 1" 1 "${_ec19}"
+    assert_contains "TP-FOLDER-BACKUP-19 missing sudoer-cli" "$_err" "sudoer-cli not found"
+
+    # TP-FOLDER-BACKUP-20 submit via stub sudoer-cli into writable inbound
+    _stub_dir="${CI_HOME}/stub-sudoer"
+    mkdir -p "${_stub_dir}/bin" "${_stub_dir}/sudoer-approving"
+    cat > "${_stub_dir}/bin/sudoer-cli" <<'STUB'
+#!/bin/sh
+_file=""
+_svc=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --json) ;;
+        --file) _file="$2"; shift ;;
+        --purpose) shift ;;
+        --service) _svc="$2"; shift ;;
+        add-sudoer-request|update-sudoer-request) ;;
+        *) ;;
+    esac
+    shift
+done
+[ -n "${_file}" ] && [ -f "${_file}" ] || exit 1
+_id="sudoer-20260814-${_svc:-folder-backup}-stub-add-1.json"
+# inbound parent is LPU_HOME/sudoer-approving when compose exports LPU_HOME
+_in="${LPU_HOME:-}/sudoer-approving"
+[ -d "${_in}" ] || _in="${SUDOER_QUEUE_INBOUND:-}"
+[ -d "${_in}" ] || exit 1
+cp "${_file}" "${_in}/${_id}" || exit 1
+printf 'request_id=%s\n' "${_id}"
+exit 0
+STUB
+    chmod 0755 "${_stub_dir}/bin/sudoer-cli"
+    _out=$(HOME="${CI_HOME}" \
+        SUDOER_CLI="${_stub_dir}/bin/sudoer-cli" \
+        SUDOER_ADM_USER="$(id -un)" \
+        SUDOER_QUEUE_INBOUND="${_stub_dir}/sudoer-approving" \
+        sh "${SCRIPT}" submit-sudoer-request --allow-test-local 2>&1)
+    _ec20=$?
+    assert_eq "TP-FOLDER-BACKUP-20 submit stub exit 0" 0 "${_ec20}"
+    assert_contains "TP-FOLDER-BACKUP-20 request_id" "$_out" "request_id="
+    _njson=$(find "${_stub_dir}/sudoer-approving" -type f | wc -l | tr -d ' ')
+    assert_eq "TP-FOLDER-BACKUP-20 inbound has file" 1 "${_njson}"
+
+    # TP-FOLDER-BACKUP-21 public inbound preferred over leftover home sudoer-approving
+    _pub21="${CI_HOME}/var-sudoer-cli"
+    mkdir -p "${_pub21}/sudoer-request" "${CI_HOME}/sudoer-approving"
+    # leftover real dir must not win
+    _j21=$(HOME="${CI_HOME}" \
+        SUDOER_PUBLIC_ROOT="${_pub21}" \
+        SUDOER_ADM_USER="$(id -un)" \
+        SUDOER_QUEUE_INBOUND="" \
+        sh "${SCRIPT}" --json about 2>/dev/null)
+    assert_contains "TP-FOLDER-BACKUP-21 about prefers public inbound" "${_j21}" "${_pub21}/sudoer-request"
+    assert_not_contains "TP-FOLDER-BACKUP-21 not leftover approving" "${_j21}" "${CI_HOME}/sudoer-approving"
+    # Type 0 must not mkdir a missing public inbound
+    _missing21="${CI_HOME}/var-sudoer-cli-absent"
+    _j21b=$(HOME="${CI_HOME}" \
+        SUDOER_PUBLIC_ROOT="${_missing21}" \
+        SUDOER_ADM_USER="no-such-sudoer-adm-fb21" \
+        SUDOER_QUEUE_INBOUND="" \
+        sh "${SCRIPT}" --json about 2>/dev/null)
+    assert_contains "TP-FOLDER-BACKUP-21 missing public is not_found" "${_j21b}" '"sudoer_inbound":"not_found"'
+    assert_file_missing "TP-FOLDER-BACKUP-21 no Type 0 mkdir public inbound" "${_missing21}/sudoer-request"
+    assert_file_missing "TP-FOLDER-BACKUP-21 no Type 0 mkdir public parent" "${_missing21}"
+
+    # TP-FOLDER-BACKUP-21b env override wins over public inbound
+    _env21="${CI_HOME}/env-inbound"
+    mkdir -p "${_env21}"
+    _j21c=$(HOME="${CI_HOME}" \
+        SUDOER_PUBLIC_ROOT="${_pub21}" \
+        SUDOER_QUEUE_INBOUND="${_env21}" \
+        SUDOER_ADM_USER="$(id -un)" \
+        sh "${SCRIPT}" --json about 2>/dev/null)
+    assert_contains "TP-FOLDER-BACKUP-21b env inbound wins" "${_j21c}" "${_env21}"
+    assert_not_contains "TP-FOLDER-BACKUP-21b env beats public" "${_j21c}" "${_pub21}/sudoer-request"
+
     # cleanup remaining drafts
     HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force "${CI_HOME}/.config/folder-backup/sudoers.fragment" >/dev/null 2>&1 || true
     HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force "${CI_HOME}/.config/folder-backup/sudoers.fragment-otheruser" >/dev/null 2>&1 || true

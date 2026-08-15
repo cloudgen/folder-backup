@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.4.1  
-**Last plan update:** 2026-08-09  
-**Last suite run:** PASS=131 FAIL=0 SKIP=0 (2026-08-09)
+**Product VERSION:** 1.7.1  
+**Last plan update:** 2026-08-15  
+**Last suite run:** PASS=175 FAIL=0 SKIP=2 (2026-08-15)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -22,7 +22,8 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Storage isolation | have | TP-CLI-12 |
 | No online verbs / no SCRIPT_URL UX | have | TP-CLI-04, TP-CLI-10 |
 | Local install / idempotent / uninstall / mode 0755 | have | TP-LC-01..10 |
-| Help lists sudoers verbs (print / install-script / remove draft) | have | TP-CLI-04 |
+| Help lists sudoers verbs (print / install-script / remove draft / submit + public inbound) | have | TP-CLI-04 |
+| Submit detect: public inbound first; env override; no Type 0 mkdir | have | TP-FOLDER-BACKUP-19/20/21/21b |
 | Domain surface: print-sudoers allowlist + test-mode gate | have | TP-FOLDER-BACKUP-01, 01b, 01c, 02 |
 | Admin install-script handoff (project-sudoers-file) | have | TP-FOLDER-BACKUP-14 |
 | Remove project-sudoers draft only | have | TP-FOLDER-BACKUP-15 |
@@ -44,7 +45,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-01 | `sh -n` ship unit | `tests/test_cli.sh` | requirement-shell-cli-interface | **have** |
 | TP-CLI-02 | version human | test_cli | requirement-shell-cli-interface | **have** |
 | TP-CLI-03 | version JSON | test_cli | requirement-shell-output-requirements | **have** |
-| TP-CLI-04 | help local verbs; print-sudoers + install-script + remove-project-sudoers; no online | test_cli | requirement-shell-cli-interface · domain | **have** |
+| TP-CLI-04 | help local verbs; print-sudoers + install-script + remove-project-sudoers + submit-sudoer-request; no online | test_cli | requirement-shell-cli-interface · domain | **have** |
 | TP-CLI-05 | help JSON short | test_cli | requirement-shell-output-requirements | **have** |
 | TP-CLI-06 | about JSON storage + domain fields | test_cli | requirement-shell-cli-storage · domain | **have** |
 | TP-CLI-07 | empty argv Type N help | test_cli | requirement-shell-cli-zero-arguments | **have** |
@@ -89,6 +90,10 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-FOLDER-BACKUP-12 | restore to explicit dest + verify | test_domain | **folder-archive-backup** | **have** |
 | TP-FOLDER-BACKUP-13 | restore default host hard-disk + non-empty refuse | test_domain | **folder-archive-backup** | **have** |
 | TP-FOLDER-BACKUP-14 | print-sudoers-install-script: draft + admin script; sh -n; root required for install | test_domain | three-layer §2.3.3a · project-sudoers-file | **have** |
+| TP-FOLDER-BACKUP-19 | submit-sudoer-request fail-closed when sudoer-cli missing | test_domain | three-layer §2.3.3c | **have** |
+| TP-FOLDER-BACKUP-20 | submit-sudoer-request via stub cli writes inbound file | test_domain | three-layer §2.3.3c | **have** |
+| TP-FOLDER-BACKUP-21 | submit detect prefers public inbound over leftover `sudoer-approving`; no Type 0 mkdir | test_domain | three-layer §2.3.3c AC-16/17 | **have** |
+| TP-FOLDER-BACKUP-21b | `SUDOER_QUEUE_INBOUND` wins over public inbound | test_domain | three-layer §2.3.3c detect priority 1 | **have** |
 | TP-FOLDER-BACKUP-15 | remove-project-sudoers: force remove draft; refuse `/etc`; already absent; host elev probe | test_domain | three-layer §2.3.3b · project-sudoers-file | **have** |
 | TP-FOLDER-BACKUP-15b | multi-draft: list + non-interactive requires path; explicit path removes one only | test_domain | three-layer AC-15 · L-SUDOERS-04 | **have** |
 | TP-FOLDER-BACKUP-16 | restore dest whitelist: refuse `/etc/passwd` + exact `/etc` + `/etc/<other>`; W-ETC-USER `/etc/{{username}}` gate allow | test_domain | **folder-archive-backup** §2.6b.2a · INC-20260812-001 | **have** |

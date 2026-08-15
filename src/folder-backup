@@ -30,7 +30,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.6.1"
+# VERSION: hard-assign VERSION="1.7.1"
 #
 # =============================================================================
 
@@ -45,10 +45,10 @@ APP_NAME="folder-backup"
 : "${APP_NAME:=folder-backup}"
 : "${APP_DESC:=Local folder archive backup/restore with narrow sudo deposit}"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
-: "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers.}"
+: "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.6.1"
-: "${VERSION:=1.6.1}"
+VERSION="1.7.1"
+: "${VERSION:=1.7.1}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -105,8 +105,20 @@ fi
 : "${RAM_ROOT:=/dev/shm}"
 : "${PROJECTS_ROOT:=}"
 : "${RESTORE_HOST:=}"
+# Optional sudoer-cli compose (Type 0 submit into approval inbound)
+: "${SUDOER_CLI:=}"
+: "${SUDOER_ADM_USER:=sudoer-adm}"
+: "${SUDOER_QUEUE_INBOUND:=}"
+: "${SUDOER_APPROVAL_APP:=sudoer-cli}"
+: "${SUDOER_INBOUND_BASENAME:=sudoer-request}"
+: "${SUDOER_PUBLIC_ROOT:=/var/${SUDOER_APPROVAL_APP}}"
+: "${SUBMIT_PURPOSE:=}"
+: "${SUBMIT_ACTION:=add}"
 
+# Interactive capability SSOT — measure [ -t outside functions only.
+TTY=0
 [ -t 0 ] && [ -t 1 ] && TTY=1
+export TTY
 USERNAME="$(id -un 2>/dev/null || echo "unknown")"
 if [ "$(id -u 2>/dev/null || echo 1)" -eq 0 ]; then
     IS_ROOT=1
@@ -909,6 +921,31 @@ util_resolve_storage() {
 }
 
 # =============================================================================
+# util_mktemp() - Isolated scratch file (consume EFFECTIVE_STORAGE_DIR)
+# =============================================================================
+# ALIGNMENT: requirement-shell-cli-storage.md
+# Forbidden: predictable $$ names (e.g. /tmp/${APP_NAME}.$$).
+# =============================================================================
+util_mktemp() {
+    : "${APP_NAME:=folder-backup}"
+    : "${EFFECTIVE_STORAGE_DIR:=}"
+    _suffix="${1:-tmp}"
+    _dollar='$'
+    case "${_suffix}" in
+        *"${_dollar}${_dollar}"*)
+            out_die "util_mktemp: refuse predictable \$\$ name template"
+            ;;
+    esac
+    if [ -z "${EFFECTIVE_STORAGE_DIR}" ]; then
+        EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
+        export EFFECTIVE_STORAGE_DIR
+    fi
+    mktemp "${EFFECTIVE_STORAGE_DIR}/${APP_NAME}.${_suffix}.XXXXXX" 2>/dev/null \
+        || mktemp "${TMPDIR:-/tmp}/${APP_NAME}.${_suffix}.XXXXXX" 2>/dev/null \
+        || mktemp
+}
+
+# =============================================================================
 # prompt_ask() - Defensive general-purpose interactive prompt with default
 # =============================================================================
 #
@@ -955,8 +992,8 @@ prompt_ask() {
         return 0
     fi
 
-    # Must have a real TTY (unless caller explicitly set INTERACTIVE=1)
-    if ! [ -t 0 ] || ! [ -t 1 ]; then
+    # Consume TTY SSOT (measured outside functions). Do not re-test [ -t.
+    if [ "${TTY:-0}" -ne 1 ]; then
         if [ "${INTERACTIVE:-0}" -ne 1 ]; then
             printf '%s' "${default}"
             return 0
@@ -1026,8 +1063,8 @@ prompt_yes_no() {
         return 1   # treat as "no" in non-interactive modes
     fi
 
-    # Must be interactive TTY
-    if ! [ -t 0 ] || ! [ -t 1 ]; then
+    # Consume TTY SSOT (measured outside functions). Do not re-test [ -t.
+    if [ "${TTY:-0}" -ne 1 ]; then
         return 1
     fi
 
@@ -1952,7 +1989,7 @@ fb_backup() {
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${HOME:=/tmp}"
     : "${USERNAME:=unknown}"
-    : "${VERSION:=1.6.1}"
+    : "${VERSION:=1.7.1}"
     : "${MAX_DAILY_BACKUPS:=5}"
     : "${MAX_TOTAL_BACKUPS:=30}"
 
@@ -2561,50 +2598,43 @@ fb_sudoers_trust_tier() {
 }
 
 # =============================================================================
-# fb_print_sudoers() - Emit narrow sudoers fragment (does NOT write /etc)
+# fb_sudoers_fragment_text() - Class B: emit draft sudoers text to stdout
 # =============================================================================
+#
+# GENERAL PURPOSE:
+# Build the narrow deposit/verify/restore-stage fragment for the invoking user.
+# Callers (print-sudoers, submit-sudoer-request) own trust-tier gates and I/O.
 #
 # ALIGNMENT:
-# - requirement-domain-folder-backup.md
 # - requirement-three-layer-privilege-model.md
-# - requirement-folder-archive-backup.md (deposit + restore stage fetch)
+# - requirement-domain-folder-backup.md
 #
-# Last reviewed: 2026-08-09
+# Last reviewed: 2026-08-14
 # =============================================================================
-fb_print_sudoers() {
+fb_sudoers_fragment_text() {
     : "${APP_NAME:=folder-backup}"
-    : "${JSON:=0}"
-    : "${QUIET:=0}"
     : "${BACKUP_ROOT:=/var/backup}"
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${HOME:=/tmp}"
     : "${GLOBAL_BIN:=/usr/local/bin}"
     : "${USER_BIN:=${HOME}/.local/bin}"
-    : "${ALLOW_TEST_LOCAL_SUDOERS:=0}"
 
     _user=$(id -un 2>/dev/null || echo "unknown")
     _dest="${BACKUP_ROOT}/${BACKUP_NOTATION}"
-    _out_path="${1:-}"
     _tier=$(fb_sudoers_trust_tier)
-    _test_mode="false"
     _global_path="${GLOBAL_BIN}/${APP_NAME}"
     _local_path="${USER_BIN}/${APP_NAME}"
-    # Per-user stage roots only (must match util_resolve_storage / EFFECTIVE_STORAGE_DIR)
     _stage_shm="/dev/shm/${APP_NAME}-${_user}"
     _stage_tmp="/tmp/${APP_NAME}-${_user}"
     _stage_cache="${HOME}/.cache/${APP_NAME}-${_user}"
-
-    if [ "${_tier}" != "production" ]; then
-        _test_mode="true"
-        if [ "${ALLOW_TEST_LOCAL_SUDOERS}" -ne 1 ]; then
-            out_die "print-sudoers trust tier is ${_tier} (not production). Local/user-rewritable install is TEST MODE ONLY. Prefer: sudo ${APP_NAME} install  (global ${_global_path}). To emit a test fragment anyway: ${APP_NAME} print-sudoers --allow-test-local [path]  or ALLOW_TEST_LOCAL_SUDOERS=1"
-        fi
-    fi
-
     _installed=$(fb_default_installed_sudoers_path)
-    _draft_default=$(fb_default_project_sudoers_path)
+    _purpose="Narrow ${APP_NAME} deposit/verify/restore-stage grant for ${_user}"
 
-    if [ "${_test_mode}" = "true" ]; then
+    if [ "${_tier}" = "production" ]; then
+        _trust_banner="# Trust tier: production (global managed binary: ${_global_path})
+# Residual risk: stage trees below are still user-writable content sources.
+# Multi-user: install as ${_installed} (per-user suffix; do not overwrite other users)."
+    else
         _trust_banner="# =============================================================================
 # WARNING: TEST MODE ONLY — NOT PRODUCTION-SECURE
 # Local/unmanaged install: user can rewrite ${_local_path} and stage trees.
@@ -2613,17 +2643,10 @@ fb_print_sudoers() {
 # Production path: sudo ${APP_NAME} install  → re-emit print-sudoers → re-review → reinstall
 # Multi-user: installed name is per-user (${APP_NAME}-<user>) so users do not overwrite each other.
 # ============================================================================="
-    else
-        _trust_banner="# Trust tier: production (global managed binary: ${_global_path})
-# Residual risk: stage trees below are still user-writable content sources.
-# Multi-user: install as ${_installed} (per-user suffix; do not overwrite other users)."
     fi
 
-    # Narrow allowlist: deposit + verify list + restore stage fetch (cp reverse).
-    # Admin must review; install with mode 0440 under /etc/sudoers.d/
-    # Stage paths are per-user only (no ${APP_NAME}-* broad wildcards).
-    # Installed filename includes user suffix so multi-user hosts keep separate fragments.
-    _fragment=$(cat <<EOF
+    cat <<EOF
+# Purpose: ${_purpose}
 # ${APP_NAME} — narrow deposit / verify / restore-stage allowlist (review before install)
 # Target user: ${_user}
 # Install: sudo install -m 0440 <this-file> ${_installed}
@@ -2650,7 +2673,47 @@ ${_user} ALL=(root) NOPASSWD: /usr/bin/cp ${_dest}/* ${_stage_cache}/, /bin/cp $
 # Retention prune: remove individual archives under deposit only (not recursive)
 ${_user} ALL=(root) NOPASSWD: /bin/rm -f ${_dest}/*.tar.gz, /usr/bin/rm -f ${_dest}/*.tar.gz
 EOF
-)
+}
+
+# =============================================================================
+# fb_print_sudoers() - Emit narrow sudoers fragment (does NOT write /etc)
+# =============================================================================
+#
+# ALIGNMENT:
+# - requirement-domain-folder-backup.md
+# - requirement-three-layer-privilege-model.md
+# - requirement-folder-archive-backup.md (deposit + restore stage fetch)
+#
+# Last reviewed: 2026-08-14
+# =============================================================================
+fb_print_sudoers() {
+    : "${APP_NAME:=folder-backup}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    : "${BACKUP_ROOT:=/var/backup}"
+    : "${BACKUP_NOTATION:=folder-backup}"
+    : "${HOME:=/tmp}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${USER_BIN:=${HOME}/.local/bin}"
+    : "${ALLOW_TEST_LOCAL_SUDOERS:=0}"
+
+    _user=$(id -un 2>/dev/null || echo "unknown")
+    _dest="${BACKUP_ROOT}/${BACKUP_NOTATION}"
+    _out_path="${1:-}"
+    _tier=$(fb_sudoers_trust_tier)
+    _test_mode="false"
+    _global_path="${GLOBAL_BIN}/${APP_NAME}"
+
+    if [ "${_tier}" != "production" ]; then
+        _test_mode="true"
+        if [ "${ALLOW_TEST_LOCAL_SUDOERS}" -ne 1 ]; then
+            out_die "print-sudoers trust tier is ${_tier} (not production). Local/user-rewritable install is TEST MODE ONLY. Prefer: sudo ${APP_NAME} install  (global ${_global_path}). To emit a test fragment anyway: ${APP_NAME} print-sudoers --allow-test-local [path]  or ALLOW_TEST_LOCAL_SUDOERS=1"
+        fi
+    fi
+
+    _installed=$(fb_default_installed_sudoers_path)
+    _draft_default=$(fb_default_project_sudoers_path)
+    _fragment=$(fb_sudoers_fragment_text)
 
     if [ "${_test_mode}" = "true" ] && [ "${JSON}" -eq 0 ]; then
         out_warn "TEST MODE ONLY: trust tier=${_tier}. Uninstall ${_installed} soon. Prefer global install for production."
@@ -2699,6 +2762,309 @@ EOF
     out_empty_line
     out_info "Tip: ${APP_NAME} print-sudoers ${_draft_default}"
     out_info "Admin script: ${APP_NAME} print-sudoers-install-script"
+}
+
+# =============================================================================
+# fb_detect_sudoer_cli() - Class B: path of sudoer-cli, or fail
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Locate the sudoer-cli binary (env override, global bin, user bin, PATH).
+# Does not claim the approval queues exist.
+#
+# ALIGNMENT:
+# - requirement-domain-folder-backup.md
+# - requirement-three-layer-privilege-model.md
+#
+# Last reviewed: 2026-08-14
+# =============================================================================
+fb_detect_sudoer_cli() {
+    : "${HOME:=/tmp}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${USER_BIN:=${HOME}/.local/bin}"
+    : "${SUDOER_CLI:=}"
+
+    if [ -n "${SUDOER_CLI}" ]; then
+        if [ -x "${SUDOER_CLI}" ]; then
+            printf '%s' "${SUDOER_CLI}"
+            return 0
+        fi
+        return 1
+    fi
+    if [ -x "${GLOBAL_BIN}/sudoer-cli" ]; then
+        printf '%s' "${GLOBAL_BIN}/sudoer-cli"
+        return 0
+    fi
+    if [ -x "${USER_BIN}/sudoer-cli" ]; then
+        printf '%s' "${USER_BIN}/sudoer-cli"
+        return 0
+    fi
+    _found=$(command -v sudoer-cli 2>/dev/null || true)
+    if [ -n "${_found}" ] && [ -x "${_found}" ]; then
+        printf '%s' "${_found}"
+        return 0
+    fi
+    return 1
+}
+
+# =============================================================================
+# fb_detect_sudoer_adm() - Class B: sudoer-adm login if present
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Probe whether the least-privilege approver account exists (id).
+# Account name defaults to sudoer-adm; override with SUDOER_ADM_USER.
+#
+# ALIGNMENT:
+# - requirement-domain-folder-backup.md
+# - requirement-three-layer-privilege-model.md
+#
+# Last reviewed: 2026-08-14
+# =============================================================================
+fb_detect_sudoer_adm() {
+    : "${SUDOER_ADM_USER:=sudoer-adm}"
+    if id "${SUDOER_ADM_USER}" >/dev/null 2>&1; then
+        printf '%s' "${SUDOER_ADM_USER}"
+        return 0
+    fi
+    return 1
+}
+
+# =============================================================================
+# fb_detect_sudoer_inbound() - Class B: inbound approval dir if present
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Find the sibling public inbound (preferred /var/sudoer-cli/sudoer-request).
+# Type 0 MUST NOT mkdir. Order: env override → public → F4 view → legacy.
+#
+# ALIGNMENT:
+# - requirement-three-layer-privilege-model.md §2.3.3c (AC-16)
+# - requirement-domain-folder-backup.md
+#
+# Last reviewed: 2026-08-15
+# =============================================================================
+fb_detect_sudoer_inbound() {
+    : "${SUDOER_ADM_USER:=sudoer-adm}"
+    : "${SUDOER_QUEUE_INBOUND:=}"
+    : "${SUDOER_APPROVAL_APP:=sudoer-cli}"
+    : "${SUDOER_INBOUND_BASENAME:=sudoer-request}"
+    : "${SUDOER_PUBLIC_ROOT:=/var/${SUDOER_APPROVAL_APP}}"
+
+    if [ -n "${SUDOER_QUEUE_INBOUND}" ] && [ -d "${SUDOER_QUEUE_INBOUND}" ]; then
+        printf '%s' "${SUDOER_QUEUE_INBOUND}"
+        return 0
+    fi
+
+    _home=""
+    if command -v getent >/dev/null 2>&1; then
+        _home=$(getent passwd "${SUDOER_ADM_USER}" 2>/dev/null | cut -d: -f6)
+    fi
+    if [ -z "${_home}" ] && [ -r /etc/passwd ]; then
+        _home=$(awk -F: -v u="${SUDOER_ADM_USER}" '$1==u {print $6; exit}' /etc/passwd 2>/dev/null)
+    fi
+
+    for _cand in \
+        "${SUDOER_PUBLIC_ROOT}/${SUDOER_INBOUND_BASENAME}" \
+        ${_home:+"${_home}/${SUDOER_INBOUND_BASENAME}"} \
+        ${_home:+"${_home}/sudoer-approving"} \
+        "/etc/${SUDOER_ADM_USER}/sudoer-approving" \
+        "/home/${SUDOER_ADM_USER}/sudoer-approving"
+    do
+        if [ -n "${_cand}" ] && [ -d "${_cand}" ]; then
+            printf '%s' "${_cand}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# =============================================================================
+# fb_sudoer_queue_root_from_inbound() - parent of real public inbound, or test override
+# =============================================================================
+# MUST NOT treat a legacy …/sudoer-approving parent as the public queue root.
+# =============================================================================
+fb_sudoer_queue_root_from_inbound() {
+    _in="${1:-}"
+    [ -n "${_in}" ] || return 1
+    _base=$(basename -- "${_in}")
+    if [ -n "${SUDOER_QUEUE_INBOUND}" ] && [ "${_in}" = "${SUDOER_QUEUE_INBOUND}" ]; then
+        dirname -- "${_in}"
+        return 0
+    fi
+    if [ "${_base}" = "${SUDOER_INBOUND_BASENAME:-sudoer-request}" ]; then
+        _real="${_in}"
+        if command -v readlink >/dev/null 2>&1; then
+            _resolved=$(readlink -f "${_in}" 2>/dev/null || true)
+            [ -n "${_resolved}" ] && _real="${_resolved}"
+        fi
+        dirname -- "${_real}"
+        return 0
+    fi
+    return 1
+}
+
+# =============================================================================
+# fb_sudoers_require_emit_trust() - Fail-closed unless production or test-allow
+# =============================================================================
+fb_sudoers_require_emit_trust() {
+    : "${APP_NAME:=folder-backup}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${ALLOW_TEST_LOCAL_SUDOERS:=0}"
+    _tier=$(fb_sudoers_trust_tier)
+    if [ "${_tier}" != "production" ]; then
+        if [ "${ALLOW_TEST_LOCAL_SUDOERS}" -ne 1 ]; then
+            out_die "submit-sudoer-request trust tier is ${_tier} (not production). Prefer: sudo ${APP_NAME} install  (global ${GLOBAL_BIN}/${APP_NAME}). To submit a test fragment: ${APP_NAME} submit-sudoer-request --allow-test-local  or ALLOW_TEST_LOCAL_SUDOERS=1"
+        fi
+    fi
+}
+
+# =============================================================================
+# fb_submit_sudoer_request() - Type 0: queue this product's sudoers for approval
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Detect sudoer-cli and sudoer-adm, emit (or accept) a self-scoped sudoers
+# fragment, and submit it via sudoer-cli so a JSON request lands in the
+# public inbound (/var/sudoer-cli/sudoer-request). Does not write /etc
+# and does not mkdir inbound. Approver (sudoer-adm) still must approve.
+#
+# ALIGNMENT:
+# - requirement-domain-folder-backup.md
+# - requirement-three-layer-privilege-model.md
+# - requirement-shell-cli-interface.md
+#
+# Last reviewed: 2026-08-15
+# =============================================================================
+fb_submit_sudoer_request() {
+    : "${APP_NAME:=folder-backup}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    : "${HOME:=/tmp}"
+    : "${SUDOER_ADM_USER:=sudoer-adm}"
+    : "${SUBMIT_PURPOSE:=}"
+    : "${SUBMIT_ACTION:=add}"
+    : "${EFFECTIVE_STORAGE_DIR:=}"
+
+    _src_file="${1:-}"
+    _user=$(id -un 2>/dev/null || echo "unknown")
+    _purpose="${SUBMIT_PURPOSE}"
+    if [ -z "${_purpose}" ]; then
+        _purpose="Narrow ${APP_NAME} deposit/verify/restore-stage grant for ${_user}"
+    fi
+    case "${SUBMIT_ACTION}" in
+        add|update) ;;
+        *) out_die "submit-sudoer-request action must be add or update (got ${SUBMIT_ACTION})" ;;
+    esac
+
+    _cli=""
+    if _cli=$(fb_detect_sudoer_cli); then
+        :
+    else
+        out_die "sudoer-cli not found (set SUDOER_CLI or install sudoer-cli to ${GLOBAL_BIN:-/usr/local/bin}/sudoer-cli). Submit is Type 0 compose — this CLI does not write /etc."
+    fi
+
+    _adm=""
+    if _adm=$(fb_detect_sudoer_adm); then
+        :
+    else
+        out_die "sudoer-adm not found (id ${SUDOER_ADM_USER} failed). Ask an admin to run: sudo sudoer-cli setup"
+    fi
+
+    : "${SUDOER_PUBLIC_ROOT:=/var/${SUDOER_APPROVAL_APP:-sudoer-cli}}"
+    _inbound=""
+    if _inbound=$(fb_detect_sudoer_inbound); then
+        :
+    else
+        out_die "sudoer inbound queue not found (preferred ${SUDOER_PUBLIC_ROOT}/sudoer-request). Ask an admin to run: sudo sudoer-cli setup"
+    fi
+    if [ ! -w "${_inbound}" ]; then
+        out_die "sudoer inbound not writable: ${_inbound}. Check mode 3773 on public inbound (owner ${_adm})."
+    fi
+
+    _tmp=""
+    if [ -n "${_src_file}" ]; then
+        if [ ! -f "${_src_file}" ]; then
+            out_die "sudoers file not found: ${_src_file}"
+        fi
+        if [ -L "${_src_file}" ]; then
+            out_die "refusing symlink sudoers input: ${_src_file}"
+        fi
+        _tmp="${_src_file}"
+        _cleanup_tmp=0
+    else
+        fb_sudoers_require_emit_trust
+        if [ -z "${EFFECTIVE_STORAGE_DIR}" ]; then
+            EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
+        fi
+        _tmp=$(util_mktemp sudoer)
+        fb_sudoers_fragment_text >"${_tmp}" || out_die "cannot write temp sudoers fragment ${_tmp}"
+        _cleanup_tmp=1
+    fi
+
+    # Point sudoer-cli at the public queue root (parent of real inbound).
+    # Do not export a legacy sudoer-approving parent as the public trio root.
+    if _qr=$(fb_sudoer_queue_root_from_inbound "${_inbound}"); then
+        SUDOER_CLI_QUEUE_ROOT="${_qr}"
+        export SUDOER_CLI_QUEUE_ROOT
+        if [ -n "${SUDOER_QUEUE_INBOUND}" ] && [ "${_inbound}" = "${SUDOER_QUEUE_INBOUND}" ]; then
+            LPU_HOME="${_qr}"
+            export LPU_HOME
+        fi
+    fi
+
+    _verb="add-sudoer-request"
+    if [ "${SUBMIT_ACTION}" = "update" ]; then
+        _verb="update-sudoer-request"
+    fi
+
+    _errf=$(util_mktemp sudoer-err)
+    _out=""
+    _rc=0
+    if [ "${JSON}" -eq 1 ]; then
+        _out=$("${_cli}" --json "${_verb}" --file "${_tmp}" --purpose "${_purpose}" --service "${APP_NAME}" 2>"${_errf}")
+        _rc=$?
+    else
+        _out=$("${_cli}" "${_verb}" --file "${_tmp}" --purpose "${_purpose}" --service "${APP_NAME}" 2>"${_errf}")
+        _rc=$?
+    fi
+    _err=$(cat "${_errf}" 2>/dev/null || true)
+    rm -f "${_errf}"
+    if [ "${_cleanup_tmp}" -eq 1 ]; then
+        rm -f "${_tmp}"
+    fi
+
+    if [ "${_rc}" -ne 0 ]; then
+        if [ -n "${_err}" ]; then
+            out_die "sudoer-cli ${_verb} failed: ${_err}"
+        fi
+        out_die "sudoer-cli ${_verb} failed (exit ${_rc})"
+    fi
+
+    _rid=$(printf '%s\n' "${_out}" | sed -n 's/.*"request_id":"\([^"]*\)".*/\1/p')
+    if [ -z "${_rid}" ]; then
+        _rid=$(printf '%s\n' "${_out}" | sed -n 's/.*request_id=\([^[:space:]]*\).*/\1/p')
+    fi
+
+    if [ "${JSON}" -eq 1 ]; then
+        out_json "submit-sudoer-request" "submitted" \
+            "request_id" "${_rid}" \
+            "action" "${SUBMIT_ACTION}" \
+            "service" "${APP_NAME}" \
+            "user" "${_user}" \
+            "sudoer_cli" "${_cli}" \
+            "sudoer_adm" "${_adm}" \
+            "inbound" "${_inbound}"
+        return 0
+    fi
+
+    out_success "Submitted ${SUBMIT_ACTION} request via ${_cli}"
+    if [ -n "${_rid}" ]; then
+        out_info "request_id=${_rid}"
+    fi
+    out_info "inbound=${_inbound}  (approver: ${_adm})"
+    out_info "This CLI did not write /etc. Approver must approve the request."
+    return 0
 }
 
 # =============================================================================
@@ -3197,7 +3563,7 @@ EOF
 # =============================================================================
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.6.1}"
+    : "${VERSION:=1.7.1}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         out_json "version" "" "app" "${APP_NAME}" "version" "${VERSION}"
@@ -3221,7 +3587,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.6.1}"
+    : "${VERSION:=1.7.1}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"
@@ -3257,7 +3623,7 @@ app_about() {
     _shell=$(util_get_current_shell)
     _user=$(id -un 2>/dev/null || echo "unknown")
     _interactive="false"
-    [ -t 1 ] && _interactive="true"
+    [ "${TTY:-0}" -eq 1 ] && _interactive="true"
 
     # Best-effort sudo deposit probe
     _sudo_deposit="unknown"
@@ -3271,6 +3637,23 @@ app_about() {
         fi
     else
         _sudo_deposit="no_sudo"
+    fi
+
+    _sudoer_cli="not_found"
+    if _scli_path=$(fb_detect_sudoer_cli); then
+        _sudoer_cli="${_scli_path}"
+    fi
+    _sudoer_adm="absent"
+    if _sadm_name=$(fb_detect_sudoer_adm); then
+        _sudoer_adm="${_sadm_name}"
+    fi
+    _sudoer_inbound="not_found"
+    _sudoer_inbound_writable="false"
+    if _sin_path=$(fb_detect_sudoer_inbound); then
+        _sudoer_inbound="${_sin_path}"
+        if [ -w "${_sin_path}" ]; then
+            _sudoer_inbound_writable="true"
+        fi
     fi
 
     if [ "${JSON}" -eq 1 ]; then
@@ -3294,6 +3677,10 @@ app_about() {
             "deposit_dir" "${BACKUP_ROOT}/${BACKUP_NOTATION}" \
             "sudo_deposit" "${_sudo_deposit}" \
             "sudoers_trust_tier" "$(fb_sudoers_trust_tier)" \
+            "sudoer_cli" "${_sudoer_cli}" \
+            "sudoer_adm" "${_sudoer_adm}" \
+            "sudoer_inbound" "${_sudoer_inbound}" \
+            "sudoer_inbound_writable" "${_sudoer_inbound_writable}" \
             "max_daily_backups" "$(fb_positive_int_or_default "${MAX_DAILY_BACKUPS}" 5)" \
             "max_total_backups" "$(fb_positive_int_or_default "${MAX_TOTAL_BACKUPS}" 30)" \
             "restore_host_default" "${RESTORE_HOST_DEFAULT}" \
@@ -3333,7 +3720,7 @@ app_about() {
     fi
     out_empty_line
     out_info "Current shell:     ${_shell}"
-    if [ -t 1 ]; then
+    if [ "${TTY:-0}" -eq 1 ]; then
         out_info "TTY / Interactive: yes"
     else
         out_info "TTY / Interactive: no"
@@ -3346,6 +3733,13 @@ app_about() {
     out_info "Backup notation:   ${BACKUP_NOTATION}"
     out_info "Deposit directory: ${BACKUP_ROOT}/${BACKUP_NOTATION}"
     out_info "Sudo deposit:      ${_sudo_deposit}"
+    out_info "sudoer-cli:        ${_sudoer_cli}"
+    out_info "sudoer-adm:        ${_sudoer_adm}"
+    if [ "${_sudoer_inbound}" = "not_found" ]; then
+        out_info "sudoer inbound:    not_found (preferred ${SUDOER_PUBLIC_ROOT:-/var/sudoer-cli}/sudoer-request)"
+    else
+        out_info "sudoer inbound:    ${_sudoer_inbound} (writable=${_sudoer_inbound_writable})"
+    fi
     out_info "Retention daily:   max $(fb_positive_int_or_default "${MAX_DAILY_BACKUPS}" 5) per basename per day (MAX_DAILY_BACKUPS)"
     out_info "Retention total:   max $(fb_positive_int_or_default "${MAX_TOTAL_BACKUPS}" 30) per basename (MAX_TOTAL_BACKUPS)"
     _proot=$(util_resolve_projects_root 2>/dev/null || echo "")
@@ -3357,6 +3751,7 @@ app_about() {
     out_info "   ${APP_NAME} help            → Full usage"
     out_info "   ${APP_NAME} install         → Local install to ~/.local/bin"
     out_info "   ${APP_NAME} print-sudoers   → Sudoers fragment for admin"
+    out_info "   ${APP_NAME} submit-sudoer-request → JSON request into /var/sudoer-cli/sudoer-request"
     out_info "   ${APP_NAME} backup <dir>    → Archive + deposit + retention prune"
     out_info "   ${APP_NAME} restore <name>  → Restore archive (default dest: hard-disk)"
     out_info "   ${APP_NAME} --json          → Machine-readable output"
@@ -3367,7 +3762,7 @@ app_about() {
 # =============================================================================
 app_help() {
     : "${SHORT_DESCRIPTION:=${APP_DESC:-Local folder archive backup/restore with narrow sudo deposit}}"
-    : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers.}"
+    : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, submit-sudoer-request.}"
     : "${BACKUP_ROOT:=/var/backup}"
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${RESTORE_HOST_DEFAULT:=hard-disk}"
@@ -3411,6 +3806,10 @@ app_help() {
     out_plain "                       Remove project-sudoers-file draft only (not host elev;"
     out_plain "                       lists drafts and lets you choose when multiple;"
     out_plain "                       confirm or --force; probes /etc/sudoers.d/ and warns if active)"
+    out_plain "  submit-sudoer-request [file]"
+    out_plain "                       Type 0: detect sudoer-cli + sudoer-adm; sibling writes"
+    out_plain "                       JSON into /var/sudoer-cli/sudoer-request"
+    out_plain "                       (does not write /etc; does not mkdir inbound)"
     out_empty_line
     out_info "Global Options:"
     out_plain "  --quiet, -q          Suppress info/success (errors still shown)"
@@ -3431,7 +3830,11 @@ app_help() {
     out_plain "  RAM_ROOT             ${RAM_ROOT}"
     out_plain "  RESTORE_HOST_DEFAULT ${RESTORE_HOST_DEFAULT}  (hard-disk|ram-drive)"
     out_plain "  USER_BIN / GLOBAL_BIN  install destinations"
-    out_plain "  ALLOW_TEST_LOCAL_SUDOERS  1 = allow test-mode print-sudoers"
+    out_plain "  ALLOW_TEST_LOCAL_SUDOERS  1 = allow test-mode print-sudoers / submit"
+    out_plain "  SUDOER_CLI              override path to sudoer-cli"
+    out_plain "  SUDOER_ADM_USER         approver login (default sudoer-adm)"
+    out_plain "  SUDOER_QUEUE_INBOUND    override inbound approval dir"
+    out_plain "  SUDOER_PUBLIC_ROOT      public queue root (default /var/sudoer-cli)"
     out_empty_line
     out_info "Examples:"
     out_plain "  ${APP_NAME} install"
@@ -3441,6 +3844,7 @@ app_help() {
     out_plain "  # admin (sudo rights): sudo sh /dev/shm/…-sudoers-admin.sh install|uninstall|replace"
     out_plain "  # host path is /etc/sudoers.d/${APP_NAME}-<user> (multi-user safe)"
     out_plain "  ${APP_NAME} remove-project-sudoers --force  # delete draft only (not /etc elev)"
+    out_plain "  ${APP_NAME} submit-sudoer-request           # JSON into /var/sudoer-cli/sudoer-request"
     out_plain "  ${APP_NAME} backup /path/to/project"
     out_plain "  ${APP_NAME} restore genesis-template"
     out_plain "  ${APP_NAME} restore genesis-template --ram"
@@ -3476,6 +3880,8 @@ app_main() {
     : "${FORCE_REINSTALL:=0}"
     : "${FORCE_GLOBAL:=0}"
     : "${ALLOW_TEST_LOCAL_SUDOERS:=0}"
+    : "${SUBMIT_PURPOSE:=}"
+    : "${SUBMIT_ACTION:=add}"
     : "${USERNAME:=unknown}"
     : "${HOME:=/tmp}"
     : "${XDG_CACHE_HOME:=${HOME}/.cache}"
@@ -3506,6 +3912,18 @@ app_main() {
                 ALLOW_TEST_LOCAL_SUDOERS=1
                 export ALLOW_TEST_LOCAL_SUDOERS
                 ;;
+            --purpose)
+                if [ $# -lt 2 ]; then
+                    out_die "--purpose requires TEXT"
+                fi
+                SUBMIT_PURPOSE="$2"
+                export SUBMIT_PURPOSE
+                shift
+                ;;
+            --update)
+                SUBMIT_ACTION="update"
+                export SUBMIT_ACTION
+                ;;
             --disk|--hard-disk)
                 RESTORE_HOST="hard-disk"
                 export RESTORE_HOST
@@ -3514,14 +3932,15 @@ app_main() {
                 RESTORE_HOST="ram-drive"
                 export RESTORE_HOST
                 ;;
-            version|about|help|install|uninstall|where-is-me|backup|restore|print-sudoers|print-sudoers-install-script|remove-project-sudoers)
+            version|about|help|install|uninstall|where-is-me|backup|restore|print-sudoers|print-sudoers-install-script|remove-project-sudoers|submit-sudoer-request)
                 COMMAND="$1"
                 ;;
             *)
                 # Positional operands for domain verbs
                 if [ "${COMMAND}" = "backup" ] || [ "${COMMAND}" = "print-sudoers" ] \
                     || [ "${COMMAND}" = "print-sudoers-install-script" ] \
-                    || [ "${COMMAND}" = "remove-project-sudoers" ]; then
+                    || [ "${COMMAND}" = "remove-project-sudoers" ] \
+                    || [ "${COMMAND}" = "submit-sudoer-request" ]; then
                     if [ -z "${_domain_arg}" ]; then
                         _domain_arg="$1"
                     else
@@ -3556,6 +3975,7 @@ app_main() {
         print-sudoers) fb_print_sudoers "${_domain_arg}" ;;
         print-sudoers-install-script) fb_print_sudoers_install_script "${_domain_arg}" ;;
         remove-project-sudoers) fb_remove_project_sudoers "${_domain_arg}" ;;
+        submit-sudoer-request) fb_submit_sudoer_request "${_domain_arg}" ;;
         help|*)       app_help ;;
     esac
 }
