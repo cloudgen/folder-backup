@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-08-15
+
+### Changed
+
+- **Sudoers grant is the project command only.** `print-sudoers` / submit emit `${GLOBAL_BIN}/folder-backup backup` and `restore` (JSON dual written as `<draft>.json`). No `mkdir`/`cp`/`tar`/`rm`/`install`/`chmod` Cmnds — those extra tools increased complexity and weakened security.
+- **Warning:** Runtime deposit/restore/retention still call `sudo -n mkdir`/`cp`/`tar`/`rm`. **Do not replace** a working OS-tool host fragment with this grant until `backup`/`restore` re-exec via the project command. Submit **refuses** leftover OS-tool files (AC-7).
+- Law: `requirement-sudoer-json-file` **1.0.1** · three-layer **1.6.0** (JSON body deferred) · domain **1.4.1**
+- Suite **TP-FOLDER-BACKUP-22 / 22b / 22c**; 01/01c/01d/02 assert the new grant shape.
+
 ## [1.7.1] - 2026-08-15
 
 ### Changed

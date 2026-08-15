@@ -14,6 +14,7 @@
 # - requirement-bootstrap-chain.md
 # - requirement-project-folder.md
 # - requirement-three-layer-privilege-model.md
+# - requirement-sudoer-json-file.md  (JSON sudoer file: PRJ_NAME only)
 # - requirement-shell-cli-interface.md
 # - requirement-shell-cli-zero-arguments.md  (Type N empty argv = help)
 # - requirement-shell-local-self-management.md
@@ -30,7 +31,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.7.1"
+# VERSION: hard-assign VERSION="1.8.0"
 #
 # =============================================================================
 
@@ -47,8 +48,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.7.1"
-: "${VERSION:=1.7.1}"
+VERSION="1.8.0"
+: "${VERSION:=1.8.0}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -1989,7 +1990,7 @@ fb_backup() {
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${HOME:=/tmp}"
     : "${USERNAME:=unknown}"
-    : "${VERSION:=1.7.1}"
+    : "${VERSION:=1.8.0}"
     : "${MAX_DAILY_BACKUPS:=5}"
     : "${MAX_TOTAL_BACKUPS:=30}"
 
@@ -2602,42 +2603,36 @@ fb_sudoers_trust_tier() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Build the narrow deposit/verify/restore-stage fragment for the invoking user.
-# Callers (print-sudoers, submit-sudoer-request) own trust-tier gates and I/O.
+# Build the sudoer-file text dual of fb_sudoers_json_text (same verbs, no *).
 #
 # ALIGNMENT:
+# - requirement-sudoer-json-file.md
 # - requirement-three-layer-privilege-model.md
 # - requirement-domain-folder-backup.md
 #
-# Last reviewed: 2026-08-14
+# Last reviewed: 2026-08-15
 # =============================================================================
 fb_sudoers_fragment_text() {
     : "${APP_NAME:=folder-backup}"
-    : "${BACKUP_ROOT:=/var/backup}"
-    : "${BACKUP_NOTATION:=folder-backup}"
     : "${HOME:=/tmp}"
     : "${GLOBAL_BIN:=/usr/local/bin}"
     : "${USER_BIN:=${HOME}/.local/bin}"
 
     _user=$(id -un 2>/dev/null || echo "unknown")
-    _dest="${BACKUP_ROOT}/${BACKUP_NOTATION}"
     _tier=$(fb_sudoers_trust_tier)
     _global_path="${GLOBAL_BIN}/${APP_NAME}"
     _local_path="${USER_BIN}/${APP_NAME}"
-    _stage_shm="/dev/shm/${APP_NAME}-${_user}"
-    _stage_tmp="/tmp/${APP_NAME}-${_user}"
-    _stage_cache="${HOME}/.cache/${APP_NAME}-${_user}"
     _installed=$(fb_default_installed_sudoers_path)
-    _purpose="Narrow ${APP_NAME} deposit/verify/restore-stage grant for ${_user}"
+    _purpose="Allow ${_user} to run ${APP_NAME} backup and restore as root."
 
     if [ "${_tier}" = "production" ]; then
         _trust_banner="# Trust tier: production (global managed binary: ${_global_path})
-# Residual risk: stage trees below are still user-writable content sources.
+# Residual: elevating backup/restore as root can read any path the binary can.
 # Multi-user: install as ${_installed} (per-user suffix; do not overwrite other users)."
     else
         _trust_banner="# =============================================================================
 # WARNING: TEST MODE ONLY — NOT PRODUCTION-SECURE
-# Local/unmanaged install: user can rewrite ${_local_path} and stage trees.
+# Local/unmanaged install: user can rewrite ${_local_path}.
 # Uninstall this fragment soon:
 #   sudo rm ${_installed}
 # Production path: sudo ${APP_NAME} install  → re-emit print-sudoers → re-review → reinstall
@@ -2647,32 +2642,89 @@ fb_sudoers_fragment_text() {
 
     cat <<EOF
 # Purpose: ${_purpose}
-# ${APP_NAME} — narrow deposit / verify / restore-stage allowlist (review before install)
+# ${APP_NAME} — ${APP_NAME} backup/restore only (review before install)
 # Target user: ${_user}
 # Install: sudo install -m 0440 <this-file> ${_installed}
 # Validate: sudo visudo -c -f ${_installed}
 # Trust tier: ${_tier}
 ${_trust_banner}
 #
-# Allow ${_user} to create notation dir, deposit archives, list for verify,
-# copy archives back to user stage for restore extract, and prune single
-# deposit archives for retention (daily/total caps).
-# Does NOT elevate ${_local_path} (user-rewritable).
-${_user} ALL=(root) NOPASSWD: /bin/mkdir -p ${_dest}, /usr/bin/mkdir -p ${_dest}
-${_user} ALL=(root) NOPASSWD: /bin/cp ${_stage_cache}/* ${_dest}/, /usr/bin/cp ${_stage_cache}/* ${_dest}/
-${_user} ALL=(root) NOPASSWD: /bin/cp ${_stage_tmp}/* ${_dest}/, /usr/bin/cp ${_stage_tmp}/* ${_dest}/
-${_user} ALL=(root) NOPASSWD: /bin/cp ${_stage_shm}/* ${_dest}/, /usr/bin/cp ${_stage_shm}/* ${_dest}/
-${_user} ALL=(root) NOPASSWD: /usr/bin/install -m 0640 ${_stage_cache}/* ${_dest}/*, /usr/bin/install -m 0640 ${_stage_tmp}/* ${_dest}/*, /usr/bin/install -m 0640 ${_stage_shm}/* ${_dest}/*
-${_user} ALL=(root) NOPASSWD: /bin/chmod 0640 ${_dest}/*, /usr/bin/chmod 0640 ${_dest}/*
-# Post-deposit verification (list members only; no extract)
-${_user} ALL=(root) NOPASSWD: /usr/bin/tar -tzf ${_dest}/*, /bin/tar -tzf ${_dest}/*
-# Restore: copy deposit archive into per-user stage (Type 0 tar -xzf after)
-${_user} ALL=(root) NOPASSWD: /usr/bin/cp ${_dest}/* ${_stage_shm}/, /bin/cp ${_dest}/* ${_stage_shm}/
-${_user} ALL=(root) NOPASSWD: /usr/bin/cp ${_dest}/* ${_stage_tmp}/, /bin/cp ${_dest}/* ${_stage_tmp}/
-${_user} ALL=(root) NOPASSWD: /usr/bin/cp ${_dest}/* ${_stage_cache}/, /bin/cp ${_dest}/* ${_stage_cache}/
-# Retention prune: remove individual archives under deposit only (not recursive)
-${_user} ALL=(root) NOPASSWD: /bin/rm -f ${_dest}/*.tar.gz, /usr/bin/rm -f ${_dest}/*.tar.gz
+# Grant is the project command only. Does NOT elevate ${_local_path}.
+# Does NOT allowlist mkdir/cp/tar/rm/install/chmod (complexity weakens security).
+# After elev, the ship unit performs deposit/verify/restore internally.
+${_user} ALL=(root) NOPASSWD: ${_global_path} backup
+${_user} ALL=(root) NOPASSWD: ${_global_path} restore
 EOF
+}
+
+# =============================================================================
+# fb_sudoers_json_text() - Class B: emit JSON sudoer file to stdout
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# JSON sudoer file (requirement-sudoer-json-file). action from SUBMIT_ACTION.
+#
+# ALIGNMENT: requirement-sudoer-json-file.md
+# Last reviewed: 2026-08-15
+# =============================================================================
+fb_sudoers_json_text() {
+    : "${APP_NAME:=folder-backup}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${SUBMIT_ACTION:=add}"
+
+    _user=$(id -un 2>/dev/null || echo "unknown")
+    _global_path="${GLOBAL_BIN}/${APP_NAME}"
+    _action="${SUBMIT_ACTION}"
+    case "${_action}" in
+        add|update) ;;
+        *) _action="add" ;;
+    esac
+
+    cat <<EOF
+{
+  "schema_version": 1,
+  "purpose": "Allow ${_user} to run ${APP_NAME} backup and restore as root.",
+  "username": "${_user}",
+  "service": "${APP_NAME}",
+  "action": "${_action}",
+  "commands": [
+    {
+      "runas": "root",
+      "tags": ["NOPASSWD"],
+      "path": "${_global_path}",
+      "args": ["backup"]
+    },
+    {
+      "runas": "root",
+      "tags": ["NOPASSWD"],
+      "path": "${_global_path}",
+      "args": ["restore"]
+    }
+  ]
+}
+EOF
+}
+
+# =============================================================================
+# fb_sudoers_refuse_forbidden_grant() - Fail closed on OS-tool sudoer files
+# =============================================================================
+#
+# ALIGNMENT: requirement-sudoer-json-file.md §2.7 AC-7
+# =============================================================================
+fb_sudoers_refuse_forbidden_grant() {
+    _gf="${1:-}"
+    : "${APP_NAME:=folder-backup}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    if [ -z "${_gf}" ] || [ ! -f "${_gf}" ]; then
+        out_die "sudoer grant file missing"
+    fi
+    _gb=$(cat "${_gf}" 2>/dev/null || true)
+    case "${_gb}" in
+        *"/usr/bin/mkdir"*|*"/bin/mkdir"*|*"/usr/bin/cp"*|*"/bin/cp"*|*"/usr/bin/tar"*|*"/bin/tar"*|*"/bin/rm "*|*"/usr/bin/rm "*|*"/usr/bin/install"*|*"/usr/bin/chmod"*|*"/bin/chmod"*)
+            out_die "refusing sudoer grant with OS-tool commands (need ${GLOBAL_BIN}/${APP_NAME} backup|restore only)"
+            ;;
+    esac
+    return 0
 }
 
 # =============================================================================
@@ -2725,7 +2777,10 @@ fb_print_sudoers() {
             mkdir -p "${_dir}" || out_die "Cannot create ${_dir}"
         fi
         printf '%s\n' "${_fragment}" > "${_out_path}" || out_die "Cannot write ${_out_path}"
+        _json_path="${_out_path}.json"
+        fb_sudoers_json_text > "${_json_path}" || out_die "Cannot write ${_json_path}"
         out_success "Wrote sudoers fragment to ${_out_path}"
+        out_info "JSON sudoer file: ${_json_path}"
         out_info "Admin: sudo visudo -c -f ${_out_path}"
         out_info "Admin: sudo install -m 0440 ${_out_path} ${_installed}"
         if [ "${_test_mode}" = "true" ]; then
@@ -2755,7 +2810,8 @@ fb_print_sudoers() {
         return 0
     fi
 
-    out_info "Sudoers fragment for user ${_user} → deposit ${_dest}/ (trust_tier=${_tier})"
+    out_info "Sudoers fragment for user ${_user} → ${GLOBAL_BIN}/${APP_NAME} backup|restore (trust_tier=${_tier})"
+    out_warn "Host Type 1 still uses sudo mkdir/cp until backup/restore re-exec; installing this fragment now will fail those steps."
     out_info "Admin steps: review → visudo -c -f FILE → install -m 0440 FILE ${_installed}"
     out_empty_line
     out_plain "${_fragment}"
@@ -2932,6 +2988,7 @@ fb_sudoers_require_emit_trust() {
 # ALIGNMENT:
 # - requirement-domain-folder-backup.md
 # - requirement-three-layer-privilege-model.md
+# - requirement-sudoer-json-file.md (JSON grant body: PRJ_NAME only)
 # - requirement-shell-cli-interface.md
 #
 # Last reviewed: 2026-08-15
@@ -2950,12 +3007,22 @@ fb_submit_sudoer_request() {
     _user=$(id -un 2>/dev/null || echo "unknown")
     _purpose="${SUBMIT_PURPOSE}"
     if [ -z "${_purpose}" ]; then
-        _purpose="Narrow ${APP_NAME} deposit/verify/restore-stage grant for ${_user}"
+        _purpose="Allow ${_user} to run ${APP_NAME} backup and restore as root."
     fi
     case "${SUBMIT_ACTION}" in
         add|update) ;;
         *) out_die "submit-sudoer-request action must be add or update (got ${SUBMIT_ACTION})" ;;
     esac
+
+    if [ -n "${_src_file}" ]; then
+        if [ ! -f "${_src_file}" ]; then
+            out_die "sudoers file not found: ${_src_file}"
+        fi
+        if [ -L "${_src_file}" ]; then
+            out_die "refusing symlink sudoers input: ${_src_file}"
+        fi
+        fb_sudoers_refuse_forbidden_grant "${_src_file}"
+    fi
 
     _cli=""
     if _cli=$(fb_detect_sudoer_cli); then
@@ -2998,9 +3065,10 @@ fb_submit_sudoer_request() {
             EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
         fi
         _tmp=$(util_mktemp sudoer)
-        fb_sudoers_fragment_text >"${_tmp}" || out_die "cannot write temp sudoers fragment ${_tmp}"
+        fb_sudoers_json_text >"${_tmp}" || out_die "cannot write temp sudoer JSON ${_tmp}"
         _cleanup_tmp=1
     fi
+    fb_sudoers_refuse_forbidden_grant "${_tmp}"
 
     # Point sudoer-cli at the public queue root (parent of real inbound).
     # Do not export a legacy sudoer-approving parent as the public trio root.
@@ -3126,6 +3194,9 @@ fb_list_project_sudoers_drafts() {
     fi
     for _f in "${_dir}"/sudoers.fragment-*; do
         if [ -f "${_f}" ]; then
+            case "${_f}" in
+                *.json) continue ;;
+            esac
             printf '%s\n' "${_f}"
         fi
     done
@@ -3563,7 +3634,7 @@ EOF
 # =============================================================================
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.7.1}"
+    : "${VERSION:=1.8.0}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         out_json "version" "" "app" "${APP_NAME}" "version" "${VERSION}"
@@ -3587,7 +3658,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.7.1}"
+    : "${VERSION:=1.8.0}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"

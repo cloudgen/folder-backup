@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.7.1  
+**Product VERSION:** 1.8.0  
 **Last plan update:** 2026-08-15  
-**Last suite run:** PASS=175 FAIL=0 SKIP=2 (2026-08-15)
+**Last suite run:** PASS=189 FAIL=0 SKIP=2 (2026-08-15)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -24,6 +24,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Local install / idempotent / uninstall / mode 0755 | have | TP-LC-01..10 |
 | Help lists sudoers verbs (print / install-script / remove draft / submit + public inbound) | have | TP-CLI-04 |
 | Submit detect: public inbound first; env override; no Type 0 mkdir | have | TP-FOLDER-BACKUP-19/20/21/21b |
+| JSON sudoer file is `folder-backup` backup/restore only (no OS tools / path / filename) | have | TP-FOLDER-BACKUP-22/22b/22c |
 | Domain surface: print-sudoers allowlist + test-mode gate | have | TP-FOLDER-BACKUP-01, 01b, 01c, 02 |
 | Admin install-script handoff (project-sudoers-file) | have | TP-FOLDER-BACKUP-14 |
 | Remove project-sudoers draft only | have | TP-FOLDER-BACKUP-15 |
@@ -94,6 +95,10 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-FOLDER-BACKUP-20 | submit-sudoer-request via stub cli writes inbound file | test_domain | three-layer §2.3.3c | **have** |
 | TP-FOLDER-BACKUP-21 | submit detect prefers public inbound over leftover `sudoer-approving`; no Type 0 mkdir | test_domain | three-layer §2.3.3c AC-16/17 | **have** |
 | TP-FOLDER-BACKUP-21b | `SUDOER_QUEUE_INBOUND` wins over public inbound | test_domain | three-layer §2.3.3c detect priority 1 | **have** |
+| TP-FOLDER-BACKUP-22 | JSON sudoer file `path` is only `/usr/local/bin/folder-backup` | test_domain | **sudoer-json-file** AC-1 | **have** |
+| TP-FOLDER-BACKUP-22b | JSON sudoer file contains no mkdir/cp/tar/rm/install/chmod | test_domain | **sudoer-json-file** AC-4 | **have** |
+| TP-FOLDER-BACKUP-22c | JSON sudoer file contains no deposit/stage path and no `*.tar.gz` | test_domain | **sudoer-json-file** AC-5 | **have** |
+| TP-FOLDER-BACKUP-22d | submit refuses OS-tool grant file | test_domain | **sudoer-json-file** AC-7 | **have** |
 | TP-FOLDER-BACKUP-15 | remove-project-sudoers: force remove draft; refuse `/etc`; already absent; host elev probe | test_domain | three-layer §2.3.3b · project-sudoers-file | **have** |
 | TP-FOLDER-BACKUP-15b | multi-draft: list + non-interactive requires path; explicit path removes one only | test_domain | three-layer AC-15 · L-SUDOERS-04 | **have** |
 | TP-FOLDER-BACKUP-16 | restore dest whitelist: refuse `/etc/passwd` + exact `/etc` + `/etc/<other>`; W-ETC-USER `/etc/{{username}}` gate allow | test_domain | **folder-archive-backup** §2.6b.2a · INC-20260812-001 | **have** |

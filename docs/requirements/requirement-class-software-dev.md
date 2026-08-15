@@ -85,7 +85,7 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | **Architectures supported** | any arch with POSIX sh and the external tools the script invokes |
 | **Git surface** | used when product is published |
 | **Ship unit / install** | yes — `src/folder-backup` → `${USER_BIN}/folder-backup` (default `~/.local/bin/folder-backup`); **local-only** install (no online channel) |
-| **Product version SSOT** | `VERSION="1.7.1"` hard-assign in `src/folder-backup` |
+| **Product version SSOT** | `VERSION="1.8.0"` hard-assign in `src/folder-backup` |
 | **Bootstrap origin** | sibling product **cli-template** (`/home/leolio/prjs/cli-template`) — Type 0 local-only template; domain extend only |
 
 **Residual ownership table:**
@@ -105,7 +105,8 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | Idempotency / re-run safety | `requirement-shell-idempotency` | Do not duplicate |
 | Interactive vs non-interactive | `requirement-shell-interactive-vs-noninteractive` | Do not duplicate |
 | Modular prefixes / single-file layout | `requirement-shell-modular-function-design` | Do not duplicate |
-| Privilege layers + sudoers **files** (emit/install/fail-closed) | `requirement-three-layer-privilege-model` | Type 0 + narrow Type 1 deposit; §2.3 sudoers SSOT |
+| Privilege layers + sudoers **files** (emit/install/fail-closed) | `requirement-three-layer-privilege-model` | Type 0 + narrow Type 1 deposit; §2.3 sudoers workflow SSOT |
+| JSON sudoer file (grant body) | `requirement-sudoer-json-file` | `{{PRJ_NAME}}` only; no `cp`/`mkdir`/OS-tool commands |
 | Folder archive **backup operations** | `requirement-folder-archive-backup` | Create / name / deposit / verify (not domain) |
 | Domain surface (verbs, help, about) | `requirement-domain-folder-backup` | Four pillars only; ops pointer |
 | Online install / remote self-management / companion checksum | **intentionally absent** | Absent on A; remain absent on B |
@@ -177,6 +178,7 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | `requirement-shell-interactive-vs-noninteractive` | Mode policy |
 | `requirement-shell-modular-function-design` | Prefixes / single-file modularity |
 | `requirement-three-layer-privilege-model` | Privilege + working with sudoers fragment files |
+| `requirement-sudoer-json-file` | JSON sudoer file body (`{{PRJ_NAME}}` only) |
 | `requirement-folder-archive-backup` | Folder archive backup operations SSOT |
 | `requirement-domain-folder-backup` | Domain four pillars |
 | `docs/requirements/index.md` | Registry SSOT |
@@ -189,6 +191,7 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 |------|--------|------|
 | 2026-08-03 | Active | Specialized class law for folder-backup (left genesis; then named selfmanaged as origin) |
 | 2026-08-13 | Active | Origin retarget: A=cli-template → B=folder-backup |
+| 2026-08-15 | Active | Residual: JSON sudoer file → `requirement-sudoer-json-file` |
 
 ---
 

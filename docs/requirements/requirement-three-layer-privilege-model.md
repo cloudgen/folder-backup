@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-three-layer-privilege-model.md  
-**Status**: Active (Version 1.5.0)  
+**Status**: Active (Version 1.6.0)  
 **Area**: architecture  
 **Key**: `requirement-three-layer-privilege-model`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -8,7 +8,9 @@
 
 This requirement is the **project Single Source of Truth** for the **three-layer privilege model** as applied to **folder-backup**: which operations run as the invoking user, which use **narrow elevated sudo**, and what is out of scope.
 
-It is also the **product law SSOT for working with sudoers fragment files**: how the CLI **emits** a draft, what the fragment **must / must not** contain, how an **admin** validates and installs under `/etc/sudoers.d/`, how **`submit-sudoer-request`** hands a fragment to sibling **sudoer-cli** so a **JSON request** lands in the **public inbound**, how **runtime deposit** uses allowlisted `sudo -n`, and how **fail-closed** behaves when elevation is missing.
+It is also the **product law SSOT for working with sudoers fragment files**: how the CLI **emits** a draft, how an **admin** validates and installs under `/etc/sudoers.d/`, how **`submit-sudoer-request`** hands a grant to sibling **sudoer-cli** so a **JSON request** lands in the **public inbound**, how **runtime deposit** uses allowlisted `sudo -n`, and how **fail-closed** behaves when elevation is missing.
+
+**JSON sudoer file body** (command identity, schema, samples) is **not** owned here — it is **`requirement-sudoer-json-file`**. That peer **MUST** grant only `{{PRJ_NAME}}` (`folder-backup`); OS-tool commands (`cp`, `mkdir`, …) are forbidden there.
 
 Domain backup semantics (naming, tar, pillars) live in `requirement-domain-folder-backup.md`. Agent procedure for security-gated create is **`SK-CREATE-SUDOERS-FILE`** (not product-source authority).
 
@@ -21,7 +23,7 @@ Domain backup semantics (naming, tar, pillars) live in `requirement-domain-folde
 | Layer | Privilege | Actor | folder-backup responsibilities |
 |-------|-----------|-------|--------------------------------|
 | **Type 0** | Invoking user | End user / automation | Local install/uninstall, diagnostics, path report, tar.gz **create** in user staging, **print / write draft** sudoers fragment |
-| **Type 1** | Elevated (controlled sudo) | root via **allowlisted** command only | **mkdir** (deposit dir only when allowlisted) + **copy/install** staged archive into `/var/backup/folder-backup/` only |
+| **Type 1** | Elevated (controlled sudo) | root via **allowlisted** command only | `folder-backup backup` / `folder-backup restore` (grant body: `requirement-sudoer-json-file`). After elev, deposit/verify/restore run **inside** the ship unit. |
 | **Type 2** | Dedicated least-privilege system user | App runtime user | **Not used** — no dedicated app user required |
 
 ### 2.2 Least-privilege rules
@@ -337,83 +339,14 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | **Test emit gate** | `--allow-test-local` or `ALLOW_TEST_LOCAL_SUDOERS=1` when tier ≠ production |
 | **Global install for production** | `sudo sh src/folder-backup install` or root/`--global` → `/usr/local/bin/folder-backup` |
 
-**Paired text dual + queued JSON** (same grant; sibling closed schema). Live submit usually hands the **text**; sudoer-cli converts. `--json` CLI status from `submit-sudoer-request` is **not** the queued file.
+**Paired text dual + queued JSON** (same grant; sibling closed schema). Live submit default hands the **JSON** grant (`fb_sudoers_json_text`). `--json` CLI status from `submit-sudoer-request` is **not** the queued file.
+
+**JSON body SSOT:** `requirement-sudoer-json-file` — grant is **`folder-backup` only** (`backup` / `restore`). **MUST NOT** encode `mkdir` / `cp` / `tar` / `rm` / `install` / `chmod` (or deposit/stage/archive-name operands) in the queued JSON. Complete add/update samples live on that peer.
 
 **Worked add basename:** `sudoer-20260815-folder-backup-leolio-add-1.json`  
 **Worked update basename:** `sudoer-20260815-folder-backup-leolio-update-1.json`
 
-Paired sudoers text (add and update share this body; `--update` only changes `action` / basename):
-
-```text
-# Purpose: Narrow folder-backup deposit/verify/restore-stage grant for leolio
-leolio ALL=(root) NOPASSWD: /usr/bin/mkdir -p /var/backup/folder-backup
-leolio ALL=(root) NOPASSWD: /usr/bin/cp /dev/shm/folder-backup-leolio/* /var/backup/folder-backup/
-leolio ALL=(root) NOPASSWD: /usr/bin/tar -tzf /var/backup/folder-backup/*
-```
-
-Add JSON:
-
-```json
-{
-  "schema_version": 1,
-  "purpose": "Narrow folder-backup deposit/verify/restore-stage grant for leolio",
-  "username": "leolio",
-  "service": "folder-backup",
-  "action": "add",
-  "commands": [
-    {
-      "runas": "root",
-      "tags": ["NOPASSWD"],
-      "path": "/usr/bin/mkdir",
-      "args": ["-p", "/var/backup/folder-backup"]
-    },
-    {
-      "runas": "root",
-      "tags": ["NOPASSWD"],
-      "path": "/usr/bin/cp",
-      "args": ["/dev/shm/folder-backup-leolio/*", "/var/backup/folder-backup/"]
-    },
-    {
-      "runas": "root",
-      "tags": ["NOPASSWD"],
-      "path": "/usr/bin/tar",
-      "args": ["-tzf", "/var/backup/folder-backup/*"]
-    }
-  ]
-}
-```
-
-Update JSON (same commands; `action` is `update`):
-
-```json
-{
-  "schema_version": 1,
-  "purpose": "Narrow folder-backup deposit/verify/restore-stage grant for leolio",
-  "username": "leolio",
-  "service": "folder-backup",
-  "action": "update",
-  "commands": [
-    {
-      "runas": "root",
-      "tags": ["NOPASSWD"],
-      "path": "/usr/bin/mkdir",
-      "args": ["-p", "/var/backup/folder-backup"]
-    },
-    {
-      "runas": "root",
-      "tags": ["NOPASSWD"],
-      "path": "/usr/bin/cp",
-      "args": ["/dev/shm/folder-backup-leolio/*", "/var/backup/folder-backup/"]
-    },
-    {
-      "runas": "root",
-      "tags": ["NOPASSWD"],
-      "path": "/usr/bin/tar",
-      "args": ["-tzf", "/var/backup/folder-backup/*"]
-    }
-  ]
-}
-```
+§2.3.4a remains the **legacy text-fragment** example (OS-tool deposit). That shape is **not** a valid dual of the JSON sudoer file. When emit is updated, the text dual **MUST** match `requirement-sudoer-json-file` §2.6 (`/usr/local/bin/folder-backup backup` and `restore` only).
 
 **Admin install script (worked shape).** Live emit is `print-sudoers-install-script` → `/dev/shm/folder-backup-<user>-sudoers-admin.sh`. Complete verb skeleton (values filled for this product):
 
@@ -483,7 +416,8 @@ esac
 14. `mkdir` the sibling production inbound (or its public parent) from this Type 0 CLI.  
 15. Treat `/var/backup/folder-backup` (deposit) as the sudoer inbound.  
 16. Probe **only** `{{approver-home}}/sudoer-approving` as the preferred real inbound when `/var/sudoer-cli/sudoer-request` is the public dest.  
-17. Invent the queued JSON dest basename instead of calling the sibling allocator.
+17. Invent the queued JSON dest basename instead of calling the sibling allocator.  
+18. Put `cp` / `mkdir` / `tar` / `rm` / `install` / `chmod` (or deposit/stage/archive-name operands) into the **JSON sudoer file** — that body is `requirement-sudoer-json-file` (`{{PRJ_NAME}}` only).
 
 **Violating this rule is a critical privilege regression.**
 
@@ -512,6 +446,7 @@ esac
 | AC-17 | Submit **MUST NOT** `mkdir` inbound; missing dir fails closed with `sudo sudoer-cli setup` hint |
 | AC-18 | Submit creates the queued artifact **only** by invoking sibling `add-sudoer-request` / `update-sudoer-request`; dest basename is sibling-allocated JSON under the public inbound |
 | AC-19 | About reports sudoer-cli / sudoer-adm / inbound (path or `not_found`) and writable flag |
+| AC-20 | Queued JSON **body** obeys `requirement-sudoer-json-file` (`{{PRJ_NAME}}` only; no OS-tool commands) |
 
 ---
 
@@ -519,6 +454,7 @@ esac
 
 | Key | Relationship |
 |-----|--------------|
+| `requirement-sudoer-json-file` | **JSON sudoer file** body SSOT (`{{PRJ_NAME}}` only; no OS-tool commands) |
 | `requirement-folder-archive-backup` | Backup ops that invoke Type 1 deposit/verify |
 | `requirement-domain-folder-backup` | Domain surface; submit-sudoer-request verb |
 | `requirement-shell-cli-interface` | Command privilege labels (`backup`, `print-sudoers`, `submit-sudoer-request`) |
@@ -544,6 +480,7 @@ esac
 | **TP-FOLDER-BACKUP-20** | same | have — stub cli writes a file (env inbound override) |
 | **TP-FOLDER-BACKUP-21** | same | have — detect prefers public inbound; Type 0 does not mkdir |
 | **TP-FOLDER-BACKUP-21b** | same | have — `SUDOER_QUEUE_INBOUND` wins over public |
+| **TP-FOLDER-BACKUP-22 / 22b / 22c** | same | **have** — JSON sudoer file body (`requirement-sudoer-json-file`) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -557,6 +494,7 @@ esac
 | 2026-08-03 | Active 1.1.1 | §2.3.4a **example sudoers fragment** (folder-backup deposit allowlist) |
 | 2026-08-14 | Active 1.4.0 | `submit-sudoer-request` compose (§2.3.3c) |
 | 2026-08-15 | Active 1.5.0 | Submit = JSON via sibling allocator into **public inbound** `/var/sudoer-cli/sudoer-request`; no Type 0 mkdir; legacy `sudoer-approving` last |
+| 2026-08-15 | Active 1.6.0 | JSON sudoer file **body** deferred to `requirement-sudoer-json-file`; OS-tool JSON samples withdrawn |
 
 ---
 

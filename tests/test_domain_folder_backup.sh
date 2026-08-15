@@ -4,6 +4,7 @@
 # Primary ops REQ: requirement-folder-archive-backup (NOT domain)
 # Domain surface:  requirement-domain-folder-backup (verbs/help/about pointers)
 # Privilege peer:  requirement-three-layer-privilege-model
+# JSON grant:      requirement-sudoer-json-file
 # Other peers:     requirement-shell-idempotency
 # TP family: TP-FOLDER-BACKUP-*
 # =============================================================================
@@ -42,10 +43,11 @@ run_test_domain_folder_backup() {
     _ec=$?
     assert_eq "TP-FOLDER-BACKUP-01 print-sudoers exit 0" 0 "$_ec"
     assert_contains "TP-FOLDER-BACKUP-01 NOPASSWD" "$_out" "NOPASSWD"
-    assert_contains "TP-FOLDER-BACKUP-01 dest path" "$_out" "/var/backup/folder-backup"
+    assert_contains "TP-FOLDER-BACKUP-01 project backup verb" "$_out" "folder-backup backup"
+    assert_contains "TP-FOLDER-BACKUP-01 restore verb" "$_out" "folder-backup restore"
     assert_contains "TP-FOLDER-BACKUP-01 admin install hint" "$_out" "/etc/sudoers.d/"
-    assert_contains "TP-FOLDER-BACKUP-01 tar verify allowlist" "$_out" "tar -tzf"
     assert_contains "TP-FOLDER-BACKUP-01 test mode banner" "$_out" "TEST MODE ONLY"
+    assert_not_contains "TP-FOLDER-BACKUP-01 no tar Cmnd" "$_out" "tar -tzf"
     # print-sudoers never writes /etc itself. Host may already have admin-installed fragment.
     if [ -e /etc/sudoers.d/folder-backup ]; then
         t_pass "TP-FOLDER-BACKUP-01 host has admin sudoers (print-sudoers is Type 0 only; no /etc write attempted)"
@@ -66,12 +68,25 @@ run_test_domain_folder_backup() {
     _ec=$?
     assert_eq "TP-FOLDER-BACKUP-02 write fragment exit 0" 0 "$_ec"
     assert_file_exists "TP-FOLDER-BACKUP-02 fragment file" "${_frag}"
-    assert_contains "TP-FOLDER-BACKUP-02 file has mkdir" "$(cat "${_frag}")" "mkdir -p /var/backup/folder-backup"
+    assert_contains "TP-FOLDER-BACKUP-02 file has project backup" "$(cat "${_frag}")" "folder-backup backup"
     assert_not_contains "TP-FOLDER-BACKUP-02 no ALL ALL" "$(cat "${_frag}")" "NOPASSWD: ALL"
     assert_contains "TP-FOLDER-BACKUP-02 test mode in file" "$(cat "${_frag}")" "TEST MODE ONLY"
-    # Per-user stage roots (not broad APP_NAME-* across users)
     _ci_user=$(id -un 2>/dev/null || echo "unknown")
-    assert_contains "TP-FOLDER-BACKUP-02 per-user stage" "$(cat "${_frag}")" "folder-backup-${_ci_user}"
+    assert_contains "TP-FOLDER-BACKUP-02 user-bound" "$(cat "${_frag}")" "${_ci_user} ALL=(root)"
+    # TP-FOLDER-BACKUP-22 / 22b / 22c — JSON sudoer file (requirement-sudoer-json-file)
+    _jgrant="${_frag}.json"
+    assert_file_exists "TP-FOLDER-BACKUP-22 JSON grant file" "${_jgrant}"
+    _jbody=$(cat "${_jgrant}")
+    assert_contains "TP-FOLDER-BACKUP-22 path is folder-backup" "${_jbody}" '/folder-backup"'
+    assert_contains "TP-FOLDER-BACKUP-22 backup args" "${_jbody}" '"backup"'
+    assert_contains "TP-FOLDER-BACKUP-22 restore args" "${_jbody}" '"restore"'
+    assert_not_contains "TP-FOLDER-BACKUP-22b no mkdir" "${_jbody}" "mkdir"
+    assert_not_contains "TP-FOLDER-BACKUP-22b no /usr/bin/cp" "${_jbody}" "/usr/bin/cp"
+    assert_not_contains "TP-FOLDER-BACKUP-22b no tar" "${_jbody}" "tar"
+    assert_not_contains "TP-FOLDER-BACKUP-22b no /bin/rm" "${_jbody}" "/bin/rm"
+    assert_not_contains "TP-FOLDER-BACKUP-22b no install -m" "${_jbody}" "install"
+    assert_not_contains "TP-FOLDER-BACKUP-22c no deposit path" "${_jbody}" "/var/backup/folder-backup"
+    assert_not_contains "TP-FOLDER-BACKUP-22c no tar.gz operand" "${_jbody}" ".tar.gz"
 
     # TP-FOLDER-BACKUP-03 backup without source fails
     _err=$(HOME="${CI_HOME}" sh "${SCRIPT}" backup 2>&1 >/dev/null)
@@ -238,9 +253,9 @@ run_test_domain_folder_backup() {
         sh "${SCRIPT}" restore restore-src-tree 2>&1 >/dev/null)
     assert_eq "TP-FOLDER-BACKUP-13 non-empty without force exit 1" 1 "$?"
 
-    # print-sudoers includes restore stage cp reverse
+    # print-sudoers includes restore as project verb (not OS-tool reverse cp)
     _out=$(HOME="${CI_HOME}" sh "${SCRIPT}" print-sudoers --allow-test-local 2>&1)
-    assert_contains "TP-FOLDER-BACKUP-01c restore stage cp allowlist" "$_out" "Restore: copy deposit"
+    assert_contains "TP-FOLDER-BACKUP-01c restore verb allowlist" "$_out" "folder-backup restore"
 
     # TP-FOLDER-BACKUP-14 admin install script (project-sudoers-file handoff; per-user names)
     _script="${CI_HOME}/sudoers-admin.sh"
@@ -421,9 +436,18 @@ run_test_domain_folder_backup() {
     # TP-FOLDER-BACKUP-17b cross-basename isolation
     assert_file_exists "TP-FOLDER-BACKUP-17b foreign basename kept" "${_dep17}/foreign-name-20200101-1.tar.gz"
 
-    # print-sudoers includes retention rm allowlist
+    # print-sudoers must not grant OS-tool rm (retention runs after elev internally)
     _out=$(HOME="${CI_HOME}" sh "${SCRIPT}" print-sudoers --allow-test-local 2>&1)
-    assert_contains "TP-FOLDER-BACKUP-01d retention rm allowlist" "$_out" "rm -f"
+    assert_not_contains "TP-FOLDER-BACKUP-01d no retention rm Cmnd" "$_out" "rm -f"
+
+    # TP-FOLDER-BACKUP-22d submit refuses OS-tool grant file (AC-7)
+    _badgrant="${CI_HOME}/out/bad-os-tool.json"
+    mkdir -p "${CI_HOME}/out"
+    printf '%s\n' '{"commands":[{"path":"/usr/bin/mkdir","args":["-p","/var/backup/folder-backup"]}]}' >"${_badgrant}"
+    _err=$(HOME="${CI_HOME}" sh "${SCRIPT}" submit-sudoer-request --allow-test-local "${_badgrant}" 2>&1 >/dev/null)
+    _ec22d=$?
+    assert_eq "TP-FOLDER-BACKUP-22d refuse OS-tool grant exit 1" 1 "${_ec22d}"
+    assert_contains "TP-FOLDER-BACKUP-22d refuse message" "${_err}" "OS-tool"
 
     # TP-FOLDER-BACKUP-19 submit fail-closed when sudoer-cli missing
     _err=$(HOME="${CI_HOME}" SUDOER_CLI="${CI_HOME}/no-such-sudoer-cli" \

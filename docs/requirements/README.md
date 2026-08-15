@@ -17,6 +17,7 @@ Authoritative specialized product law for **folder-backup** lives here.
 | Retention total | `requirement-folder-archive-backup-retention-total` — max **30** per basename |
 | Retention daily | `requirement-folder-archive-backup-retention-daily` — max **5** per basename per day |
 | Domain surface | `requirement-domain-folder-backup` — four pillars; ops deferred |
+| JSON sudoer file | `requirement-sudoer-json-file` — grant is `folder-backup` only; no `cp`/`mkdir` |
 
 ## Class requirement gate
 

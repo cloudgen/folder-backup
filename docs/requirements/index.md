@@ -9,7 +9,8 @@
 | requirement-class-software-dev | Software-development class law + residual stack (posix-sh, local-only); multi-vault forge push identity §2.0.5a | class | Active | `requirement-class-software-dev.md` | 2026-08-11 |
 | requirement-bootstrap-chain | Bootstrap chain A=cli-template → B=folder-backup (domain extend) | architecture | Active (2.0.0) | `requirement-bootstrap-chain.md` | 2026-08-13 |
 | requirement-project-folder | Project layout (`src/`), install bins, `/var/backup` deposit | architecture | Active | `requirement-project-folder.md` | 2026-08-03 |
-| requirement-three-layer-privilege-model | Type 0 + narrow Type 1 deposit; sudoers emit + **install-script** handoff; **per-user** fragment names; **trust tiers** (S13); **submit-sudoer-request** JSON into public inbound | architecture | Active (1.5.0) | `requirement-three-layer-privilege-model.md` | 2026-08-15 |
+| requirement-three-layer-privilege-model | Type 0 + narrow Type 1 deposit; sudoers emit + **install-script** handoff; **per-user** fragment names; **trust tiers** (S13); **submit-sudoer-request** workflow (JSON **body** owned by sudoer-json-file) | architecture | Active (1.6.0) | `requirement-three-layer-privilege-model.md` | 2026-08-15 |
+| requirement-sudoer-json-file | **JSON sudoer file** SSOT: grant is **`{{PRJ_NAME}}` only** (`folder-backup` backup/restore); forbids `cp`/`mkdir`/… (complexity weakens security) | architecture | Active (1.0.1) | `requirement-sudoer-json-file.md` | 2026-08-15 |
 | requirement-folder-archive-backup | **Backup/restore ops SSOT**: backup + verify + **restore**; dest whitelist **W-ETC-USER** `/etc/{{username}}` (never `/etc/passwd`) | backup | Active (1.2.0) | `requirement-folder-archive-backup.md` | 2026-08-12 |
 | requirement-folder-archive-backup-retention-total | **Total retention**: max **30** archives per project basename; prune oldest after successful deposit | backup | Active (1.0.0) | `requirement-folder-archive-backup-retention-total.md` | 2026-08-12 |
 | requirement-folder-archive-backup-retention-daily | **Daily retention**: max **5** archives per basename per calendar day; prune oldest same-day `N` | backup | Active (1.0.0) | `requirement-folder-archive-backup-retention-daily.md` | 2026-08-12 |
@@ -21,7 +22,7 @@
 | requirement-shell-idempotency | Re-run safety; archive next-N no overwrite | shell | Active | `requirement-shell-idempotency.md` | 2026-08-03 |
 | requirement-shell-interactive-vs-noninteractive | Interactive vs non-interactive / confirm policy | shell | Active | `requirement-shell-interactive-vs-noninteractive.md` | 2026-08-03 |
 | requirement-shell-cli-storage | Scratch/cache resolve + backup staging root | shell | Active | `requirement-shell-cli-storage.md` | 2026-08-03 |
-| requirement-domain-folder-backup | Domain **surface** SSOT (four pillars); ops defer to folder-archive-backup; submit-sudoer-request → public inbound JSON | domain | Active (1.4.0) | `requirement-domain-folder-backup.md` | 2026-08-15 |
+| requirement-domain-folder-backup | Domain **surface** SSOT (four pillars); ops defer to folder-archive-backup; submit-sudoer-request → public inbound JSON (body: sudoer-json-file) | domain | Active (1.4.1) | `requirement-domain-folder-backup.md` | 2026-08-15 |
 
 ## Intentionally absent (by design — inherited from cli-template)
 

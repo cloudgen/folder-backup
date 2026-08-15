@@ -2,6 +2,7 @@
 
 | Date | Report | Scope | Verdict | Suite |
 |------|--------|-------|---------|-------|
+| 2026-08-15 | `reports/2026-08-15-sudoer-json-file.md` | JSON sudoer file = `folder-backup` only; emit 1.8.0 | **PASS** (FB-SUDOER-01 residual runtime) | PASS=189 FAIL=0 SKIP=2 |
 | 2026-08-15 | `reports/2026-08-15-coverage-public-inbound.md` | Coverage P0–P2 + public inbound detect | **PASS** (findings closed) | PASS=175 FAIL=0 SKIP=2 |
 | 2026-08-13 | `reports/2026-08-13-bootstrap-specialize-cli-template.md` | Origin retarget A=cli-template → B; VERSION 1.6.1 alignment | **PASS** | PASS=157 FAIL=0 SKIP=2 |
 | 2026-08-12 | **1.6.0 retention** (daily 5 + total 30; TP-17/18; retention REQs) | `fb_apply_retention` + deposit Type 0 when writable + sudoers rm | **PASS** | PASS=166 FAIL=0 SKIP=0 |
