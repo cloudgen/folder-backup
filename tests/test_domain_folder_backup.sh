@@ -422,6 +422,25 @@ run_test_domain_folder_backup() {
     # TP-FOLDER-BACKUP-18b: other basename not deleted by daily prune
     assert_file_exists "TP-FOLDER-BACKUP-18b other basename kept" "${_dep18}/other-proj-${_day18}-1.tar.gz"
 
+    # TP-FOLDER-BACKUP-18c failed backup does not trigger daily prune (AC-5)
+    _broot18c="${CI_HOME}/ret-daily-fail-root"
+    _dep18c="${_broot18c}/folder-backup"
+    mkdir -p "${_dep18c}"
+    _day18c=$(date +%Y%m%d)
+    _i=1
+    while [ "${_i}" -le 6 ]; do
+        printf 'k' > "${_dep18c}/ret-fail-daily-${_day18c}-${_i}.tar.gz"
+        _i=$((_i + 1))
+    done
+    _out=$(HOME="${CI_HOME}" BACKUP_ROOT="${_broot18c}" BACKUP_NOTATION="folder-backup" \
+        MAX_DAILY_BACKUPS=5 MAX_TOTAL_BACKUPS=30 \
+        sh "${SCRIPT}" backup "${CI_HOME}/ret-fail-daily" 2>&1)
+    _ec18c=$?
+    assert_eq "TP-FOLDER-BACKUP-18c failed backup exit 1" 1 "${_ec18c}"
+    _cnt18c=$(find "${_dep18c}" -name "ret-fail-daily-${_day18c}-*.tar.gz" 2>/dev/null | wc -l | tr -d ' ')
+    assert_eq "TP-FOLDER-BACKUP-18c same-day still 6" 6 "${_cnt18c}"
+    assert_file_exists "TP-FOLDER-BACKUP-18c lowest N kept" "${_dep18c}/ret-fail-daily-${_day18c}-1.tar.gz"
+
     # TP-FOLDER-BACKUP-17 total retention: max 30 per basename
     _broot17="${CI_HOME}/ret-total-root"
     _dep17="${_broot17}/folder-backup"
@@ -454,6 +473,29 @@ run_test_domain_folder_backup() {
     assert_file_missing "TP-FOLDER-BACKUP-17 pruned oldest" "${_dep17}/ret-total-src-20200101-1.tar.gz"
     # TP-FOLDER-BACKUP-17b cross-basename isolation
     assert_file_exists "TP-FOLDER-BACKUP-17b foreign basename kept" "${_dep17}/foreign-name-20200101-1.tar.gz"
+
+    # TP-FOLDER-BACKUP-17c failed backup does not trigger total prune (AC-5)
+    _broot17c="${CI_HOME}/ret-total-fail-root"
+    _dep17c="${_broot17c}/folder-backup"
+    mkdir -p "${_dep17c}"
+    _j=1
+    while [ "${_j}" -le 16 ]; do
+        printf 'o' > "${_dep17c}/ret-fail-total-20200101-${_j}.tar.gz"
+        _j=$((_j + 1))
+    done
+    _j=1
+    while [ "${_j}" -le 15 ]; do
+        printf 'o' > "${_dep17c}/ret-fail-total-20200102-${_j}.tar.gz"
+        _j=$((_j + 1))
+    done
+    _out=$(HOME="${CI_HOME}" BACKUP_ROOT="${_broot17c}" BACKUP_NOTATION="folder-backup" \
+        MAX_DAILY_BACKUPS=50 MAX_TOTAL_BACKUPS=30 \
+        sh "${SCRIPT}" backup "${CI_HOME}/ret-fail-total" 2>&1)
+    _ec17c=$?
+    assert_eq "TP-FOLDER-BACKUP-17c failed backup exit 1" 1 "${_ec17c}"
+    _cnt17c=$(find "${_dep17c}" -name "ret-fail-total-*.tar.gz" 2>/dev/null | wc -l | tr -d ' ')
+    assert_eq "TP-FOLDER-BACKUP-17c total still 31" 31 "${_cnt17c}"
+    assert_file_exists "TP-FOLDER-BACKUP-17c oldest kept" "${_dep17c}/ret-fail-total-20200101-1.tar.gz"
 
     # print-sudoers must not grant OS-tool rm (retention runs after elev internally)
     _out=$(HOME="${CI_HOME}" sh "${SCRIPT}" print-sudoers --allow-test-local 2>&1)
@@ -547,6 +589,103 @@ STUB
     assert_contains "TP-FOLDER-BACKUP-23b forced add" "${_j23b}" '"action":"add"'
     assert_contains "TP-FOLDER-BACKUP-23b explicit" "${_j23b}" '"action_source":"explicit"'
     rm -f "${CI_SUDOERS_D}/folder-backup-${_user23}"
+
+    # TP-FOLDER-BACKUP-23c other user's fragment does not flip this user to update
+    printf '# other user host fragment\n' > "${CI_SUDOERS_D}/folder-backup-otheruser"
+    _j23c=$(HOME="${CI_HOME}" \
+        SUDOER_CLI="${_stub_dir}/bin/sudoer-cli" \
+        SUDOER_ADM_USER="$(id -un)" \
+        SUDOER_QUEUE_INBOUND="${_stub_dir}/sudoer-approving" \
+        SUDOERS_D_DIR="${CI_SUDOERS_D}" \
+        sh "${SCRIPT}" --json submit-sudoer-request --allow-test-local 2>/dev/null)
+    assert_eq "TP-FOLDER-BACKUP-23c other-user submit exit 0" 0 "$?"
+    assert_contains "TP-FOLDER-BACKUP-23c stays add" "${_j23c}" '"action":"add"'
+    assert_contains "TP-FOLDER-BACKUP-23c detected" "${_j23c}" '"action_source":"detected"'
+    assert_contains "TP-FOLDER-BACKUP-23c host present false" "${_j23c}" '"host_fragment_present":"false"'
+    rm -f "${CI_SUDOERS_D}/folder-backup-otheruser"
+
+    # TP-FOLDER-BACKUP-24 generate writes verified compact JSON (both verbs)
+    _user24=$(id -un)
+    _gen_default="${CI_HOME}/.config/folder-backup/sudoer-request-${_user24}.json"
+    _out24=$(HOME="${CI_HOME}" sh "${SCRIPT}" generate-sudoer-request --allow-test-local 2>&1)
+    _ec24=$?
+    assert_eq "TP-FOLDER-BACKUP-24 generate exit 0" 0 "${_ec24}"
+    assert_file_exists "TP-FOLDER-BACKUP-24 default dest exists" "${_gen_default}"
+    _gen_body=$(cat "${_gen_default}" 2>/dev/null || true)
+    assert_contains "TP-FOLDER-BACKUP-24 compact token" "${_gen_body}" '},{'
+    assert_contains "TP-FOLDER-BACKUP-24 has backup" "${_gen_body}" '"backup"'
+    assert_contains "TP-FOLDER-BACKUP-24 has restore" "${_gen_body}" '"restore"'
+    assert_contains "TP-FOLDER-BACKUP-24 human next submit" "${_out24}" "submit-sudoer-request"
+    assert_not_contains "TP-FOLDER-BACKUP-24 no /etc dest" "${_out24}" "/etc/sudoers.d/"
+
+    # TP-FOLDER-BACKUP-24b explicit path + /etc refuse
+    _gen_exp="${CI_HOME}/out/verified-grant.json"
+    mkdir -p "${CI_HOME}/out"
+    _out24b=$(HOME="${CI_HOME}" sh "${SCRIPT}" generate-sudoer-request --allow-test-local "${_gen_exp}" 2>&1)
+    assert_eq "TP-FOLDER-BACKUP-24b explicit path exit 0" 0 "$?"
+    assert_file_exists "TP-FOLDER-BACKUP-24b explicit dest" "${_gen_exp}"
+    assert_contains "TP-FOLDER-BACKUP-24b explicit backup" "$(cat "${_gen_exp}")" '"backup"'
+    _err24c=$(HOME="${CI_HOME}" sh "${SCRIPT}" generate-sudoer-request --allow-test-local /etc/sudoers.d/folder-backup-nope 2>&1 >/dev/null)
+    assert_eq "TP-FOLDER-BACKUP-24b refuse /etc exit 1" 1 "$?"
+    assert_contains "TP-FOLDER-BACKUP-24b refuse /etc message" "${_err24c}" "/etc"
+
+    # TP-FOLDER-BACKUP-24d dest is readable without sudo (review/suite fixture)
+    if [ -r "${_gen_exp}" ]; then
+        t_pass "TP-FOLDER-BACKUP-24d dest readable without sudo"
+    else
+        t_fail "TP-FOLDER-BACKUP-24d dest readable without sudo" "not readable: ${_gen_exp}"
+    fi
+    _body24d=$(cat "${_gen_exp}" 2>/dev/null || true)
+    assert_contains "TP-FOLDER-BACKUP-24d cat without sudo has backup" "${_body24d}" '"backup"'
+    assert_contains "TP-FOLDER-BACKUP-24d cat without sudo has restore" "${_body24d}" '"restore"'
+
+    # TP-FOLDER-BACKUP-24c generated file through real sudoer-cli convert keeps both verbs
+    if [ -n "${_srcli}" ] && [ -x "${_srcli}" ]; then
+        _p24="${CI_HOME}/out/gen-convert.sudoers"
+        HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_gen_exp}" --out "${_p24}" >/dev/null 2>&1
+        assert_eq "TP-FOLDER-BACKUP-24c convert exit 0" 0 "$?"
+        _c24=$(cat "${_p24}" 2>/dev/null || true)
+        assert_contains "TP-FOLDER-BACKUP-24c convert backup" "${_c24}" "folder-backup backup"
+        assert_contains "TP-FOLDER-BACKUP-24c convert restore" "${_c24}" "folder-backup restore"
+    fi
+
+    # TP-FOLDER-BACKUP-25 operator-readable inbound-fidelity error (restore-only queued body)
+    _stub25="${CI_HOME}/stub-drop"
+    mkdir -p "${_stub25}/bin" "${_stub25}/sudoer-approving"
+    cat > "${_stub25}/bin/sudoer-cli" <<'STUB25'
+#!/bin/sh
+_file=""
+_svc=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --json) ;;
+        --file) _file="$2"; shift ;;
+        --purpose) shift ;;
+        --service) _svc="$2"; shift ;;
+        add-sudoer-request|update-sudoer-request) ;;
+        *) ;;
+    esac
+    shift
+done
+[ -n "${_file}" ] && [ -f "${_file}" ] || exit 1
+_id="sudoer-20260817-${_svc:-folder-backup}-stub-drop-1.json"
+_in="${LPU_HOME:-}/sudoer-approving"
+[ -d "${_in}" ] || _in="${SUDOER_QUEUE_INBOUND:-}"
+[ -d "${_in}" ] || exit 1
+printf '%s\n' '{"purpose":"backup and restore","commands":[{"args":["restore"]}]}' >"${_in}/${_id}" || exit 1
+printf 'request_id=%s\n' "${_id}"
+exit 0
+STUB25
+    chmod 0755 "${_stub25}/bin/sudoer-cli"
+    _err25=$(HOME="${CI_HOME}" \
+        SUDOER_CLI="${_stub25}/bin/sudoer-cli" \
+        SUDOER_ADM_USER="$(id -un)" \
+        SUDOER_QUEUE_INBOUND="${_stub25}/sudoer-approving" \
+        sh "${SCRIPT}" submit-sudoer-request --allow-test-local 2>&1 >/dev/null)
+    assert_eq "TP-FOLDER-BACKUP-25 inbound incomplete exit 1" 1 "$?"
+    assert_contains "TP-FOLDER-BACKUP-25 what happened" "${_err25}" "incomplete"
+    assert_contains "TP-FOLDER-BACKUP-25b next generate" "${_err25}" "generate-sudoer-request"
+    assert_not_contains "TP-FOLDER-BACKUP-25c no sibling jargon" "${_err25}" "sibling re-encode"
 
     # TP-FOLDER-BACKUP-22e (submit path): real sudoer-cli + readable test inbound
     if [ -n "${_srcli}" ] && [ -x "${_srcli}" ]; then

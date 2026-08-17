@@ -31,7 +31,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.8.0"
+# VERSION: hard-assign VERSION="1.9.0"
 #
 # =============================================================================
 
@@ -46,10 +46,10 @@ APP_NAME="folder-backup"
 : "${APP_NAME:=folder-backup}"
 : "${APP_DESC:=Local folder archive backup/restore with narrow sudo deposit}"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
-: "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, submit-sudoer-request.}"
+: "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.8.2"
-: "${VERSION:=1.8.2}"
+VERSION="1.9.0"
+: "${VERSION:=1.9.0}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -2707,6 +2707,26 @@ fb_sudoers_json_text() {
 EOF
 }
 
+# Compact one-line dual of fb_sudoers_json_text (same grant). Legal JSON.
+# Sibling sudoer-cli 1.6.1 splits commands[] only on the token },{ — pretty
+# emit survives 1.6.2+; compact is the submit/generate handoff so inbound
+# still names backup and restore (INC-20260817-001 / 002).
+fb_sudoers_json_text_compact() {
+    : "${APP_NAME:=folder-backup}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${SUBMIT_ACTION:=add}"
+
+    _user=$(id -un 2>/dev/null || echo "unknown")
+    _global_path="${GLOBAL_BIN}/${APP_NAME}"
+    _action="${SUBMIT_ACTION}"
+    case "${_action}" in
+        add|update) ;;
+        *) _action="add" ;;
+    esac
+
+    printf '%s\n' "{\"schema_version\":1,\"purpose\":\"Allow ${_user} to run ${APP_NAME} backup and restore as root.\",\"username\":\"${_user}\",\"service\":\"${APP_NAME}\",\"action\":\"${_action}\",\"commands\":[{\"runas\":\"root\",\"tags\":[\"NOPASSWD\"],\"path\":\"${_global_path}\",\"args\":[\"backup\"]},{\"runas\":\"root\",\"tags\":[\"NOPASSWD\"],\"path\":\"${_global_path}\",\"args\":[\"restore\"]}]}"
+}
+
 # =============================================================================
 # fb_sudoers_refuse_forbidden_grant() - Fail closed on OS-tool sudoer files
 # =============================================================================
@@ -2725,6 +2745,61 @@ fb_sudoers_refuse_forbidden_grant() {
         *"/usr/bin/mkdir"*|*"/bin/mkdir"*|*"/usr/bin/cp"*|*"/bin/cp"*|*"/usr/bin/tar"*|*"/bin/tar"*|*"/bin/rm "*|*"/usr/bin/rm "*|*"/usr/bin/install"*|*"/usr/bin/chmod"*|*"/bin/chmod"*)
             out_die "refusing sudoer grant with OS-tool commands (need ${GLOBAL_BIN}/${APP_NAME} backup|restore only)"
             ;;
+    esac
+    return 0
+}
+
+# Fail closed unless the file still names both elev verbs.
+fb_sudoers_verify_grant_verbs() {
+    _gf="${1:-}"
+    : "${APP_NAME:=folder-backup}"
+    if [ -z "${_gf}" ] || [ ! -f "${_gf}" ]; then
+        out_die "sudoer file missing (cannot verify backup and restore)"
+    fi
+    _gb=$(cat "${_gf}" 2>/dev/null || true)
+    case "${_gb}" in
+        *'"backup"'*) ;;
+        *) out_die "Sudoer file is incomplete: it does not allow backup. Path: ${_gf}" ;;
+    esac
+    case "${_gb}" in
+        *'"restore"'*) ;;
+        *) out_die "Sudoer file is incomplete: it does not allow restore. Path: ${_gf}" ;;
+    esac
+    return 0
+}
+
+# When sudoer-cli is present, convert must still list both verbs.
+# Returns 0 if convert kept both; 1 if sudoer-cli is absent (caller may skip).
+fb_sudoers_verify_sibling_convert() {
+    _gf="${1:-}"
+    : "${APP_NAME:=folder-backup}"
+    _cli=""
+    if _cli=$(fb_detect_sudoer_cli); then
+        :
+    else
+        return 1
+    fi
+    # Stub CLIs used in suite only implement add/update. Skip convert unless
+    # help lists json-to-sudoers (real sudoer-cli).
+    _help=$("${_cli}" help 2>/dev/null || true)
+    case "${_help}" in
+        *json-to-sudoers*) ;;
+        *) return 1 ;;
+    esac
+    _outf=$(util_mktemp sudoer-conv)
+    if ! "${_cli}" json-to-sudoers --file "${_gf}" --out "${_outf}" >/dev/null 2>&1; then
+        rm -f "${_outf}"
+        out_die "sudoer-cli json-to-sudoers failed for ${_gf}. The file is not safe to submit."
+    fi
+    _txt=$(cat "${_outf}" 2>/dev/null || true)
+    rm -f "${_outf}"
+    case "${_txt}" in
+        *" ${APP_NAME} backup"*|*"/${APP_NAME} backup"*) ;;
+        *) out_die "sudoer-cli convert dropped backup from ${_gf}. Do not submit this file. Install sudoer-cli 1.6.2+ or regenerate with ${APP_NAME} generate-sudoer-request." ;;
+    esac
+    case "${_txt}" in
+        *" ${APP_NAME} restore"*|*"/${APP_NAME} restore"*) ;;
+        *) out_die "sudoer-cli convert dropped restore from ${_gf}. Do not submit this file. Install sudoer-cli 1.6.2+ or regenerate with ${APP_NAME} generate-sudoer-request." ;;
     esac
     return 0
 }
@@ -2969,12 +3044,120 @@ fb_sudoers_require_emit_trust() {
     : "${APP_NAME:=folder-backup}"
     : "${GLOBAL_BIN:=/usr/local/bin}"
     : "${ALLOW_TEST_LOCAL_SUDOERS:=0}"
+    _cmd="${1:-submit-sudoer-request}"
     _tier=$(fb_sudoers_trust_tier)
     if [ "${_tier}" != "production" ]; then
         if [ "${ALLOW_TEST_LOCAL_SUDOERS}" -ne 1 ]; then
-            out_die "submit-sudoer-request trust tier is ${_tier} (not production). Prefer: sudo ${APP_NAME} install  (global ${GLOBAL_BIN}/${APP_NAME}). To submit a test fragment: ${APP_NAME} submit-sudoer-request --allow-test-local  or ALLOW_TEST_LOCAL_SUDOERS=1"
+            out_die "${_cmd} trust tier is ${_tier} (not production). Prefer: sudo ${APP_NAME} install  (global ${GLOBAL_BIN}/${APP_NAME}). To emit a test file: ${APP_NAME} ${_cmd} --allow-test-local  or ALLOW_TEST_LOCAL_SUDOERS=1"
         fi
     fi
+}
+
+# =============================================================================
+# fb_generate_sudoer_request() - Type 0: write a local JSON grant you can verify
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Write this product's sudoer JSON to a local path (default under ~/.config),
+# verify backup + restore are present, and when sudoer-cli exists convert the
+# file so a dropped verb fails here — not after inbound queue. Does not write
+# /etc, does not write inbound, does not mkdir inbound.
+#
+# ALIGNMENT:
+# - requirement-three-layer-privilege-model.md §2.3.3d
+# - requirement-sudoer-json-file.md
+# - requirement-domain-folder-backup.md
+# - INC-20260817-002 (operator-readable; incomplete JSON is not a standing class)
+#
+# Last reviewed: 2026-08-17
+# =============================================================================
+fb_generate_sudoer_request() {
+    : "${APP_NAME:=folder-backup}"
+    : "${JSON:=0}"
+    : "${HOME:=/tmp}"
+    : "${SUBMIT_ACTION:=add}"
+    : "${SUBMIT_ACTION_EXPLICIT:=0}"
+
+    _out_path="${1:-}"
+    _user=$(id -un 2>/dev/null || echo "unknown")
+
+    _host_path=""
+    _host_present="false"
+    if _host_path=$(fb_probe_current_user_host_sudoers); then
+        _host_present="true"
+    else
+        _host_path=""
+    fi
+    if [ "${SUBMIT_ACTION_EXPLICIT}" -ne 1 ]; then
+        if [ "${_host_present}" = "true" ]; then
+            SUBMIT_ACTION="update"
+        else
+            SUBMIT_ACTION="add"
+        fi
+    fi
+    case "${SUBMIT_ACTION}" in
+        add|update) ;;
+        *) out_die "generate-sudoer-request action must be add or update (got ${SUBMIT_ACTION})" ;;
+    esac
+
+    fb_sudoers_require_emit_trust "generate-sudoer-request"
+
+    if [ -z "${_out_path}" ]; then
+        _out_path=$(fb_default_sudoer_request_path)
+    fi
+    case "${_out_path}" in
+        /etc|/etc/*)
+            out_die "generate-sudoer-request refuses to write under /etc (Type 0). Use a path under \$HOME or /dev/shm."
+            ;;
+        /var/sudoer-cli|/var/sudoer-cli/*)
+            out_die "generate-sudoer-request does not write inbound. Write a local file, then: ${APP_NAME} submit-sudoer-request <path>"
+            ;;
+    esac
+    if [ -e "${_out_path}" ] && [ -L "${_out_path}" ]; then
+        out_die "refusing symlink dest: ${_out_path}"
+    fi
+    if [ -d "${_out_path}" ]; then
+        out_die "generate dest is a directory: ${_out_path}"
+    fi
+    _dir=$(dirname -- "${_out_path}")
+    if [ ! -d "${_dir}" ]; then
+        mkdir -p "${_dir}" || out_die "Cannot create ${_dir}"
+    fi
+
+    fb_sudoers_json_text_compact >"${_out_path}" || out_die "Cannot write ${_out_path}"
+    chmod 0644 "${_out_path}" 2>/dev/null || true
+    if [ ! -r "${_out_path}" ]; then
+        out_die "generated sudoer file is not readable: ${_out_path}"
+    fi
+    fb_sudoers_refuse_forbidden_grant "${_out_path}"
+    fb_sudoers_verify_grant_verbs "${_out_path}"
+
+    _convert="skipped"
+    if fb_sudoers_verify_sibling_convert "${_out_path}"; then
+        _convert="ok"
+    fi
+
+    if [ "${JSON}" -eq 1 ]; then
+        out_json "generate-sudoer-request" "written" \
+            "path" "${_out_path}" \
+            "readable" "true" \
+            "verified" "true" \
+            "convert_checked" "$([ "${_convert}" = "ok" ] && echo true || echo false)" \
+            "action" "${SUBMIT_ACTION}" \
+            "host_fragment_present" "${_host_present}" \
+            "user" "${_user}"
+        return 0
+    fi
+
+    out_success "Wrote verified sudoer file to ${_out_path}"
+    out_info "Grant allows: ${APP_NAME} backup and restore (action=${SUBMIT_ACTION})"
+    if [ "${_convert}" = "ok" ]; then
+        out_info "Convert check: backup and restore still present after sudoer-cli json-to-sudoers"
+    else
+        out_info "Convert check: skipped (sudoer-cli not found). File still lists backup and restore."
+    fi
+    out_info "Review the file, then submit it:"
+    out_info "   ${APP_NAME} submit-sudoer-request ${_out_path}"
 }
 
 # =============================================================================
@@ -2986,6 +3169,7 @@ fb_sudoers_require_emit_trust() {
 # fragment, and submit it via sudoer-cli so a JSON request lands in the
 # public inbound (/var/sudoer-cli/sudoer-request). Does not write /etc
 # and does not mkdir inbound. Approver (sudoer-adm) still must approve.
+# Default emit is the compact verified grant (same as generate-sudoer-request).
 #
 # ALIGNMENT:
 # - requirement-domain-folder-backup.md
@@ -2993,7 +3177,7 @@ fb_sudoers_require_emit_trust() {
 # - requirement-sudoer-json-file.md (JSON grant body: PRJ_NAME only)
 # - requirement-shell-cli-interface.md
 #
-# Last reviewed: 2026-08-15
+# Last reviewed: 2026-08-17
 # =============================================================================
 fb_submit_sudoer_request() {
     : "${APP_NAME:=folder-backup}"
@@ -3080,15 +3264,17 @@ fb_submit_sudoer_request() {
         _tmp="${_src_file}"
         _cleanup_tmp=0
     else
-        fb_sudoers_require_emit_trust
+        fb_sudoers_require_emit_trust "submit-sudoer-request"
         if [ -z "${EFFECTIVE_STORAGE_DIR}" ]; then
             EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
         fi
         _tmp=$(util_mktemp sudoer)
-        fb_sudoers_json_text >"${_tmp}" || out_die "cannot write temp sudoer JSON ${_tmp}"
+        fb_sudoers_json_text_compact >"${_tmp}" || out_die "cannot write temp sudoer JSON ${_tmp}"
         _cleanup_tmp=1
     fi
     fb_sudoers_refuse_forbidden_grant "${_tmp}"
+    fb_sudoers_verify_grant_verbs "${_tmp}"
+    fb_sudoers_verify_sibling_convert "${_tmp}" || true
 
     # Point sudoer-cli at the public queue root (parent of real inbound).
     # Do not export a legacy sudoer-approving parent as the public trio root.
@@ -3140,11 +3326,11 @@ fb_submit_sudoer_request() {
         _ibody=$(cat "${_inbound}/${_rid}" 2>/dev/null || true)
         case "${_ibody}" in
             *'"backup"'*) ;;
-            *) out_die "inbound grant lost backup verb (sibling re-encode?). Do not approve ${_rid}." ;;
+            *) out_die "Queued sudo request is incomplete: it allows restore but not backup. Do not approve ${_rid}. Reject or leave it pending. Write a verified file, then submit that file: ${APP_NAME} generate-sudoer-request && ${APP_NAME} submit-sudoer-request <path>" ;;
         esac
         case "${_ibody}" in
             *'"restore"'*) ;;
-            *) out_die "inbound grant lost restore verb (sibling re-encode?). Do not approve ${_rid}." ;;
+            *) out_die "Queued sudo request is incomplete: it allows backup but not restore. Do not approve ${_rid}. Reject or leave it pending. Write a verified file, then submit that file: ${APP_NAME} generate-sudoer-request && ${APP_NAME} submit-sudoer-request <path>" ;;
         esac
     fi
 
@@ -3195,6 +3381,14 @@ fb_default_project_sudoers_path() {
     : "${HOME:=/tmp}"
     _user=$(fb_current_login_user)
     printf '%s' "${HOME}/.config/${APP_NAME}/sudoers.fragment-${_user}"
+}
+
+# Local verified JSON grant for generate-sudoer-request (not inbound).
+fb_default_sudoer_request_path() {
+    : "${APP_NAME:=folder-backup}"
+    : "${HOME:=/tmp}"
+    _user=$(fb_current_login_user)
+    printf '%s' "${HOME}/.config/${APP_NAME}/sudoer-request-${_user}.json"
 }
 
 # =============================================================================
@@ -3914,6 +4108,7 @@ app_about() {
     out_info "   ${APP_NAME} help            → Full usage"
     out_info "   ${APP_NAME} install         → Local install to ~/.local/bin"
     out_info "   ${APP_NAME} print-sudoers   → Sudoers fragment for admin"
+    out_info "   ${APP_NAME} generate-sudoer-request → Write a local JSON grant you can verify"
     out_info "   ${APP_NAME} submit-sudoer-request → JSON request into /var/sudoer-cli/sudoer-request"
     out_info "   ${APP_NAME} backup <dir>    → Archive + deposit + retention prune"
     out_info "   ${APP_NAME} restore <name>  → Restore archive (default dest: hard-disk)"
@@ -3925,7 +4120,7 @@ app_about() {
 # =============================================================================
 app_help() {
     : "${SHORT_DESCRIPTION:=${APP_DESC:-Local folder archive backup/restore with narrow sudo deposit}}"
-    : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, submit-sudoer-request.}"
+    : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
     : "${BACKUP_ROOT:=/var/backup}"
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${RESTORE_HOST_DEFAULT:=hard-disk}"
@@ -3969,19 +4164,25 @@ app_help() {
     out_plain "                       Remove project-sudoers-file draft only (not host elev;"
     out_plain "                       lists drafts and lets you choose when multiple;"
     out_plain "                       confirm or --force; probes /etc/sudoers.d/ and warns if active)"
+    out_plain "  generate-sudoer-request [path]"
+    out_plain "                       Type 0 independent generate: write a JSON sudoer file"
+    out_plain "                       (compact, both verbs) to a dest tests/review can read."
+    out_plain "                       Does not write /etc or inbound."
+    out_plain "                       default: ~/.config/${APP_NAME}/sudoer-request-<user>.json"
     out_plain "  submit-sudoer-request [file]"
     out_plain "                       Type 0: detect sudoer-cli + sudoer-adm; sibling writes"
     out_plain "                       JSON into /var/sudoer-cli/sudoer-request"
     out_plain "                       action=update if this user's /etc/sudoers.d/${APP_NAME}-<user>"
     out_plain "                       (or legacy ${APP_NAME}) exists; else add"
     out_plain "                       (does not write /etc; does not mkdir inbound)"
+    out_plain "                       Prefer: generate-sudoer-request, review, then submit file"
     out_empty_line
     out_info "Global Options:"
     out_plain "  --quiet, -q          Suppress info/success (errors still shown)"
     out_plain "  --json               Machine-readable JSON (implies --quiet)"
     out_plain "  --force              Force reinstall / skip uninstall confirm / restore into non-empty dest"
     out_plain "  --global             Install to GLOBAL_BIN (production elevation path)"
-    out_plain "  --allow-test-local   Allow print-sudoers when only local/unmanaged (TEST MODE)"
+    out_plain "  --allow-test-local   Allow print-sudoers / generate-sudoer-request / submit when only local/unmanaged (TEST MODE)"
     out_plain "  --update             Force submit-sudoer-request action=update"
     out_plain "  --add                Force submit-sudoer-request action=add"
     out_plain "  --disk               Restore host: hard-disk (default; reverse of ram-drive-first)"
@@ -3997,7 +4198,7 @@ app_help() {
     out_plain "  RAM_ROOT             ${RAM_ROOT}"
     out_plain "  RESTORE_HOST_DEFAULT ${RESTORE_HOST_DEFAULT}  (hard-disk|ram-drive)"
     out_plain "  USER_BIN / GLOBAL_BIN  install destinations"
-    out_plain "  ALLOW_TEST_LOCAL_SUDOERS  1 = allow test-mode print-sudoers / submit"
+    out_plain "  ALLOW_TEST_LOCAL_SUDOERS  1 = allow test-mode print-sudoers / generate / submit"
     out_plain "  SUDOER_CLI              override path to sudoer-cli"
     out_plain "  SUDOER_ADM_USER         approver login (default sudoer-adm)"
     out_plain "  SUDOER_QUEUE_INBOUND    override inbound approval dir"
@@ -4012,7 +4213,9 @@ app_help() {
     out_plain "  # admin (sudo rights): sudo sh /dev/shm/…-sudoers-admin.sh install|uninstall|replace"
     out_plain "  # host path is /etc/sudoers.d/${APP_NAME}-<user> (multi-user safe)"
     out_plain "  ${APP_NAME} remove-project-sudoers --force  # delete draft only (not /etc elev)"
+    out_plain "  ${APP_NAME} generate-sudoer-request         # verified JSON under ~/.config/"
     out_plain "  ${APP_NAME} submit-sudoer-request           # JSON into /var/sudoer-cli/sudoer-request"
+    out_plain "  ${APP_NAME} submit-sudoer-request ~/.config/${APP_NAME}/sudoer-request-\$(id -un).json"
     out_plain "  ${APP_NAME} backup /path/to/project"
     out_plain "  ${APP_NAME} restore genesis-template"
     out_plain "  ${APP_NAME} restore genesis-template --ram"
@@ -4107,7 +4310,7 @@ app_main() {
                 RESTORE_HOST="ram-drive"
                 export RESTORE_HOST
                 ;;
-            version|about|help|install|uninstall|where-is-me|backup|restore|print-sudoers|print-sudoers-install-script|remove-project-sudoers|submit-sudoer-request)
+            version|about|help|install|uninstall|where-is-me|backup|restore|print-sudoers|print-sudoers-install-script|remove-project-sudoers|generate-sudoer-request|submit-sudoer-request)
                 COMMAND="$1"
                 ;;
             *)
@@ -4115,6 +4318,7 @@ app_main() {
                 if [ "${COMMAND}" = "backup" ] || [ "${COMMAND}" = "print-sudoers" ] \
                     || [ "${COMMAND}" = "print-sudoers-install-script" ] \
                     || [ "${COMMAND}" = "remove-project-sudoers" ] \
+                    || [ "${COMMAND}" = "generate-sudoer-request" ] \
                     || [ "${COMMAND}" = "submit-sudoer-request" ]; then
                     if [ -z "${_domain_arg}" ]; then
                         _domain_arg="$1"
@@ -4150,6 +4354,7 @@ app_main() {
         print-sudoers) fb_print_sudoers "${_domain_arg}" ;;
         print-sudoers-install-script) fb_print_sudoers_install_script "${_domain_arg}" ;;
         remove-project-sudoers) fb_remove_project_sudoers "${_domain_arg}" ;;
+        generate-sudoer-request) fb_generate_sudoer_request "${_domain_arg}" ;;
         submit-sudoer-request) fb_submit_sudoer_request "${_domain_arg}" ;;
         help|*)       app_help ;;
     esac

@@ -152,6 +152,7 @@ It does **not** own create/name/deposit/verify/restore (`requirement-folder-arch
 |----------------|-------|--------|
 | **TP-FOLDER-BACKUP-18** | `tests/test_domain_folder_backup.sh` | **have** — daily cap prune lowest N |
 | **TP-FOLDER-BACKUP-18b** | same | **have** — daily prune does not touch other days / other basename |
+| **TP-FOLDER-BACKUP-18c** | same | **have** — failed backup does not prune (AC-5) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`

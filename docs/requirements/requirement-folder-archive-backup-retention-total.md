@@ -149,6 +149,7 @@ It does **not** own create/name/deposit/verify/restore (those stay in `requireme
 |----------------|-------|--------|
 | **TP-FOLDER-BACKUP-17** | `tests/test_domain_folder_backup.sh` | **have** — total cap prune |
 | **TP-FOLDER-BACKUP-17b** | same | **have** — no cross-basename delete |
+| **TP-FOLDER-BACKUP-17c** | same | **have** — failed backup does not prune (AC-5) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`

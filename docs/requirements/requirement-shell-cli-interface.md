@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.2.0)  
+**Status**: Active (Version 1.3.1)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -64,7 +64,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | **Primary executable** | `src/folder-backup` (POSIX `/bin/sh`, single-file ship unit) |
 | **Dispatcher** | `app_main` |
 | **Output SSOT** | `out_text` + wrappers (`out_info`, `out_success`, `out_warn`, `out_error`, `out_die`, `out_plain`, `out_json`, …) |
-| **Version SSOT** | `VERSION="1.8.0"` hard-assign in ship unit |
+| **Version SSOT** | ship unit `VERSION=` in `src/folder-backup` (do not pin a stale number here) |
 | **Install paths** | Global: `GLOBAL_BIN` default `/usr/local/bin`; User: `USER_BIN` default `${HOME}/.local/bin` |
 | **Primary install story** | User bin: `~/.local/bin/folder-backup` |
 | **Online channel env** | **Not product UX** (absent; inherited from cli-template) |
@@ -84,6 +84,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
 | `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
 | `print-sudoers` | Type 0 | `fb_print_sudoers` (domain) | Emit sudoers fragment for admin to install under `/etc/sudoers.d/` — **does not** write `/etc` itself |
+| `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound |
 | `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound |
 
 #### Global flags (normative wiring)
@@ -161,6 +162,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | AC-4 | No online self-management verbs on the surface |
 | AC-5 | Domain verbs point to domain requirement for deep semantics |
 | AC-6 | `submit-sudoer-request` is Type 0, routed, listed in help; does not write `/etc` or create inbound |
+| AC-7 | `generate-sudoer-request` is Type 0, routed, listed in help; independent of submit; dest is invoking-user readable; does not write `/etc` or inbound |
 
 ---
 
@@ -193,6 +195,8 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | 2026-08-03 | Active 1.0.0 | CLI surface for local-only folder-backup + domain backup |
 | 2026-08-15 | Active 1.1.0 | `submit-sudoer-request` listed as Type 0 JSON submit into sibling public inbound |
 | 2026-08-17 | Active 1.2.0 | `--add` / `--update`; default submit action from host `/etc/sudoers.d` probe |
+| 2026-08-17 | Active 1.3.0 | `generate-sudoer-request` Type 0; AC-7 |
+| 2026-08-17 | Active 1.3.1 | Generate dest must be readable for tests/review; independent of submit |
 
 ---
 

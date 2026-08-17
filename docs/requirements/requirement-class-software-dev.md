@@ -101,6 +101,7 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | Empty argv Type N help | `requirement-shell-cli-zero-arguments` | Local-only |
 | Local self-managed lifecycle | `requirement-shell-local-self-management` | install / uninstall / where-is-me |
 | Output SSOT (`out_*`) | `requirement-shell-output-requirements` | Do not duplicate |
+| Operator-readable error wording | `requirement-operator-readable-error` | Human-intro-style `[ERROR]` copy; do not duplicate |
 | Scratch/cache storage resolve | `requirement-shell-cli-storage` | Do not duplicate |
 | Idempotency / re-run safety | `requirement-shell-idempotency` | Do not duplicate |
 | Interactive vs non-interactive | `requirement-shell-interactive-vs-noninteractive` | Do not duplicate |
@@ -173,6 +174,7 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | `requirement-shell-cli-zero-arguments` | Type N empty argv |
 | `requirement-shell-local-self-management` | Local install lifecycle |
 | `requirement-shell-output-requirements` | `out_*` SSOT |
+| `requirement-operator-readable-error` | Operator error wording |
 | `requirement-shell-cli-storage` | Scratch/cache resolve |
 | `requirement-shell-idempotency` | Re-run safety |
 | `requirement-shell-interactive-vs-noninteractive` | Mode policy |

@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.8.2  
+**Product VERSION:** 1.9.0  
 **Last plan update:** 2026-08-17  
-**Last suite run:** see latest `./tests/run.sh` (1.8.2: TP-23/23b host-probe add/update)
+**Last suite run:** `./tests/run.sh` (1.9.0: PASS=242 FAIL=0 SKIP=2 — generate TP-24* + operator-readable TP-25*)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -22,11 +22,13 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Storage isolation | have | TP-CLI-12 |
 | No online verbs / no SCRIPT_URL UX | have | TP-CLI-04, TP-CLI-10 |
 | Local install / idempotent / uninstall / mode 0755 | have | TP-LC-01..10 |
-| Help lists sudoers verbs (print / install-script / remove draft / submit + public inbound) | have | TP-CLI-04 |
+| Help lists sudoers verbs (print / install-script / remove draft / **generate** / submit + public inbound) | have | TP-CLI-04 |
+| Independent generate dest readable without sudo | have | TP-FOLDER-BACKUP-24/24b/24c/24d |
+| Operator-readable inbound-fidelity `[ERROR]` | have | TP-FOLDER-BACKUP-25/25b/25c |
 | Submit detect: public inbound first; env override; no Type 0 mkdir | have | TP-FOLDER-BACKUP-19/20/21/21b |
 | JSON sudoer file is `folder-backup` backup/restore only (no OS tools / path / filename) | have | TP-FOLDER-BACKUP-22/22b/22c |
 | Pretty emit + inbound body keep both verbs (sibling re-encode fidelity) | have | TP-FOLDER-BACKUP-22e/22f |
-| Submit action: host `/etc/sudoers.d` fragment → update; else add | have | TP-FOLDER-BACKUP-23/23b |
+| Submit action: host `/etc/sudoers.d` fragment → update; else add | have | TP-FOLDER-BACKUP-23/23b/23c |
 | Domain surface: print-sudoers allowlist + test-mode gate | have | TP-FOLDER-BACKUP-01, 01b, 01c, 02 |
 | Admin install-script handoff (project-sudoers-file) | have | TP-FOLDER-BACKUP-14 |
 | Remove project-sudoers draft only | have | TP-FOLDER-BACKUP-15 |
@@ -48,7 +50,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-01 | `sh -n` ship unit | `tests/test_cli.sh` | requirement-shell-cli-interface | **have** |
 | TP-CLI-02 | version human | test_cli | requirement-shell-cli-interface | **have** |
 | TP-CLI-03 | version JSON | test_cli | requirement-shell-output-requirements | **have** |
-| TP-CLI-04 | help local verbs; print-sudoers + install-script + remove-project-sudoers + submit-sudoer-request; no online | test_cli | requirement-shell-cli-interface · domain | **have** |
+| TP-CLI-04 | help local verbs; print-sudoers + install-script + remove-project-sudoers + generate-sudoer-request + submit-sudoer-request; no online | test_cli | requirement-shell-cli-interface · domain | **have** |
 | TP-CLI-05 | help JSON short | test_cli | requirement-shell-output-requirements | **have** |
 | TP-CLI-06 | about JSON storage + domain fields | test_cli | requirement-shell-cli-storage · domain | **have** |
 | TP-CLI-07 | empty argv Type N help | test_cli | requirement-shell-cli-zero-arguments | **have** |
@@ -79,7 +81,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 |-------|--------|-------|------------------------|--------|
 | TP-FOLDER-BACKUP-01 | print-sudoers with allow; TEST MODE banner; no Type 0 `/etc` write; tar -tzf | test_domain | three-layer §2.3.1a/§2.3.3 · domain | **have** |
 | TP-FOLDER-BACKUP-01b | refuse print-sudoers without `--allow-test-local` when not production | test_domain | three-layer trust tier **S13** | **have** |
-| TP-FOLDER-BACKUP-01c | restore-stage reverse cp allowlist in fragment | test_domain | three-layer · folder-archive-backup | **have** |
+| TP-FOLDER-BACKUP-01c | print-sudoers text dual includes project **restore** verb | test_domain | three-layer · folder-archive-backup | **have** |
 | TP-FOLDER-BACKUP-02 | print-sudoers to path; narrow; per-user stage; test mode in file | test_domain | three-layer privilege | **have** |
 | TP-FOLDER-BACKUP-03 | backup missing operand | test_domain | **folder-archive-backup** | **have** |
 | TP-FOLDER-BACKUP-04 | backup missing dir | test_domain | **folder-archive-backup** | **have** |
@@ -105,13 +107,23 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-FOLDER-BACKUP-22f | stub inbound **body** still contains both verbs (not file-count only) | test_domain | **sudoer-json-file** AC-9 | **have** |
 | TP-FOLDER-BACKUP-23 | this-user host fragment under `SUDOERS_D_DIR` → default submit **update** | test_domain | three-layer AC-22 | **have** |
 | TP-FOLDER-BACKUP-23b | `--add` overrides host-present default | test_domain | three-layer AC-22 | **have** |
+| TP-FOLDER-BACKUP-23c | other-user host fragment does not flip this user to **update** | test_domain | three-layer AC-22 | **have** |
+| TP-FOLDER-BACKUP-24 | generate-sudoer-request writes compact JSON with both verbs | test_domain | three-layer §2.3.3d AC-23 | **have** |
+| TP-FOLDER-BACKUP-24b | generate explicit path; refuse `/etc` | test_domain | three-layer AC-23 | **have** |
+| TP-FOLDER-BACKUP-24c | generated file through real sudoer-cli convert keeps both verbs | test_domain | three-layer AC-23 · sudoer-json-file AC-9 | **have** |
+| TP-FOLDER-BACKUP-24d | generate dest is readable without sudo; suite `cat`s body | test_domain | three-layer §2.3.2a AC-24 · sudoer-json-file AC-10 | **have** |
+| TP-FOLDER-BACKUP-25 | inbound-fidelity error names incompleteness in operator words | test_domain | operator-readable-error AC-1 | **have** |
+| TP-FOLDER-BACKUP-25b | same error names `generate-sudoer-request` | test_domain | operator-readable-error AC-2 | **have** |
+| TP-FOLDER-BACKUP-25c | same error does not contain `sibling re-encode` | test_domain | operator-readable-error AC-3 | **have** |
 | TP-FOLDER-BACKUP-15 | remove-project-sudoers: force remove draft; refuse `/etc`; already absent; host elev probe | test_domain | three-layer §2.3.3b · project-sudoers-file | **have** |
 | TP-FOLDER-BACKUP-15b | multi-draft: list + non-interactive requires path; explicit path removes one only | test_domain | three-layer AC-15 · L-SUDOERS-04 | **have** |
 | TP-FOLDER-BACKUP-16 | restore dest whitelist: refuse `/etc/passwd` + exact `/etc` + `/etc/<other>`; W-ETC-USER `/etc/{{username}}` gate allow | test_domain | **folder-archive-backup** §2.6b.2a · INC-20260812-001 | **have** |
 | TP-FOLDER-BACKUP-17 | total retention: after deposit, prune oldest until ≤30 per basename | test_domain | **retention-total** | **have** |
 | TP-FOLDER-BACKUP-17b | total retention: no cross-basename delete | test_domain | **retention-total** | **have** |
+| TP-FOLDER-BACKUP-17c | failed backup does not prune prior total archives | test_domain | **retention-total** AC-5 | **have** |
 | TP-FOLDER-BACKUP-18 | daily retention: same-day prune lowest N until ≤5 | test_domain | **retention-daily** | **have** |
 | TP-FOLDER-BACKUP-18b | daily retention: does not delete other days / other basename | test_domain | **retention-daily** | **have** |
+| TP-FOLDER-BACKUP-18c | failed backup does not prune prior same-day archives | test_domain | **retention-daily** AC-5 | **have** |
 
 ---
 
@@ -130,7 +142,9 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | JSON emit identity (no OS-tool / path hardcode) | 22 / 22b / 22c / 22d | **sudoer-json-file** AC-1..7 |
 | Pretty emit + real sibling convert/submit keeps both verbs | **22e** | **sudoer-json-file** AC-9 · three-layer AC-21 · **JR-3/JR-4** |
 | Stub inbound **body** still has both verbs | **22f** | AC-9 · **JR-6** (not file-count only) |
-| Review gate JSON re-encode | n/a automated | `what-to-review` **JR-1..8** · **S15** · INC-20260817-001 |
+| Independent generate dest (compact + readable) | **24 / 24d** | three-layer AC-23/24 · **JR-9** · **S16** |
+| Operator-readable inbound-fidelity error | **25 / 25b / 25c** | operator-readable-error AC-1..3 · **L-OUTPUT-01** |
+| Review gate JSON re-encode | n/a automated | `what-to-review` **JR-1..9** · **S15** / **S16** · INC-20260817-001 |
 
 ---
 

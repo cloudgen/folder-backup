@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-domain-folder-backup.md  
-**Status**: Active (Version 1.5.0)  
+**Status**: Active (Version 1.6.1)  
 **Area**: domain  
 **Key**: `requirement-domain-folder-backup`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -27,6 +27,7 @@ This file remains the sole Active **`requirement-domain-*`** (four pillars).
 | `print-sudoers` | optional output path; `--allow-test-local` when test_local | `fb_*` | Emit **project-sudoers-file** (draft; no `/etc` write) | **`requirement-three-layer-privilege-model`** |
 | `print-sudoers-install-script` | optional script path; same trust gate | `fb_*` | Admin handoff script under `/dev/shm` or temp (`install`/`uninstall`/`replace`/`status`) | **`requirement-three-layer-privilege-model`** §2.3.3a |
 | `remove-project-sudoers` | optional path; `--force` | `fb_*` | Remove **project-sudoers-file** draft only (not `/etc`) | **`requirement-three-layer-privilege-model`** §2.3.3b |
+| `generate-sudoer-request` | optional dest path; `--update` / `--add`; `--allow-test-local` | `fb_*` | Type 0 **independent** generate: write JSON grant to a dest **readable without sudo** (tests/review); compact; both verbs; no `/etc`; no inbound | workflow: **`requirement-three-layer-privilege-model`** §2.3.2a · §2.3.3d · JSON body: **`requirement-sudoer-json-file`** |
 | `submit-sudoer-request` | optional sudoers file; `--purpose`; `--update` / `--add`; `--allow-test-local` | `fb_*` | Type 0 submitter: detect sudoer-cli + sudoer-adm + **public inbound**; **default action=update** if this user’s `/etc/sudoers.d/{{APP_NAME}}-<user>` exists, else add; sibling allocates JSON (no `/etc` write; no inbound `mkdir`) | workflow: **`requirement-three-layer-privilege-model`** §2.3.3c · JSON body: **`requirement-sudoer-json-file`** |
 
 **Routing:** Dispatcher in `app_main` (CLI interface) **MUST** route these verbs; unknown operands fail closed.
@@ -42,6 +43,7 @@ This file remains the sole Active **`requirement-domain-*`** (four pillars).
 | Sudoers draft print | Expose `print-sudoers` | `requirement-three-layer-privilege-model` |
 | Admin sudoers install script | Expose `print-sudoers-install-script` | `requirement-three-layer-privilege-model` §2.3.3a · term `project-sudoers-file` |
 | Remove project-sudoers draft | Expose `remove-project-sudoers` | `requirement-three-layer-privilege-model` §2.3.3b |
+| Generate sudoer file | Expose `generate-sudoer-request` — **independent** JSON grant to a dest tests/review can read without sudo | workflow: `requirement-three-layer-privilege-model` §2.3.2a · §2.3.3d · body: `requirement-sudoer-json-file` |
 | Submit sudoers for approval | Expose `submit-sudoer-request` — JSON request into sibling public inbound | workflow: `requirement-three-layer-privilege-model` §2.3.3c · body: `requirement-sudoer-json-file` |
 
 Domain **MUST NOT** restate full operational backup rules in a second competing SSOT. Pointers and verb catalog only.
@@ -57,6 +59,7 @@ Domain **MUST NOT** restate full operational backup rules in a second competing 
 | `print-sudoers` | Emit **project-sudoers-file** (draft) for admin install |
 | `print-sudoers-install-script` | Write admin script (`/dev/shm` or temp) for sudo install/uninstall/replace of project-sudoers-file |
 | `remove-project-sudoers [path]` | Delete project-sudoers-file draft only (list/choose if multiple; confirm / `--force`; not `/etc`) |
+| `generate-sudoer-request [path]` | Independently write a JSON grant to a dest tests and review can read (compact; both verbs); no `/etc`; no inbound |
 | `submit-sudoer-request [file]` | Queue a JSON sudoers-grant request via sudoer-cli into `/var/sudoer-cli/sudoer-request` (default **update** if this user’s host fragment exists; `--add`/`--update`; no `/etc` write; no inbound mkdir) |
 | Env note | `BACKUP_*`, `PROJECTS_ROOT`, `RAM_ROOT`, `RESTORE_HOST_DEFAULT` |
 | Privilege note | Archive as user; deposit/restore-stage need allowlisted sudo after admin installs fragment |
@@ -69,6 +72,8 @@ folder-backup print-sudoers-install-script
 # admin (sudo): sudo sh /dev/shm/folder-backup-<user>-sudoers-admin.sh install
 # leave test elev: sudo sh …/…-sudoers-admin.sh uninstall
 folder-backup backup /path/to/project
+folder-backup generate-sudoer-request
+folder-backup submit-sudoer-request ~/.config/folder-backup/sudoer-request-<user>.json
 folder-backup submit-sudoer-request
 # sibling writes: /var/sudoer-cli/sudoer-request/sudoer-YYYYMMDD-folder-backup-<user>-add-N.json
 ```
@@ -103,6 +108,7 @@ folder-backup submit-sudoer-request
 | **Backup operations SSOT** | `requirement-folder-archive-backup` |
 | **Privilege / sudoers SSOT** | `requirement-three-layer-privilege-model` (workflow) · `requirement-sudoer-json-file` (JSON grant body) |
 | **Submit verb** | `submit-sudoer-request` → `fb_submit_sudoer_request` |
+| **Generate verb** | `generate-sudoer-request` → `fb_generate_sudoer_request` |
 | **Public inbound (sibling)** | `/var/sudoer-cli/sudoer-request` (3773) |
 | **Worked queued basename** | `sudoer-20260815-folder-backup-leolio-add-1.json` |
 | **Bootstrap** | Specialized from **cli-template** Type 0 architecture; online install already absent on A |
@@ -145,8 +151,8 @@ folder-backup submit-sudoer-request
 | ID | Criterion |
 |----|-----------|
 | AC-1 | Four pillars present (subcommands, feature map, help, about) |
-| AC-2 | `backup`, `print-sudoers`, `print-sudoers-install-script`, `remove-project-sudoers`, and `submit-sudoer-request` listed with peer SSOT pointers |
-| AC-3 | Help lists backup + print-sudoers + install-script + remove-project-sudoers + submit-sudoer-request |
+| AC-2 | `backup`, `print-sudoers`, `print-sudoers-install-script`, `remove-project-sudoers`, `generate-sudoer-request`, and `submit-sudoer-request` listed with peer SSOT pointers |
+| AC-3 | Help lists backup + print-sudoers + install-script + remove-project-sudoers + generate-sudoer-request + submit-sudoer-request |
 | AC-4 | About lists backup root / notation / deposit dir + sudoer-cli / sudoer-adm / inbound (preferred public path) + `host_sudoers_present` |
 | AC-5 | Registered as sole Active domain SSOT |
 | AC-6 | No competing full backup ops body (defers to folder-archive-backup) |
@@ -176,6 +182,7 @@ folder-backup submit-sudoer-request
 | **TP-CLI-04,06** | `tests/test_cli.sh` | have | help/about list domain verbs |
 | **TP-FOLDER-BACKUP-19,20** | `tests/test_domain_folder_backup.sh` | have | submit fail-closed / stub inbound (privilege peer) |
 | **TP-FOLDER-BACKUP-23,23b** | same | have | host `/etc/sudoers.d` probe → update; `--add` override |
+| **TP-FOLDER-BACKUP-24,24b,24c,24d** | same | have | generate-sudoer-request independent dest; suite reads without sudo |
 | **TP-FOLDER-BACKUP-21** | same | have | public inbound preferred over leftover `sudoer-approving`; no Type 0 mkdir |
 | **TP-FOLDER-BACKUP-21b** | same | have | env inbound override wins over public |
 | **TP-FOLDER-BACKUP-22,22b,22c** | same | **have** | JSON sudoer file body — primary: `requirement-sudoer-json-file` |
@@ -196,6 +203,8 @@ folder-backup submit-sudoer-request
 | 2026-08-15 | Active 1.4.0 | Submit = JSON into `/var/sudoer-cli/sudoer-request`; no inbound mkdir |
 | 2026-08-15 | Active 1.4.1 | JSON sudoer file body → `requirement-sudoer-json-file` |
 | 2026-08-17 | Active 1.5.0 | Submit default update when this user’s host fragment exists; `--add`/`--update` |
+| 2026-08-17 | Active 1.6.0 | `generate-sudoer-request` surface (local verified JSON) |
+| 2026-08-17 | Active 1.6.1 | Generate is independent; dest readable for tests/review (three-layer §2.3.2a) |
 
 ---
 

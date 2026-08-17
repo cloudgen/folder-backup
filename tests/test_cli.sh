@@ -48,6 +48,7 @@ run_test_cli() {
     assert_contains "TP-CLI-04 help install-script" "$_out" "print-sudoers-install-script"
     assert_contains "TP-CLI-04 help remove-project-sudoers" "$_out" "remove-project-sudoers"
     assert_contains "TP-CLI-04 help submit-sudoer-request" "$_out" "submit-sudoer-request"
+    assert_contains "TP-CLI-04 help generate-sudoer-request" "$_out" "generate-sudoer-request"
     assert_contains "TP-CLI-04 help public inbound" "$_out" "/var/sudoer-cli/sudoer-request"
     assert_contains "TP-CLI-04 help --update" "$_out" "--update"
     assert_contains "TP-CLI-04 help --add" "$_out" "--add"

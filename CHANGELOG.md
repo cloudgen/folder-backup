@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] - 2026-08-17
+
+### Added
+
+- Law **`requirement-operator-readable-error`**: blocking errors must be understandable (what happened / next step). Suite **TP-FOLDER-BACKUP-25 / 25b / 25c**. Portable: **`LM-OPERATOR-READABLE-ERROR`** · **`SK-OPERATOR-READABLE-ERROR`** · **`CL-OPERATOR-READABLE-ERROR`**.
+- **`generate-sudoer-request [path]`** writes a local JSON sudoer file (compact; `backup` and `restore`) and verifies it. Default: `~/.config/folder-backup/sudoer-request-<user>.json`. Does not write `/etc` or inbound. When `sudoer-cli` is present, `json-to-sudoers` must still list both verbs. Next step is `submit-sudoer-request <path>`.
+- Suite **TP-FOLDER-BACKUP-24 / 24b / 24c / 24d**. Law: three-layer **1.10.0** AC-23/24 · domain **1.6.1** · CLI **1.3.1** · sudoer-json **1.2.0**. Incident **INC-20260817-002**.
+
+### Changed
+
+- **`submit-sudoer-request` default handoff is compact JSON** (same grant as pretty `print-sudoers` dual) so sibling convert keeps both verbs. Inbound fail-closed copy names the missing grant, the request id, and `generate-sudoer-request`.
+- **Independent generate (sacred):** any sudoer generate is a Type 0 subcommand that writes a dest tests and review can read without sudo. Submit temp / inbound / `/etc` are not that dest.
+
 ## [1.8.2] - 2026-08-17
 
 ### Added

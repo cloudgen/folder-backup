@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-sudoer-json-file.md  
-**Status**: Active (Version 1.1.0)  
+**Status**: Active (Version 1.2.0)  
 **Area**: architecture  
 **Key**: `requirement-sudoer-json-file`  
 **Optional RQ-ID**: `RQ-SUDOER-JSON-FILE`  
@@ -63,7 +63,7 @@ Elevating **`{{PRJ_NAME}}`** once is the smaller, stronger F6: after the operato
 2. **MUST** include a `backup` grant when durable deposit is in scope.  
 3. **MUST** include a `restore` grant when elevated restore-stage fetch is in scope.  
 4. **MUST NOT** put deposit paths, stage paths, host HOME, or archive filenames in `args` (no `/var/backup/…`, no `/dev/shm/…`, no `*.tar.gz`, no `NAME-YYYYMMDD-N.tar.gz`). Paths and names are **Config / product law**, not grant operands.  
-5. **MUST NOT** grant `install`, `uninstall`, `print-sudoers`, `print-sudoers-install-script`, `remove-project-sudoers`, or `submit-sudoer-request` as elevated commands (those stay Type 0).  
+5. **MUST NOT** grant `install`, `uninstall`, `print-sudoers`, `print-sudoers-install-script`, `remove-project-sudoers`, `generate-sudoer-request`, or `submit-sudoer-request` as elevated commands (those stay Type 0).  
 6. **MUST NOT** grant `{{PRJ_NAME}}` with **no** verb when that would let the user run any subcommand as root. Verb-bound entries are required.  
 7. Extra flags the CLI accepts (`--json`, `--force`, `--disk`, `--ram`) **MUST NOT** be frozen as the only legal operands in the JSON; the product validates flags after elev.
 
@@ -173,7 +173,8 @@ That shape (and `cp` / `tar` / `rm` / `install` / `chmod` siblings) is **non-com
 1. When `submit-sudoer-request` builds or accepts a JSON sudoer file, the body **MUST** satisfy §2.2–2.4.  
 2. **MUST** fail closed if an input file’s `commands` contain a forbidden path or OS-tool basename.  
 3. **MUST NOT** “fix” a forbidden file by submitting it anyway.  
-4. Trust-tier gates (production vs test_local) remain on `requirement-three-layer-privilege-model`. This requirement does not weaken those gates.
+4. Trust-tier gates (production vs test_local) remain on `requirement-three-layer-privilege-model`. This requirement does not weaken those gates.  
+5. **Independent generate:** this JSON **MUST** be writable by a Type 0 **subcommand** (this product: `generate-sudoer-request`) **without** submit, inbound, or `/etc`. Dest **MUST** be invoking-user readable so tests and review can `cat` it without sudo. Submit temp and inbound are **not** that dest. Workflow/readability law: `requirement-three-layer-privilege-model` §2.3.2a.
 
 ### 2.7a Re-encode / convert fidelity (sacred)
 
@@ -197,6 +198,8 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 | **Forbidden paths (examples)** | `/usr/bin/mkdir`, `/bin/mkdir`, `/usr/bin/cp`, `/bin/cp`, `/usr/bin/install`, `/usr/bin/tar`, `/bin/tar`, `/bin/rm`, `/usr/bin/rm`, `/usr/bin/chmod`, `/bin/chmod` |
 | **Ship unit** | `src/folder-backup` |
 | **Submit verb** | `submit-sudoer-request` → `fb_submit_sudoer_request` |
+| **Generate verb** | `generate-sudoer-request` → `fb_generate_sudoer_request` (independent compact dual; dest readable without sudo) |
+| **Generate dest (default)** | `${HOME}/.config/folder-backup/sudoer-request-<user>.json` (path operand for suite/review) |
 | **Service field** | `folder-backup` |
 | **Worked user in samples** | `leolio` (illustrative login; live emit uses `id -un`) |
 | **Privilege / workflow peer** | `requirement-three-layer-privilege-model` |
@@ -238,7 +241,8 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 9. Cite templates or skills as product-source authority for this grant.  
 10. Treat a sibling re-encode that dropped `commands[]` objects as “still the same grant” because `purpose` or `[OK]` survived.  
 11. Mark emit-only tests (substring `"backup"` on the draft dual) as proof the **queued inbound** kept every verb.  
-12. Require callers to emit minified `},{` only in order to skip a whitespace-tolerant decoder.
+12. Require callers to emit minified `},{` only in order to skip a whitespace-tolerant decoder.  
+13. Make submit, inbound, or a deleted temp the only way to obtain this JSON for tests or review. Independent generate to a readable dest is required.
 
 **Violating this rule is a critical privilege / complexity-as-insecurity regression.**
 
@@ -257,6 +261,7 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 | AC-7 | Submit of a file that violates AC-1–AC-5 fails closed |
 | AC-8 | Text dual of this grant (if emitted) lists only `{{PRJ_NAME}} backup` and `{{PRJ_NAME}} restore` |
 | AC-9 | Pretty-printed grant with both verbs survives sibling `json-to-sudoers` / submit re-encode as **both** verbs (or submit fail-closed if inbound readable and a verb is missing) |
+| AC-10 | Independent generate subcommand writes this JSON to an invoking-user-readable dest; suite opens it without sudo |
 
 ---
 
@@ -284,6 +289,7 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 | **TP-FOLDER-BACKUP-22c** | same | **have** — JSON sudoer file contains no deposit/stage path and no `*.tar.gz` |
 | **TP-FOLDER-BACKUP-22e** | same | **have** — pretty emit through real `sudoer-cli` keeps `backup` and `restore` |
 | **TP-FOLDER-BACKUP-22f** | same | **have** — stub inbound body still contains both verbs (not file-count only) |
+| **TP-FOLDER-BACKUP-24 / 24d** | same | **have** — independent generate dest; suite reads file without sudo |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -295,6 +301,7 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 | 2026-08-15 | Active 1.0.0 | JSON sudoer file SSOT; grant is `{{PRJ_NAME}}` only; OS-tool commands forbidden (complexity weakens security) |
 | 2026-08-15 | Active 1.0.1 | Ship unit 1.8.0 emit matches §2.6; DTV 22/22b/22c **have** |
 | 2026-08-17 | Active 1.1.0 | §2.7a re-encode fidelity; pretty JSON legal; AC-9; TP-22e/22f; INC-20260817-001 |
+| 2026-08-17 | Active 1.2.0 | §2.7 item 5 independent generate to a dest tests/review can read; AC-10; TP-24d |
 
 ---
 

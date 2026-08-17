@@ -93,6 +93,7 @@ prompt_ask() {
 | `install` | May inform; no required confirm for first install | Proceed without hang |
 | `backup` | May show progress via `out_*` | No prompts; fail loud on missing operands / sudo failure |
 | `print-sudoers` | Print fragment | Print fragment (stdout/file); no `/etc` write |
+| `generate-sudoer-request` | May show path + verify via `out_*` | No prompts; write + verify; no hang |
 | `submit-sudoer-request` | May show detect/submit via `out_*` | No prompts; fail closed if sudoer-cli / inbound missing; no hang |
 | Missing required operand | Clear error | Clear error; non-zero exit |
 

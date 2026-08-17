@@ -132,6 +132,7 @@ Rules:
 | `requirement-shell-cli-interface` | Modes and flags |
 | `requirement-shell-interactive-vs-noninteractive` | Prompt vs auto |
 | `requirement-domain-folder-backup` | Domain message payloads |
+| `requirement-operator-readable-error` | Operator error **wording** (human-intro style) |
 | `docs/requirements/index.md` | Registry |
 
 ---
