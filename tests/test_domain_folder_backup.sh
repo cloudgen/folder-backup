@@ -45,7 +45,7 @@ run_test_domain_folder_backup() {
     assert_contains "TP-FOLDER-BACKUP-01 NOPASSWD" "$_out" "NOPASSWD"
     assert_contains "TP-FOLDER-BACKUP-01 project backup verb" "$_out" "folder-backup backup"
     assert_contains "TP-FOLDER-BACKUP-01 restore verb" "$_out" "folder-backup restore"
-    assert_contains "TP-FOLDER-BACKUP-01 admin install hint" "$_out" "/etc/sudoers.d/"
+    assert_contains "TP-FOLDER-BACKUP-01 admin install hint" "$_out" "sudoers.d/"
     assert_contains "TP-FOLDER-BACKUP-01 test mode banner" "$_out" "TEST MODE ONLY"
     assert_not_contains "TP-FOLDER-BACKUP-01 no tar Cmnd" "$_out" "tar -tzf"
     # print-sudoers never writes /etc itself. Host may already have admin-installed fragment.
@@ -282,7 +282,9 @@ run_test_domain_folder_backup() {
     _script="${CI_HOME}/sudoers-admin.sh"
     _user=$(id -un 2>/dev/null || echo "unknown")
     _draft_default="${CI_HOME}/.config/folder-backup/sudoers.fragment-${_user}"
-    _installed_default="/etc/sudoers.d/folder-backup-${_user}"
+    : "${CI_SUDOERS_D:=${CI_HOME}/sudoers.d}"
+    _installed_default="${CI_SUDOERS_D}/folder-backup-${_user}"
+    _installed_real="/etc/sudoers.d/folder-backup-${_user}"
     _out=$(HOME="${CI_HOME}" sh "${SCRIPT}" print-sudoers-install-script --allow-test-local "${_script}" 2>&1)
     _ec=$?
     assert_eq "TP-FOLDER-BACKUP-14 install-script exit 0" 0 "$_ec"
@@ -309,27 +311,23 @@ run_test_domain_folder_backup() {
     _out=$(HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force 2>&1)
     assert_eq "TP-FOLDER-BACKUP-15 remove --force exit 0" 0 "$?"
     assert_file_missing "TP-FOLDER-BACKUP-15 draft removed" "${_draft}"
-    assert_contains "TP-FOLDER-BACKUP-15 mentions host path" "$_out" "/etc/sudoers.d/"
-    # Probe honesty: if any host elev exists warn STILL ACTIVE; else report host also absent
-    if [ -e "${_installed_default}" ] || [ -e /etc/sudoers.d/folder-backup ] || ls /etc/sudoers.d/folder-backup-* >/dev/null 2>&1; then
-        assert_contains "TP-FOLDER-BACKUP-15 host elev still active warn" "$_out" "STILL ACTIVE"
-    else
-        assert_contains "TP-FOLDER-BACKUP-15 host fragment also absent" "$_out" "also absent"
-    fi
-    # refuse /etc path (legacy or per-user)
+    assert_contains "TP-FOLDER-BACKUP-15 mentions host path" "$_out" "sudoers.d/"
+    # Isolated probe: seed this-user fragment so STILL ACTIVE is deterministic
+    mkdir -p "${CI_SUDOERS_D}"
+    printf '# probe\n' > "${_installed_default}"
+    _out=$(HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force 2>&1)
+    assert_contains "TP-FOLDER-BACKUP-15 host elev still active warn" "$_out" "STILL ACTIVE"
+    # refuse /etc path (legacy or real per-user dest)
     _err=$(HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force /etc/sudoers.d/folder-backup 2>&1 >/dev/null)
     assert_eq "TP-FOLDER-BACKUP-15 refuse /etc exit 1" 1 "$?"
-    _err=$(HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force "${_installed_default}" 2>&1 >/dev/null)
+    _err=$(HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force "${_installed_real}" 2>&1 >/dev/null)
     assert_eq "TP-FOLDER-BACKUP-15 refuse per-user /etc exit 1" 1 "$?"
     # already absent is success; still honest about host elev
     _out=$(HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force 2>&1)
     assert_eq "TP-FOLDER-BACKUP-15 already absent exit 0" 0 "$?"
     assert_contains "TP-FOLDER-BACKUP-15 already absent text" "$_out" "not present"
-    if [ -e "${_installed_default}" ] || [ -e /etc/sudoers.d/folder-backup ] || ls /etc/sudoers.d/folder-backup-* >/dev/null 2>&1; then
-        assert_contains "TP-FOLDER-BACKUP-15 already-absent still warns host elev" "$_out" "STILL ACTIVE"
-    else
-        assert_contains "TP-FOLDER-BACKUP-15 already-absent host clean" "$_out" "also absent"
-    fi
+    assert_contains "TP-FOLDER-BACKUP-15 already-absent still warns host elev" "$_out" "STILL ACTIVE"
+    rm -f "${_installed_default}"
     _json=$(HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force --json 2>/dev/null)
     assert_contains "TP-FOLDER-BACKUP-15 json host_fragment_present" "$_json" "host_fragment_present"
 
@@ -514,11 +512,41 @@ STUB
     _ec20=$?
     assert_eq "TP-FOLDER-BACKUP-20 submit stub exit 0" 0 "${_ec20}"
     assert_contains "TP-FOLDER-BACKUP-20 request_id" "$_out" "request_id="
+    assert_contains "TP-FOLDER-BACKUP-20 default add when no host fragment" "$_out" "Submitted add"
     _njson=$(find "${_stub_dir}/sudoer-approving" -type f | wc -l | tr -d ' ')
     assert_eq "TP-FOLDER-BACKUP-20 inbound has file" 1 "${_njson}"
     _stub_body=$(cat "${_stub_dir}/sudoer-approving/"*.json 2>/dev/null || true)
     assert_contains "TP-FOLDER-BACKUP-22f stub inbound has backup" "${_stub_body}" '"backup"'
     assert_contains "TP-FOLDER-BACKUP-22f stub inbound has restore" "${_stub_body}" '"restore"'
+
+    # TP-FOLDER-BACKUP-23 host fragment present → default action=update
+    _user23=$(id -un)
+    : "${CI_SUDOERS_D:=${CI_HOME}/sudoers.d}"
+    mkdir -p "${CI_SUDOERS_D}"
+    printf '# host fragment\n' > "${CI_SUDOERS_D}/folder-backup-${_user23}"
+    _j23=$(HOME="${CI_HOME}" \
+        SUDOER_CLI="${_stub_dir}/bin/sudoer-cli" \
+        SUDOER_ADM_USER="$(id -un)" \
+        SUDOER_QUEUE_INBOUND="${_stub_dir}/sudoer-approving" \
+        SUDOERS_D_DIR="${CI_SUDOERS_D}" \
+        sh "${SCRIPT}" --json submit-sudoer-request --allow-test-local 2>/dev/null)
+    _ec23=$?
+    assert_eq "TP-FOLDER-BACKUP-23 host present submit exit 0" 0 "${_ec23}"
+    assert_contains "TP-FOLDER-BACKUP-23 action update" "${_j23}" '"action":"update"'
+    assert_contains "TP-FOLDER-BACKUP-23 detected" "${_j23}" '"action_source":"detected"'
+    assert_contains "TP-FOLDER-BACKUP-23 host present true" "${_j23}" '"host_fragment_present":"true"'
+
+    # TP-FOLDER-BACKUP-23b --add overrides host present
+    _j23b=$(HOME="${CI_HOME}" \
+        SUDOER_CLI="${_stub_dir}/bin/sudoer-cli" \
+        SUDOER_ADM_USER="$(id -un)" \
+        SUDOER_QUEUE_INBOUND="${_stub_dir}/sudoer-approving" \
+        SUDOERS_D_DIR="${CI_SUDOERS_D}" \
+        sh "${SCRIPT}" --json submit-sudoer-request --add --allow-test-local 2>/dev/null)
+    assert_eq "TP-FOLDER-BACKUP-23b --add override exit 0" 0 "$?"
+    assert_contains "TP-FOLDER-BACKUP-23b forced add" "${_j23b}" '"action":"add"'
+    assert_contains "TP-FOLDER-BACKUP-23b explicit" "${_j23b}" '"action_source":"explicit"'
+    rm -f "${CI_SUDOERS_D}/folder-backup-${_user23}"
 
     # TP-FOLDER-BACKUP-22e (submit path): real sudoer-cli + readable test inbound
     if [ -n "${_srcli}" ] && [ -x "${_srcli}" ]; then

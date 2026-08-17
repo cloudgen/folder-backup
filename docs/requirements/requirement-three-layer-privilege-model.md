@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-three-layer-privilege-model.md  
-**Status**: Active (Version 1.7.0)  
+**Status**: Active (Version 1.8.0)  
 **Area**: architecture  
 **Key**: `requirement-three-layer-privilege-model`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -167,11 +167,12 @@ Filled conventional names for this compose live in §2.5. Core rules **MUST NOT*
 5. **MUST NOT** treat this product’s deposit directory as an inbound.  
 6. **MUST** report detections on `about` (human + JSON): approval CLI path or `not_found`; approver or `absent`; inbound path or `not_found`; writable flag. About inbound **SHOULD** name the preferred public path when reporting `not_found`.  
 7. Default input is the same fragment `print-sudoers` would emit (same trust-tier gate). Optional file operand submits that file instead (refuse symlink / missing).  
-8. **MUST** invoke the detected approval CLI `add-sudoer-request` (or `update-sudoer-request` with `--update`) with `--service` equal to this product’s `APP_NAME` and a purpose string (`--purpose` or product default). That sibling call **is** what creates the queued **JSON** file.  
+8. **MUST** invoke the detected approval CLI `add-sudoer-request` or `update-sudoer-request` with `--service` equal to this product’s `APP_NAME` and a purpose string (`--purpose` or product default). That sibling call **is** what creates the queued **JSON** file.  
+8a. **Default action from host probe (this user only):** if `/etc/sudoers.d/{{APP_NAME}}-{{username}}` exists (or legacy `/etc/sudoers.d/{{APP_NAME}}`), default sibling verb is **`update-sudoer-request`**. If neither exists (or the directory is unreadable and `sudo -n test -e` cannot confirm), default is **`add-sudoer-request`**. Other users’ `{{APP_NAME}}-<other>` files **MUST NOT** flip this user’s action. `--update` / `--add` **MUST** override the probe. Type 0 **MUST NOT** write `/etc`. Probe dir **MAY** be overridden with `SUDOERS_D_DIR` (tests).  
 9. **MUST NOT** invent or pass a dest basename for the queued file. `request_id` is whatever the sibling allocator returns.  
 10. When pointing the sibling at a queue root, **MUST** use the **parent of the real public inbound** (or leave the sibling on its public default). **MUST NOT** export a home directory that still uses the legacy `sudoer-approving` child as if it were the public queue root.  
 11. **MUST NOT** write `/etc/sudoers.d` or `/etc/passwd` from this verb.  
-12. Product `--json` status **SHOULD** include `request_id`, `action`, `service`, `sudoer_cli`, `sudoer_adm`, `inbound`. That status object is **not** the queued request file.  
+12. Product `--json` status **SHOULD** include `request_id`, `action`, `action_source` (`detected` \| `explicit`), `host_fragment_present`, `host_fragment_path`, `service`, `sudoer_cli`, `sudoer_adm`, `inbound`. That status object is **not** the queued request file. About **SHOULD** report `host_sudoers_present` / `host_sudoers_path`.  
 13. **Inbound fidelity:** the queued body **is** the grant the approver will install. `[OK] submitted`, the purpose string, and the emit dual are **not** substitutes. When `${inbound}/${request_id}` is readable, submit **MUST** fail closed if `commands` lost a required elev verb (`backup` / `restore`). When it is not readable (production inbound often `0640` after LPU chown), stay-honest: do **not** claim the queued file equals emit.  
 14. Review / suite **MUST NOT** treat a stub `sudoer-cli` that `cp`s the input, or emit-only substring greps, as proof of sibling re-encode fidelity. Pretty-printed emit **MUST** be a fixture (INC-20260817-001).
 
@@ -451,6 +452,7 @@ esac
 | AC-19 | About reports sudoer-cli / sudoer-adm / inbound (path or `not_found`) and writable flag |
 | AC-20 | Queued JSON **body** obeys `requirement-sudoer-json-file` (`{{PRJ_NAME}}` only; no OS-tool commands) |
 | AC-21 | When inbound `${request_id}` is readable after submit, body still contains required elev verbs; emit-only / stub-`cp` tests do not satisfy this AC |
+| AC-22 | Default submit action is **update** when this user’s `/etc/sudoers.d/{{APP_NAME}}-{{user}}` (or legacy unsuffixed) exists; else **add**. `--add`/`--update` override. Other users’ fragments do not count |
 
 ---
 
@@ -486,6 +488,7 @@ esac
 | **TP-FOLDER-BACKUP-21b** | same | have — `SUDOER_QUEUE_INBOUND` wins over public |
 | **TP-FOLDER-BACKUP-22 / 22b / 22c** | same | **have** — JSON sudoer file body (`requirement-sudoer-json-file`) |
 | **TP-FOLDER-BACKUP-22e / 22f** | same | **have** — pretty emit + inbound body fidelity (AC-21) |
+| **TP-FOLDER-BACKUP-23 / 23b** | same | **have** — host fragment → update; `--add` override |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -501,9 +504,10 @@ esac
 | 2026-08-15 | Active 1.5.0 | Submit = JSON via sibling allocator into **public inbound** `/var/sudoer-cli/sudoer-request`; no Type 0 mkdir; legacy `sudoer-approving` last |
 | 2026-08-15 | Active 1.6.0 | JSON sudoer file **body** deferred to `requirement-sudoer-json-file`; OS-tool JSON samples withdrawn |
 | 2026-08-17 | Active 1.7.0 | Submit inbound fidelity §2.3.3c items 13–14; AC-21; INC-20260817-001 |
+| 2026-08-17 | Active 1.8.0 | Submit default **update** when this user’s `/etc/sudoers.d` fragment exists; AC-22; TP-23 |
 
 ---
 
-**Last Updated**: 2026-08-17  
+**Last Updated**: 2026-08-17 (1.8.0 host-probe update)  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; mold `template-three-layer-privilege-model.md` (**`LM-THREE-LAYER-PRIVILEGE-MODEL`**); **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

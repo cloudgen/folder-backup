@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.8.1  
+**Product VERSION:** 1.8.2  
 **Last plan update:** 2026-08-17  
-**Last suite run:** PASS=198 FAIL=0 SKIP=2 (2026-08-17) — includes TP-22e/22f re-encode fidelity
+**Last suite run:** see latest `./tests/run.sh` (1.8.2: TP-23/23b host-probe add/update)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -26,6 +26,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Submit detect: public inbound first; env override; no Type 0 mkdir | have | TP-FOLDER-BACKUP-19/20/21/21b |
 | JSON sudoer file is `folder-backup` backup/restore only (no OS tools / path / filename) | have | TP-FOLDER-BACKUP-22/22b/22c |
 | Pretty emit + inbound body keep both verbs (sibling re-encode fidelity) | have | TP-FOLDER-BACKUP-22e/22f |
+| Submit action: host `/etc/sudoers.d` fragment → update; else add | have | TP-FOLDER-BACKUP-23/23b |
 | Domain surface: print-sudoers allowlist + test-mode gate | have | TP-FOLDER-BACKUP-01, 01b, 01c, 02 |
 | Admin install-script handoff (project-sudoers-file) | have | TP-FOLDER-BACKUP-14 |
 | Remove project-sudoers draft only | have | TP-FOLDER-BACKUP-15 |
@@ -102,6 +103,8 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-FOLDER-BACKUP-22d | submit refuses OS-tool grant file | test_domain | **sudoer-json-file** AC-7 | **have** |
 | TP-FOLDER-BACKUP-22e | pretty emit through real sudoer-cli keeps backup **and** restore (convert + submit) | test_domain | **sudoer-json-file** AC-9 · three-layer AC-21 | **have** |
 | TP-FOLDER-BACKUP-22f | stub inbound **body** still contains both verbs (not file-count only) | test_domain | **sudoer-json-file** AC-9 | **have** |
+| TP-FOLDER-BACKUP-23 | this-user host fragment under `SUDOERS_D_DIR` → default submit **update** | test_domain | three-layer AC-22 | **have** |
+| TP-FOLDER-BACKUP-23b | `--add` overrides host-present default | test_domain | three-layer AC-22 | **have** |
 | TP-FOLDER-BACKUP-15 | remove-project-sudoers: force remove draft; refuse `/etc`; already absent; host elev probe | test_domain | three-layer §2.3.3b · project-sudoers-file | **have** |
 | TP-FOLDER-BACKUP-15b | multi-draft: list + non-interactive requires path; explicit path removes one only | test_domain | three-layer AC-15 · L-SUDOERS-04 | **have** |
 | TP-FOLDER-BACKUP-16 | restore dest whitelist: refuse `/etc/passwd` + exact `/etc` + `/etc/<other>`; W-ETC-USER `/etc/{{username}}` gate allow | test_domain | **folder-archive-backup** §2.6b.2a · INC-20260812-001 | **have** |

@@ -5,8 +5,8 @@
 **Always load first:** `reviews/lessons.md`
 
 **Last plan update:** 2026-08-17  
-**Ship unit VERSION:** 1.8.1  
-**Suite baseline:** PASS=198 FAIL=0 SKIP=2 (see `reviews/test-plan.md`)
+**Ship unit VERSION:** 1.8.2  
+**Suite baseline:** PASS=209 FAIL=0 SKIP=2 (see `reviews/test-plan.md`)
 
 ---
 
@@ -15,13 +15,14 @@
 | # | Check | Notes |
 |---|--------|--------|
 | P1 | Read `docs/requirements/index.md` | Class + architecture + shell + domain + three-layer |
-| P2 | Confirm ship unit `src/folder-backup` | `APP_NAME` / `VERSION` hard-assign (**1.8.1+**) |
+| P2 | Confirm ship unit `src/folder-backup` | `APP_NAME` / `VERSION` hard-assign (**1.8.2+**) |
 | P3 | Load `reviews/lessons.md` and re-check every open L-* | Mandatory (esp. **L-SUDOERS-01/02** · **L-SUDOERS-06** · **L-TEST-REVIEW-01**) |
 | P4 | Run `./tests/run.sh` | Record PASS/FAIL/SKIP in report; **must include TP-22e/22f** (not emit-only 22) |
 | P5 | Confirm install **channel** still local-only | No SCRIPT_URL product UX |
-| P6 | Privilege law version | `requirement-three-layer-privilege-model` **≥1.7.0** (S13 + submit inbound **AC-21**) · `requirement-sudoer-json-file` **≥1.1.0** §2.7a |
+| P6 | Privilege law version | `requirement-three-layer-privilege-model` **≥1.8.0** (S13 + inbound **AC-21** + host-probe **AC-22**) · `requirement-sudoer-json-file` **≥1.1.0** §2.7a |
 | P7 | Host elev posture (if reviewing runtime) | Global vs local binary; trust tier; `/etc/sudoers.d/` status |
 | P8 | **JSON re-encode / inbound fidelity** | Complete section below. **Revise/Block** if skipped when submit or JSON grant is in scope. |
+| P9 | **Host fragment → submit update** | This user’s `/etc/sudoers.d` dest present → default **update**; TP-**23/23b**. **Revise/Block** if skipped when submit is in scope. |
 
 ---
 
@@ -32,7 +33,7 @@
 | Class | `requirement-class-software-dev.md` | posix-sh, local-only residual |
 | Bootstrap chain | `requirement-bootstrap-chain.md` | A=cli-template → B domain extend |
 | Project folder | `requirement-project-folder.md` | `src/`, bins, `/var/backup` |
-| **Privilege / sudoers** | `requirement-three-layer-privilege-model.md` | Type 0/1; **trust tiers S13**; print-sudoers; **install-script**; **remove-project-sudoers**; **submit-sudoer-request** public inbound; **inbound fidelity AC-21**; no ALL ALL |
+| **Privilege / sudoers** | `requirement-three-layer-privilege-model.md` | Type 0/1; **trust tiers S13**; print-sudoers; **install-script**; **remove-project-sudoers**; **submit-sudoer-request** public inbound; **inbound fidelity AC-21**; **host-probe add/update AC-22**; no ALL ALL |
 | **JSON sudoer file** | `requirement-sudoer-json-file.md` | `folder-backup` backup/**and** restore; §2.7a re-encode; pretty JSON legal |
 | CLI interface | `requirement-shell-cli-interface.md` | Commands, flags, dispatch |
 | Empty argv Type N | `requirement-shell-cli-zero-arguments.md` | Empty = help |
@@ -74,6 +75,7 @@
 | `util_resolve_storage` | Isolation break / stage mismatch vs sudoers | L-STOR-01 · TP-CLI-12 · TP-02 |
 | `fb_detect_sudoer_inbound` | Home-only `sudoer-approving` or Type 0 inbound `mkdir` | L-INBOUND-01 · TP-FOLDER-BACKUP-21/21b |
 | `fb_submit_sudoer_request` / sibling decode | Pretty JSON inbound restore-only; `[OK]` / S14 / stub `cp` treated as fidelity | L-SUDOERS-06 · L-TEST-REVIEW-01 · TP-22e/22f · S15 |
+| `fb_submit_sudoer_request` / host dest probe | Default **add** while `/etc/sudoers.d/{{APP_NAME}}-<user>` exists; other users’ fragments flipping action | TP-23/23b · AC-22 |
 | Config `HOME` under `set -u` | nounset crash | L-SETU-01 · TP-CLI-11 |
 
 ---
@@ -95,6 +97,7 @@ Product claims **narrow Type 1** (allowlisted OS tools only), **not** full host 
 | Positive full deposit | Host sudoers or root | TP-07/08 |
 | Installed fragment ≠ draft only | Host may still elevate after draft removed | Honesty in remove-project-sudoers |
 | **JSON re-encode / inbound verbs** | Pretty emit through real sibling still has `backup` **and** `restore`; `[OK]` / purpose / S14 / stub `cp` are not enough | **§ JSON re-encode** · TP-**22e/22f** · S15 · AC-21 |
+| **Host fragment → submit update** | This user’s `/etc/sudoers.d/{{APP_NAME}}-<user>` (or legacy) exists → default **update**; else **add**; `--add`/`--update` override; other users ignored | TP-**23/23b** · AC-22 |
 | Full interactive password-sudo package ladder | **n/a** | deposit uses `sudo -n` after admin fragment |
 | TTY package Type 1 traps | **n/a** | no package elev claimed |
 

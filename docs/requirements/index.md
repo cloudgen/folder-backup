@@ -9,12 +9,12 @@
 | requirement-class-software-dev | Software-development class law + residual stack (posix-sh, local-only); multi-vault forge push identity §2.0.5a | class | Active | `requirement-class-software-dev.md` | 2026-08-11 |
 | requirement-bootstrap-chain | Bootstrap chain A=cli-template → B=folder-backup (domain extend) | architecture | Active (2.0.0) | `requirement-bootstrap-chain.md` | 2026-08-13 |
 | requirement-project-folder | Project layout (`src/`), install bins, `/var/backup` deposit | architecture | Active | `requirement-project-folder.md` | 2026-08-03 |
-| requirement-three-layer-privilege-model | Type 0 + narrow Type 1 deposit; sudoers emit + **install-script** handoff; **per-user** fragment names; **trust tiers** (S13); **submit-sudoer-request** workflow + inbound fidelity (JSON **body** owned by sudoer-json-file) | architecture | Active (1.7.0) | `requirement-three-layer-privilege-model.md` | 2026-08-17 |
+| requirement-three-layer-privilege-model | Type 0 + narrow Type 1 deposit; sudoers emit + **install-script** handoff; **per-user** fragment names; **trust tiers** (S13); submit workflow + inbound fidelity + **host-probe add/update** | architecture | Active (1.8.0) | `requirement-three-layer-privilege-model.md` | 2026-08-17 |
 | requirement-sudoer-json-file | **JSON sudoer file** SSOT: `{{PRJ_NAME}}` only; pretty/compact legal; re-encode **MUST** keep every `commands[]` object | architecture | Active (1.1.0) | `requirement-sudoer-json-file.md` | 2026-08-17 |
 | requirement-folder-archive-backup | **Backup/restore ops SSOT**: backup + verify + **restore**; dest whitelist **W-ETC-USER** `/etc/{{username}}` (never `/etc/passwd`) | backup | Active (1.2.0) | `requirement-folder-archive-backup.md` | 2026-08-12 |
 | requirement-folder-archive-backup-retention-total | **Total retention**: max **30** archives per project basename; prune oldest after successful deposit | backup | Active (1.0.0) | `requirement-folder-archive-backup-retention-total.md` | 2026-08-12 |
 | requirement-folder-archive-backup-retention-daily | **Daily retention**: max **5** archives per basename per calendar day; prune oldest same-day `N` | backup | Active (1.0.0) | `requirement-folder-archive-backup-retention-daily.md` | 2026-08-12 |
-| requirement-shell-cli-interface | Shell CLI interface (commands, flags, dispatch, modes); `submit-sudoer-request` Type 0 | shell | Active (1.1.0) | `requirement-shell-cli-interface.md` | 2026-08-15 |
+| requirement-shell-cli-interface | Shell CLI interface (commands, flags, dispatch, modes); submit `--add`/`--update` | shell | Active (1.2.0) | `requirement-shell-cli-interface.md` | 2026-08-17 |
 | requirement-shell-cli-zero-arguments | Empty argv Type N help (local-only) | shell | Active | `requirement-shell-cli-zero-arguments.md` | 2026-08-03 |
 | requirement-shell-local-self-management | Local install / uninstall / where-is-me; **mode 0755** multi-user | shell | Active (1.2.0) | `requirement-shell-local-self-management.md` | 2026-08-09 |
 | requirement-shell-output-requirements | Central `out_*` output SSOT | shell | Active | `requirement-shell-output-requirements.md` | 2026-08-03 |
@@ -22,7 +22,7 @@
 | requirement-shell-idempotency | Re-run safety; archive next-N no overwrite | shell | Active | `requirement-shell-idempotency.md` | 2026-08-03 |
 | requirement-shell-interactive-vs-noninteractive | Interactive vs non-interactive / confirm policy | shell | Active | `requirement-shell-interactive-vs-noninteractive.md` | 2026-08-03 |
 | requirement-shell-cli-storage | Scratch/cache resolve + backup staging root | shell | Active | `requirement-shell-cli-storage.md` | 2026-08-03 |
-| requirement-domain-folder-backup | Domain **surface** SSOT (four pillars); ops defer to folder-archive-backup; submit-sudoer-request → public inbound JSON (body: sudoer-json-file) | domain | Active (1.4.1) | `requirement-domain-folder-backup.md` | 2026-08-15 |
+| requirement-domain-folder-backup | Domain **surface** SSOT (four pillars); ops defer to folder-archive-backup; submit public inbound; **host-probe add/update** | domain | Active (1.5.0) | `requirement-domain-folder-backup.md` | 2026-08-17 |
 
 ## Intentionally absent (by design — inherited from cli-template)
 

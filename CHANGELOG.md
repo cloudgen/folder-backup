@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.2] - 2026-08-17
+
+### Added
+
+- **`submit-sudoer-request` defaults to `update`** when this user’s host fragment exists under `/etc/sudoers.d/folder-backup-<user>` (or legacy `folder-backup`). Otherwise **add**. `--update` / `--add` override. Other users’ fragments do not count. `about --json` reports `host_sudoers_present`.
+- Suite **TP-FOLDER-BACKUP-23 / 23b** (`SUDOERS_D_DIR` isolate). Law: three-layer **1.8.0** AC-22.
+
 ## [1.8.1] - 2026-08-17
 
 ### Added

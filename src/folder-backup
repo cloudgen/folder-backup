@@ -48,8 +48,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.8.1"
-: "${VERSION:=1.8.1}"
+VERSION="1.8.2"
+: "${VERSION:=1.8.2}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -115,6 +115,8 @@ fi
 : "${SUDOER_PUBLIC_ROOT:=/var/${SUDOER_APPROVAL_APP}}"
 : "${SUBMIT_PURPOSE:=}"
 : "${SUBMIT_ACTION:=add}"
+: "${SUBMIT_ACTION_EXPLICIT:=0}"
+: "${SUDOERS_D_DIR:=/etc/sudoers.d}"
 
 # Interactive capability SSOT — measure [ -t outside functions only.
 TTY=0
@@ -3001,6 +3003,7 @@ fb_submit_sudoer_request() {
     : "${SUDOER_ADM_USER:=sudoer-adm}"
     : "${SUBMIT_PURPOSE:=}"
     : "${SUBMIT_ACTION:=add}"
+    : "${SUBMIT_ACTION_EXPLICIT:=0}"
     : "${EFFECTIVE_STORAGE_DIR:=}"
 
     _src_file="${1:-}"
@@ -3008,6 +3011,23 @@ fb_submit_sudoer_request() {
     _purpose="${SUBMIT_PURPOSE}"
     if [ -z "${_purpose}" ]; then
         _purpose="Allow ${_user} to run ${APP_NAME} backup and restore as root."
+    fi
+
+    _host_path=""
+    _host_present="false"
+    if _host_path=$(fb_probe_current_user_host_sudoers); then
+        _host_present="true"
+    else
+        _host_path=""
+    fi
+    _action_source="explicit"
+    if [ "${SUBMIT_ACTION_EXPLICIT}" -ne 1 ]; then
+        _action_source="detected"
+        if [ "${_host_present}" = "true" ]; then
+            SUBMIT_ACTION="update"
+        else
+            SUBMIT_ACTION="add"
+        fi
     fi
     case "${SUBMIT_ACTION}" in
         add|update) ;;
@@ -3132,6 +3152,9 @@ fb_submit_sudoer_request() {
         out_json "submit-sudoer-request" "submitted" \
             "request_id" "${_rid}" \
             "action" "${SUBMIT_ACTION}" \
+            "action_source" "${_action_source}" \
+            "host_fragment_present" "${_host_present}" \
+            "host_fragment_path" "${_host_path}" \
             "service" "${APP_NAME}" \
             "user" "${_user}" \
             "sudoer_cli" "${_cli}" \
@@ -3143,6 +3166,11 @@ fb_submit_sudoer_request() {
     out_success "Submitted ${SUBMIT_ACTION} request via ${_cli}"
     if [ -n "${_rid}" ]; then
         out_info "request_id=${_rid}"
+    fi
+    if [ "${_host_present}" = "true" ]; then
+        out_info "host_fragment=${_host_path}  (action=${SUBMIT_ACTION} ${_action_source})"
+    else
+        out_info "host_fragment=absent  (action=${SUBMIT_ACTION} ${_action_source})"
     fi
     out_info "inbound=${_inbound}  (approver: ${_adm})"
     out_info "This CLI did not write /etc. Approver must approve the request."
@@ -3175,10 +3203,15 @@ fb_default_project_sudoers_path() {
 # Per-user installed name: /etc/sudoers.d/${APP_NAME}-<user>
 # Prevents multi-user admin installs from overwriting another user's fragment.
 # =============================================================================
+fb_sudoers_d_dir() {
+    : "${SUDOERS_D_DIR:=/etc/sudoers.d}"
+    printf '%s' "${SUDOERS_D_DIR}"
+}
+
 fb_default_installed_sudoers_path() {
     : "${APP_NAME:=folder-backup}"
     _user=$(fb_current_login_user)
-    printf '%s' "/etc/sudoers.d/${APP_NAME}-${_user}"
+    printf '%s' "$(fb_sudoers_d_dir)/${APP_NAME}-${_user}"
 }
 
 # =============================================================================
@@ -3186,7 +3219,7 @@ fb_default_installed_sudoers_path() {
 # =============================================================================
 fb_legacy_installed_sudoers_path() {
     : "${APP_NAME:=folder-backup}"
-    printf '%s' "/etc/sudoers.d/${APP_NAME}"
+    printf '%s' "$(fb_sudoers_d_dir)/${APP_NAME}"
 }
 
 # =============================================================================
@@ -3225,16 +3258,52 @@ fb_list_project_sudoers_drafts() {
 # =============================================================================
 fb_list_host_sudoers_fragments() {
     : "${APP_NAME:=folder-backup}"
+    _dir=$(fb_sudoers_d_dir)
     _legacy=$(fb_legacy_installed_sudoers_path)
     if [ -e "${_legacy}" ]; then
         printf '%s\n' "${_legacy}"
     fi
-    for _f in /etc/sudoers.d/"${APP_NAME}"-*; do
+    for _f in "${_dir}"/"${APP_NAME}"-*; do
         if [ -e "${_f}" ]; then
             printf '%s\n' "${_f}"
         fi
     done
     return 0
+}
+
+# =============================================================================
+# fb_probe_current_user_host_sudoers() - Class B: this user's installed fragment
+# =============================================================================
+# Prefer per-user ${SUDOERS_D_DIR}/${APP_NAME}-<user>, then legacy unsuffixed.
+# Other users' ${APP_NAME}-<other> files do not count.
+# Type 0: test -e first (works when the dir is searchable). If the dir is
+# 0750/unreadable, try sudo -n test -e (no password; miss → stay-honest absent).
+# Prints the first existing path; exit 1 if none found.
+# =============================================================================
+fb_host_sudoers_exists() {
+    _hp="${1:-}"
+    [ -n "${_hp}" ] || return 1
+    if [ -e "${_hp}" ]; then
+        return 0
+    fi
+    if command -v sudo >/dev/null 2>&1; then
+        sudo -n test -e "${_hp}" >/dev/null 2>&1 && return 0
+    fi
+    return 1
+}
+
+fb_probe_current_user_host_sudoers() {
+    _per=$(fb_default_installed_sudoers_path)
+    _leg=$(fb_legacy_installed_sudoers_path)
+    if fb_host_sudoers_exists "${_per}"; then
+        printf '%s' "${_per}"
+        return 0
+    fi
+    if [ "${_leg}" != "${_per}" ] && fb_host_sudoers_exists "${_leg}"; then
+        printf '%s' "${_leg}"
+        return 0
+    fi
+    return 1
 }
 
 # =============================================================================
@@ -3741,6 +3810,13 @@ app_about() {
         fi
     fi
 
+    _host_sudoers_present="false"
+    _host_sudoers_path=""
+    if _hsp=$(fb_probe_current_user_host_sudoers); then
+        _host_sudoers_present="true"
+        _host_sudoers_path="${_hsp}"
+    fi
+
     if [ "${JSON}" -eq 1 ]; then
         out_json "about" "" \
             "app" "${APP_NAME}" \
@@ -3766,6 +3842,8 @@ app_about() {
             "sudoer_adm" "${_sudoer_adm}" \
             "sudoer_inbound" "${_sudoer_inbound}" \
             "sudoer_inbound_writable" "${_sudoer_inbound_writable}" \
+            "host_sudoers_present" "${_host_sudoers_present}" \
+            "host_sudoers_path" "${_host_sudoers_path}" \
             "max_daily_backups" "$(fb_positive_int_or_default "${MAX_DAILY_BACKUPS}" 5)" \
             "max_total_backups" "$(fb_positive_int_or_default "${MAX_TOTAL_BACKUPS}" 30)" \
             "restore_host_default" "${RESTORE_HOST_DEFAULT}" \
@@ -3894,6 +3972,8 @@ app_help() {
     out_plain "  submit-sudoer-request [file]"
     out_plain "                       Type 0: detect sudoer-cli + sudoer-adm; sibling writes"
     out_plain "                       JSON into /var/sudoer-cli/sudoer-request"
+    out_plain "                       action=update if this user's /etc/sudoers.d/${APP_NAME}-<user>"
+    out_plain "                       (or legacy ${APP_NAME}) exists; else add"
     out_plain "                       (does not write /etc; does not mkdir inbound)"
     out_empty_line
     out_info "Global Options:"
@@ -3902,6 +3982,8 @@ app_help() {
     out_plain "  --force              Force reinstall / skip uninstall confirm / restore into non-empty dest"
     out_plain "  --global             Install to GLOBAL_BIN (production elevation path)"
     out_plain "  --allow-test-local   Allow print-sudoers when only local/unmanaged (TEST MODE)"
+    out_plain "  --update             Force submit-sudoer-request action=update"
+    out_plain "  --add                Force submit-sudoer-request action=add"
     out_plain "  --disk               Restore host: hard-disk (default; reverse of ram-drive-first)"
     out_plain "  --ram                Restore host: RAM-drive (/dev/shm/<project>)"
     out_plain "  --debug              Debug diagnostics on stderr"
@@ -3920,6 +4002,7 @@ app_help() {
     out_plain "  SUDOER_ADM_USER         approver login (default sudoer-adm)"
     out_plain "  SUDOER_QUEUE_INBOUND    override inbound approval dir"
     out_plain "  SUDOER_PUBLIC_ROOT      public queue root (default /var/sudoer-cli)"
+    out_plain "  SUDOERS_D_DIR           host sudoers.d dir (default /etc/sudoers.d; tests)"
     out_empty_line
     out_info "Examples:"
     out_plain "  ${APP_NAME} install"
@@ -3967,6 +4050,7 @@ app_main() {
     : "${ALLOW_TEST_LOCAL_SUDOERS:=0}"
     : "${SUBMIT_PURPOSE:=}"
     : "${SUBMIT_ACTION:=add}"
+    : "${SUBMIT_ACTION_EXPLICIT:=0}"
     : "${USERNAME:=unknown}"
     : "${HOME:=/tmp}"
     : "${XDG_CACHE_HOME:=${HOME}/.cache}"
@@ -4007,7 +4091,13 @@ app_main() {
                 ;;
             --update)
                 SUBMIT_ACTION="update"
-                export SUBMIT_ACTION
+                SUBMIT_ACTION_EXPLICIT=1
+                export SUBMIT_ACTION SUBMIT_ACTION_EXPLICIT
+                ;;
+            --add)
+                SUBMIT_ACTION="add"
+                SUBMIT_ACTION_EXPLICIT=1
+                export SUBMIT_ACTION SUBMIT_ACTION_EXPLICIT
                 ;;
             --disk|--hard-disk)
                 RESTORE_HOST="hard-disk"

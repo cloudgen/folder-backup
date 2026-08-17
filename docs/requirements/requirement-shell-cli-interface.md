@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.1.0)  
+**Status**: Active (Version 1.2.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -84,7 +84,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
 | `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
 | `print-sudoers` | Type 0 | `fb_print_sudoers` (domain) | Emit sudoers fragment for admin to install under `/etc/sudoers.d/` — **does not** write `/etc` itself |
-| `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | Detect sudoer-cli + sudoer-adm + public inbound `/var/sudoer-cli/sudoer-request`; sibling allocates a JSON request — **does not** write `/etc` or `mkdir` inbound |
+| `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound |
 
 #### Global flags (normative wiring)
 
@@ -94,6 +94,8 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `--json` | `JSON=1` and `QUIET=1` in `app_main` |
 | `--debug` | `DEBUG=1` in `app_main` |
 | `--force` | `FORCE=1` (and install reinstall policy when applicable) |
+| `--update` | `SUBMIT_ACTION=update` + explicit (submit only) |
+| `--add` | `SUBMIT_ACTION=add` + explicit (submit only) |
 
 #### Dispatcher acceptance criteria
 
@@ -190,9 +192,10 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 |------|--------|------|
 | 2026-08-03 | Active 1.0.0 | CLI surface for local-only folder-backup + domain backup |
 | 2026-08-15 | Active 1.1.0 | `submit-sudoer-request` listed as Type 0 JSON submit into sibling public inbound |
+| 2026-08-17 | Active 1.2.0 | `--add` / `--update`; default submit action from host `/etc/sudoers.d` probe |
 
 ---
 
-**Last Updated**: 2026-08-15  
+**Last Updated**: 2026-08-17  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

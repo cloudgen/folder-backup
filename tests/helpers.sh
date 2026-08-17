@@ -94,6 +94,11 @@ ci_isolated_env() {
     export HOME="${CI_HOME}"
     export USER_BIN="${CI_USER_BIN}"
     export GLOBAL_BIN="${CI_GLOBAL_BIN}"
+    # Isolate host sudoers.d probe so a live /etc/sudoers.d fragment
+    # does not flip default submit add → update (TP-23 uses this dir).
+    CI_SUDOERS_D="${CI_HOME}/sudoers.d"
+    mkdir -p "${CI_SUDOERS_D}"
+    export SUDOERS_D_DIR="${CI_SUDOERS_D}"
     # Local-only product: ensure no channel env is required
     unset SCRIPT_URL 2>/dev/null || true
     unset CHECKSUM 2>/dev/null || true
