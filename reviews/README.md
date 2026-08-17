@@ -11,7 +11,7 @@ Public product review surface (peer of `tests/`).
 | `index.md` | Report index |
 | `reports/` | Dated review run reports |
 
-**Ship unit:** `src/folder-backup` (**VERSION 1.8.0**)  
+**Ship unit:** `src/folder-backup` (**VERSION 1.8.1**)  
 **Suite:** `./tests/run.sh`  
 **Last suite baseline:** see `test-plan.md` and `reports/` (2026-08-15 public inbound)  
 

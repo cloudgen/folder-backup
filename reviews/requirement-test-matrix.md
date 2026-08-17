@@ -1,7 +1,7 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-08-15 (1.8.0)  
-**Product VERSION:** 1.8.0  
+**Updated:** 2026-08-17 (1.8.1)  
+**Product VERSION:** 1.8.1  
 **Suite:** `tests/run.sh` (PASS=189 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
@@ -9,8 +9,8 @@
 | requirement-class-software-dev | class | TP-CLI-01, TP-CLI-11 | Syntax + stack residual; no online package |
 | requirement-bootstrap-chain | architecture | TP-CLI-04, TP-CLI-10 | Online surface absent |
 | requirement-project-folder | architecture | TP-LC-01, TP-FOLDER-BACKUP-06 | src ship unit; deposit path naming |
-| requirement-three-layer-privilege-model | architecture | TP-FOLDER-BACKUP-01, **01b**, 01c, 02, 05, **14**, **15**, **15b**, **19**, **20**, **21**, **21b** | Trust tiers **S13**; submit **workflow** into public inbound **AC-16–19**; JSON **body** is sudoer-json-file |
-| requirement-sudoer-json-file | architecture | TP-FOLDER-BACKUP-**22**, **22b**, **22c** | JSON grant is `folder-backup` backup/restore only; no OS-tool commands / path / filename hardcode |
+| requirement-three-layer-privilege-model | architecture | TP-FOLDER-BACKUP-01, **01b**, 01c, 02, 05, **14**, **15**, **15b**, **19**, **20**, **21**, **21b**, **22e** | Trust tiers **S13**; submit **workflow** AC-16–19; inbound **fidelity** AC-21 |
+| requirement-sudoer-json-file | architecture | TP-FOLDER-BACKUP-**22**, **22b**, **22c**, **22e**, **22f** | JSON grant is `folder-backup` backup/restore only; pretty emit + inbound body keep both verbs |
 | requirement-folder-archive-backup | backup | TP-FOLDER-BACKUP-03..08, 10..13, **16** | Source/name/deposit/verify/next-N/**restore** + dest whitelist W-ETC-USER (ops SSOT) |
 | requirement-folder-archive-backup-retention-total | backup | TP-FOLDER-BACKUP-17, 17b | Max **30** per basename; oldest-first prune |
 | requirement-folder-archive-backup-retention-daily | backup | TP-FOLDER-BACKUP-18, 18b | Max **5** per basename per day; lowest-`N` same-day prune |

@@ -19,5 +19,7 @@ Durable failure modes. **Always re-check on product review.**
 | L-SETU-01 | `set -u` crash with unset HOME | TP-CLI-11 | open watch |
 | L-STOR-01 | Shared world-writable storage / stage roots not matching sudoers wildcards | util_resolve_storage; per-user stage; TP-CLI-12 · TP-FOLDER-BACKUP-02 | open watch |
 | L-INBOUND-01 | Submit probes only home `sudoer-approving` (or Type 0 `mkdir` inbound) | Public inbound first (`/var/sudoer-cli/sudoer-request`); no mkdir; TP-FOLDER-BACKUP-21/21b | open watch |
+| L-SUDOERS-06 | `[OK] submit` inbound is restore-only while emit/purpose list backup+restore | Inbound is sibling **re-encode**; count `commands[].args` before approve; pretty JSON trips `sudoer-cli` `},{` split; INC-20260817-001 | open watch |
+| L-TEST-REVIEW-01 | Green emit TP-22 + stub TP-20 + S14 Pass miss sibling decode drop | Assert inbound after **real** sudoer-cli; pretty + compact fixtures; do not treat `tests/run.sh` PASS as grant fidelity; INC-20260817-001 | open watch |
 
 **Bootstrap parent lessons (cli-template) still relevant for kept surfaces:** output SSOT, no basename gate on entry, storage isolation, Type N empty argv, local-only install. Historical selfmanaged lessons apply only as retired-hop context.

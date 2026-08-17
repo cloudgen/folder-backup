@@ -88,6 +88,27 @@ run_test_domain_folder_backup() {
     assert_not_contains "TP-FOLDER-BACKUP-22c no deposit path" "${_jbody}" "/var/backup/folder-backup"
     assert_not_contains "TP-FOLDER-BACKUP-22c no tar.gz operand" "${_jbody}" ".tar.gz"
 
+    # TP-FOLDER-BACKUP-22e pretty emit through real sudoer-cli keeps both verbs
+    _srcli=""
+    if [ -x "${REPO_ROOT}/../sudoer-cli/src/sudoer-cli" ]; then
+        _srcli="${REPO_ROOT}/../sudoer-cli/src/sudoer-cli"
+    elif [ -x /usr/local/bin/sudoer-cli ]; then
+        _srcli=/usr/local/bin/sudoer-cli
+    elif command -v sudoer-cli >/dev/null 2>&1; then
+        _srcli=$(command -v sudoer-cli)
+    fi
+    if [ -n "${_srcli}" ] && [ -x "${_srcli}" ]; then
+        _pback="${CI_HOME}/out/pretty-back.sudoers"
+        mkdir -p "${CI_HOME}/out"
+        HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_jgrant}" --out "${_pback}" >/dev/null 2>&1
+        assert_eq "TP-FOLDER-BACKUP-22e pretty convert exit 0" 0 "$?"
+        _pbtxt=$(cat "${_pback}" 2>/dev/null || true)
+        assert_contains "TP-FOLDER-BACKUP-22e convert keeps backup" "${_pbtxt}" "folder-backup backup"
+        assert_contains "TP-FOLDER-BACKUP-22e convert keeps restore" "${_pbtxt}" "folder-backup restore"
+    else
+        t_skip "TP-FOLDER-BACKUP-22e sudoer-cli not installed"
+    fi
+
     # TP-FOLDER-BACKUP-03 backup without source fails
     _err=$(HOME="${CI_HOME}" sh "${SCRIPT}" backup 2>&1 >/dev/null)
     assert_eq "TP-FOLDER-BACKUP-03 backup no arg exit 1" 1 "$?"
@@ -495,6 +516,28 @@ STUB
     assert_contains "TP-FOLDER-BACKUP-20 request_id" "$_out" "request_id="
     _njson=$(find "${_stub_dir}/sudoer-approving" -type f | wc -l | tr -d ' ')
     assert_eq "TP-FOLDER-BACKUP-20 inbound has file" 1 "${_njson}"
+    _stub_body=$(cat "${_stub_dir}/sudoer-approving/"*.json 2>/dev/null || true)
+    assert_contains "TP-FOLDER-BACKUP-22f stub inbound has backup" "${_stub_body}" '"backup"'
+    assert_contains "TP-FOLDER-BACKUP-22f stub inbound has restore" "${_stub_body}" '"restore"'
+
+    # TP-FOLDER-BACKUP-22e (submit path): real sudoer-cli + readable test inbound
+    if [ -n "${_srcli}" ] && [ -x "${_srcli}" ]; then
+        _q22="${CI_HOME}/sr-real-q"
+        mkdir -p "${_q22}/sudoer-request" "${_q22}/sudoer-approved" "${_q22}/sudoer-rejected"
+        _out22e=$(HOME="${CI_HOME}" \
+            SUDOER_CLI="${_srcli}" \
+            SUDOER_ADM_USER="$(id -un)" \
+            SUDOER_QUEUE_INBOUND="${_q22}/sudoer-request" \
+            SUDOER_CLI_ALLOW_TEST_ROOTS=1 \
+            sh "${SCRIPT}" submit-sudoer-request --allow-test-local 2>&1)
+        _ec22e=$?
+        assert_eq "TP-FOLDER-BACKUP-22e real submit exit 0" 0 "${_ec22e}"
+        _n22=$(find "${_q22}/sudoer-request" -name 'sudoer-*.json' -type f | wc -l | tr -d ' ')
+        assert_eq "TP-FOLDER-BACKUP-22e real inbound has file" 1 "${_n22}"
+        _real_body=$(cat "${_q22}/sudoer-request/"sudoer-*.json 2>/dev/null || true)
+        assert_contains "TP-FOLDER-BACKUP-22e inbound backup" "${_real_body}" '"backup"'
+        assert_contains "TP-FOLDER-BACKUP-22e inbound restore" "${_real_body}" '"restore"'
+    fi
 
     # TP-FOLDER-BACKUP-21 public inbound preferred over leftover home sudoer-approving
     _pub21="${CI_HOME}/var-sudoer-cli"

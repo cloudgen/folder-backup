@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-sudoer-json-file.md  
-**Status**: Active (Version 1.0.1)  
+**Status**: Active (Version 1.1.0)  
 **Area**: architecture  
 **Key**: `requirement-sudoer-json-file`  
 **Optional RQ-ID**: `RQ-SUDOER-JSON-FILE`  
@@ -30,7 +30,8 @@ Queued **basename** allocation remains sibling-owned. This requirement owns **co
 1. A JSON sudoer file is a **closed-schema object** that states: who may elevate, which **product** the grant is for, add vs update, and a **commands** list.  
 2. It is **not** `sudoers(5)` text. It is **not** this product’s `--json` CLI status.  
 3. Sibling approval software **MAY** convert a text dual into this JSON. Conversion **MUST NOT** invent OS-tool commands that this requirement forbids.  
-4. If both a text fragment and a JSON sudoer file represent the **same** grant, they **MUST** be equivalent: both elevate **`{{PRJ_NAME}}` only**. A text file that allowlists `mkdir`/`cp`/… **MUST NOT** be treated as a valid dual of a compliant JSON sudoer file.
+4. If both a text fragment and a JSON sudoer file represent the **same** grant, they **MUST** be equivalent: both elevate **`{{PRJ_NAME}}` only**. A text file that allowlists `mkdir`/`cp`/… **MUST NOT** be treated as a valid dual of a compliant JSON sudoer file.  
+5. Pretty-printed JSON (newlines and spaces between `commands[]` objects) is a **legal** encoding of this schema. Compact one-line JSON is also legal. A decoder **MUST** accept both.
 
 ### 2.2 Command identity — `{{PRJ_NAME}}` only (sacred)
 
@@ -174,6 +175,17 @@ That shape (and `cp` / `tar` / `rm` / `install` / `chmod` siblings) is **non-com
 3. **MUST NOT** “fix” a forbidden file by submitting it anyway.  
 4. Trust-tier gates (production vs test_local) remain on `requirement-three-layer-privilege-model`. This requirement does not weaken those gates.
 
+### 2.7a Re-encode / convert fidelity (sacred)
+
+Sibling (or this product) **MAY** decode then re-encode the grant when converting or queueing. That rewrite is still **this** grant.
+
+1. Decode / convert / re-encode **MUST** preserve **every** `commands[]` object: `path`, `args`, `runas`, `tags`.  
+2. **MUST NOT** silently drop a verb so that purpose still says “backup and restore” while `commands` lists only `restore` (or only `backup`). Purpose is **not** completeness.  
+3. **MUST** treat pretty-printed and compact JSON as the same grant. A splitter that only recognizes the token `},{` is non-compliant (it loses objects when `}, {` or `},\n{` appear).  
+4. If the codec cannot represent the full `commands` array, it **MUST** fail closed (`invalid_json` or product equivalent). Silent last-`args`-wins is forbidden.  
+5. `[OK] submitted` / a request_id **MUST NOT** be treated as proof the queued body equals the emit dual. When the inbound file is readable, submit **MUST** fail closed if required verbs are missing.  
+6. Proof **MUST** exercise pretty **and** compact multi-command fixtures — compact-only suite green is not fidelity.
+
 ### 2.8 Implementation Notes (this project)
 
 | Item | Value |
@@ -206,7 +218,8 @@ That shape (and `cp` / `tar` / `rm` / `install` / `chmod` siblings) is **non-com
 - **Intentional:** `service` and `path` basename are the same name: `{{PRJ_NAME}}`.  
 - **Anti-fragile:** Paths and archive names stay in Config; changing `BACKUP_ROOT` must not require a new sudoers JSON.  
 - **Over-protect:** Verb-bound `backup` / `restore` only; no bare-binary grant; no `USER_BIN` path.  
-- **Stay-honest:** 1.8.0 emit matches this grant; do not revive OS-tool Cmnds.
+- **Stay-honest:** 1.8.1 emit matches this grant; inbound after submit must still list both verbs; do not revive OS-tool Cmnds.  
+- **Anti-fragile (codec):** Re-encode is lossy unless proven; pretty JSON is legal input.
 
 ---
 
@@ -222,7 +235,10 @@ That shape (and `cp` / `tar` / `rm` / `install` / `chmod` siblings) is **non-com
 6. Claim an OS-tool emit (`mkdir`/`cp`/`tar`/`rm`) is compliant with this requirement.  
 7. Duplicate submit/install workflow law here (that stays on the privilege peer).  
 8. Store secrets in the JSON body.  
-9. Cite templates or skills as product-source authority for this grant.
+9. Cite templates or skills as product-source authority for this grant.  
+10. Treat a sibling re-encode that dropped `commands[]` objects as “still the same grant” because `purpose` or `[OK]` survived.  
+11. Mark emit-only tests (substring `"backup"` on the draft dual) as proof the **queued inbound** kept every verb.  
+12. Require callers to emit minified `},{` only in order to skip a whitespace-tolerant decoder.
 
 **Violating this rule is a critical privilege / complexity-as-insecurity regression.**
 
@@ -240,6 +256,7 @@ That shape (and `cp` / `tar` / `rm` / `install` / `chmod` siblings) is **non-com
 | AC-6 | Add and update samples exist and differ only by `action` |
 | AC-7 | Submit of a file that violates AC-1–AC-5 fails closed |
 | AC-8 | Text dual of this grant (if emitted) lists only `{{PRJ_NAME}} backup` and `{{PRJ_NAME}} restore` |
+| AC-9 | Pretty-printed grant with both verbs survives sibling `json-to-sudoers` / submit re-encode as **both** verbs (or submit fail-closed if inbound readable and a verb is missing) |
 
 ---
 
@@ -265,6 +282,8 @@ That shape (and `cp` / `tar` / `rm` / `install` / `chmod` siblings) is **non-com
 | **TP-FOLDER-BACKUP-22** | `tests/test_domain_folder_backup.sh` | **have** — JSON sudoer file `path` is only `/usr/local/bin/folder-backup` |
 | **TP-FOLDER-BACKUP-22b** | same | **have** — JSON sudoer file contains no `mkdir`/`cp`/`tar`/`rm`/`install`/`chmod` |
 | **TP-FOLDER-BACKUP-22c** | same | **have** — JSON sudoer file contains no deposit/stage path and no `*.tar.gz` |
+| **TP-FOLDER-BACKUP-22e** | same | **have** — pretty emit through real `sudoer-cli` keeps `backup` and `restore` |
+| **TP-FOLDER-BACKUP-22f** | same | **have** — stub inbound body still contains both verbs (not file-count only) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -275,9 +294,10 @@ That shape (and `cp` / `tar` / `rm` / `install` / `chmod` siblings) is **non-com
 |------|--------|------|
 | 2026-08-15 | Active 1.0.0 | JSON sudoer file SSOT; grant is `{{PRJ_NAME}}` only; OS-tool commands forbidden (complexity weakens security) |
 | 2026-08-15 | Active 1.0.1 | Ship unit 1.8.0 emit matches §2.6; DTV 22/22b/22c **have** |
+| 2026-08-17 | Active 1.1.0 | §2.7a re-encode fidelity; pretty JSON legal; AC-9; TP-22e/22f; INC-20260817-001 |
 
 ---
 
-**Last Updated**: 2026-08-15  
+**Last Updated**: 2026-08-17  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

@@ -4,9 +4,9 @@
 **Class:** software-development · domain SSOT present · **local-only** install channel (online package intentionally absent).  
 **Always load first:** `reviews/lessons.md`
 
-**Last plan update:** 2026-08-15  
-**Ship unit VERSION:** 1.8.0  
-**Suite baseline:** PASS=172+ (see `reviews/test-plan.md`)
+**Last plan update:** 2026-08-17  
+**Ship unit VERSION:** 1.8.1  
+**Suite baseline:** PASS=198 FAIL=0 SKIP=2 (see `reviews/test-plan.md`)
 
 ---
 
@@ -15,12 +15,13 @@
 | # | Check | Notes |
 |---|--------|--------|
 | P1 | Read `docs/requirements/index.md` | Class + architecture + shell + domain + three-layer |
-| P2 | Confirm ship unit `src/folder-backup` | `APP_NAME` / `VERSION` hard-assign (**1.8.0+**) |
-| P3 | Load `reviews/lessons.md` and re-check every open L-* | Mandatory (esp. **L-SUDOERS-01/02**) |
-| P4 | Run `./tests/run.sh` | Record PASS/FAIL/SKIP in report |
+| P2 | Confirm ship unit `src/folder-backup` | `APP_NAME` / `VERSION` hard-assign (**1.8.1+**) |
+| P3 | Load `reviews/lessons.md` and re-check every open L-* | Mandatory (esp. **L-SUDOERS-01/02** · **L-SUDOERS-06** · **L-TEST-REVIEW-01**) |
+| P4 | Run `./tests/run.sh` | Record PASS/FAIL/SKIP in report; **must include TP-22e/22f** (not emit-only 22) |
 | P5 | Confirm install **channel** still local-only | No SCRIPT_URL product UX |
-| P6 | Privilege law version | `requirement-three-layer-privilege-model` **≥1.5.0** (S13 + submit public inbound AC-16–19) |
+| P6 | Privilege law version | `requirement-three-layer-privilege-model` **≥1.7.0** (S13 + submit inbound **AC-21**) · `requirement-sudoer-json-file` **≥1.1.0** §2.7a |
 | P7 | Host elev posture (if reviewing runtime) | Global vs local binary; trust tier; `/etc/sudoers.d/` status |
+| P8 | **JSON re-encode / inbound fidelity** | Complete section below. **Revise/Block** if skipped when submit or JSON grant is in scope. |
 
 ---
 
@@ -31,7 +32,8 @@
 | Class | `requirement-class-software-dev.md` | posix-sh, local-only residual |
 | Bootstrap chain | `requirement-bootstrap-chain.md` | A=cli-template → B domain extend |
 | Project folder | `requirement-project-folder.md` | `src/`, bins, `/var/backup` |
-| **Privilege / sudoers** | `requirement-three-layer-privilege-model.md` | Type 0/1; **trust tiers S13**; print-sudoers; **install-script**; **remove-project-sudoers**; **submit-sudoer-request** public inbound; no ALL ALL |
+| **Privilege / sudoers** | `requirement-three-layer-privilege-model.md` | Type 0/1; **trust tiers S13**; print-sudoers; **install-script**; **remove-project-sudoers**; **submit-sudoer-request** public inbound; **inbound fidelity AC-21**; no ALL ALL |
+| **JSON sudoer file** | `requirement-sudoer-json-file.md` | `folder-backup` backup/**and** restore; §2.7a re-encode; pretty JSON legal |
 | CLI interface | `requirement-shell-cli-interface.md` | Commands, flags, dispatch |
 | Empty argv Type N | `requirement-shell-cli-zero-arguments.md` | Empty = help |
 | Local self-management | `requirement-shell-local-self-management.md` | install/uninstall; global preferred for elev |
@@ -47,8 +49,8 @@
 
 | Surface | Path | Review focus |
 |---------|------|--------------|
-| Skill create sudoers | `docs/skills/skill-create-sudoers-file.md` | **S11–S12** elev tables; **S13** trust |
-| Checklist | `docs/templates/checklists/checklist-create-sudoers-security.md` | Pre-emit gate |
+| Skill create sudoers | `docs/skills/skill-create-sudoers-file.md` | **S11–S13** + **S14** emit + **S15** convert/inbound |
+| Checklist | `docs/templates/checklists/checklist-create-sudoers-security.md` | Pre-emit **S14** and submit/convert **S15** |
 | Mold | `docs/templates/requirements/template-three-layer-privilege-model.md` | §2.3.1a, §2.3.3a/b |
 | Terms | `project-sudoers-file` · `sudoers-fragment` | Draft vs installed vs admin script |
 
@@ -71,6 +73,7 @@
 | `fb_next_archive_name` | Overwrite archives | L-OVERWRITE-01 · TP-08 |
 | `util_resolve_storage` | Isolation break / stage mismatch vs sudoers | L-STOR-01 · TP-CLI-12 · TP-02 |
 | `fb_detect_sudoer_inbound` | Home-only `sudoer-approving` or Type 0 inbound `mkdir` | L-INBOUND-01 · TP-FOLDER-BACKUP-21/21b |
+| `fb_submit_sudoer_request` / sibling decode | Pretty JSON inbound restore-only; `[OK]` / S14 / stub `cp` treated as fidelity | L-SUDOERS-06 · L-TEST-REVIEW-01 · TP-22e/22f · S15 |
 | Config `HOME` under `set -u` | nounset crash | L-SETU-01 · TP-CLI-11 |
 
 ---
@@ -91,11 +94,42 @@ Product claims **narrow Type 1** (allowlisted OS tools only), **not** full host 
 | Per-user host path | Installed `/etc/sudoers.d/{{APP_NAME}}-<user>` (no multi-user overwrite) | TP-**14** · L-SUDOERS-04 |
 | Positive full deposit | Host sudoers or root | TP-07/08 |
 | Installed fragment ≠ draft only | Host may still elevate after draft removed | Honesty in remove-project-sudoers |
+| **JSON re-encode / inbound verbs** | Pretty emit through real sibling still has `backup` **and** `restore`; `[OK]` / purpose / S14 / stub `cp` are not enough | **§ JSON re-encode** · TP-**22e/22f** · S15 · AC-21 |
 | Full interactive password-sudo package ladder | **n/a** | deposit uses `sudo -n` after admin fragment |
 | TTY package Type 1 traps | **n/a** | no package elev claimed |
 
 **CL-SHELL-TTY-PRIVILEGE-TRAPS:** N/A for package elevation.  
-**CL-CREATE-SUDOERS-SECURITY:** Required for agent-authored fragment create (**S11–S13**).
+**CL-CREATE-SUDOERS-SECURITY:** Required for agent-authored fragment create (**S11–S15**). **S15** required when `submit-sudoer-request` or sibling convert is in scope.
+
+## JSON re-encode / inbound fidelity — review plan gate
+
+**In scope when:** `print-sudoers`, `submit-sudoer-request`, JSON sudoer file, or sibling `sudoer-cli` convert/submit is reviewed.  
+**Incomplete review (Revise/Block, not Pass)** if this section is skipped while in scope.  
+**Law:** `requirement-sudoer-json-file` §2.7a · three-layer AC-21 · **S15** · INC-20260817-001 · L-SUDOERS-06 · L-TEST-REVIEW-01.
+
+Reviewer **MUST** do the checks (suite green on emit-only TPs is **not** this gate):
+
+| ID | Check | Pass | Fail |
+|----|--------|------|------|
+| **JR-1** | Emit dual lists **both** verbs | `print-sudoers` text + `.json` have `backup` and `restore` | Only one verb, or purpose lists both while `commands` has one |
+| **JR-2** | Pretty JSON is a fixture | Grant used for convert/submit is indented / `}, {` (not only compact `},{`) | Only minified encoder output was reviewed |
+| **JR-3** | Sibling **convert** | `sudoer-cli json-to-sudoers --file <pretty-dual>` has **two** Cmnd lines (`… backup` and `… restore`) | Last-`args` only (typical: restore-only) |
+| **JR-4** | Sibling **submit** (real binary, test `--queue-root` / env inbound) | Queued inbound `commands[].args` still contains both verbs | Inbound is compact restore-only; purpose unchanged |
+| **JR-5** | Readable inbound verify | Product submit fail-closed if inbound is readable and a verb is missing | `[OK] submitted` with a collapsed body |
+| **JR-6** | Suite | **TP-FOLDER-BACKUP-22e** and **22f** **have** and ran this review | Only 22/22b/22c/20 file-count; stub `cp` treated as fidelity |
+| **JR-7** | Checklist | **S15** Pass or N/A with reason; **S14 is not S15** | S14 Pass cited as inbound proof |
+| **JR-8** | Host queue (if a live request exists) | `sudo cat` inbound; count `commands`; do not approve a collapsed grant | Approve because purpose says “backup and restore” |
+
+**Must not confuse:**
+
+| Not this gate | Why |
+|---------------|-----|
+| TP-22 substring `"backup"` on the **draft** `.json` | Emit, not queued body |
+| TP-20 stub `sudoer-cli` that `cp`s the file | Never runs `sr_json_decode_to_fields` |
+| Purpose string / request_id / `[OK]` | Not `commands[]` |
+| Compact-only sibling suite (TP-SR-03/07) | Hides `},{` splitter |
+
+**Non-finding if:** JR-3/JR-4 pass on pretty emit **and** TP-22e/22f are have **and** no live inbound is restore-only while purpose lists both.
 
 ### Trust tier (S13) — must re-check
 

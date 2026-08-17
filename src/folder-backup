@@ -48,8 +48,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.8.0"
-: "${VERSION:=1.8.0}"
+VERSION="1.8.1"
+: "${VERSION:=1.8.1}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -3112,6 +3112,20 @@ fb_submit_sudoer_request() {
     _rid=$(printf '%s\n' "${_out}" | sed -n 's/.*"request_id":"\([^"]*\)".*/\1/p')
     if [ -z "${_rid}" ]; then
         _rid=$(printf '%s\n' "${_out}" | sed -n 's/.*request_id=\([^[:space:]]*\).*/\1/p')
+    fi
+
+    # When inbound is readable, queued body MUST still name both elev verbs.
+    # Purpose text and [OK] submitted are not completeness. INC-20260817-001.
+    if [ -n "${_rid}" ] && [ -r "${_inbound}/${_rid}" ]; then
+        _ibody=$(cat "${_inbound}/${_rid}" 2>/dev/null || true)
+        case "${_ibody}" in
+            *'"backup"'*) ;;
+            *) out_die "inbound grant lost backup verb (sibling re-encode?). Do not approve ${_rid}." ;;
+        esac
+        case "${_ibody}" in
+            *'"restore"'*) ;;
+            *) out_die "inbound grant lost restore verb (sibling re-encode?). Do not approve ${_rid}." ;;
+        esac
     fi
 
     if [ "${JSON}" -eq 1 ]; then

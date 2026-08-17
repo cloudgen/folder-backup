@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-three-layer-privilege-model.md  
-**Status**: Active (Version 1.6.0)  
+**Status**: Active (Version 1.7.0)  
 **Area**: architecture  
 **Key**: `requirement-three-layer-privilege-model`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -171,11 +171,13 @@ Filled conventional names for this compose live in §2.5. Core rules **MUST NOT*
 9. **MUST NOT** invent or pass a dest basename for the queued file. `request_id` is whatever the sibling allocator returns.  
 10. When pointing the sibling at a queue root, **MUST** use the **parent of the real public inbound** (or leave the sibling on its public default). **MUST NOT** export a home directory that still uses the legacy `sudoer-approving` child as if it were the public queue root.  
 11. **MUST NOT** write `/etc/sudoers.d` or `/etc/passwd` from this verb.  
-12. Product `--json` status **SHOULD** include `request_id`, `action`, `service`, `sudoer_cli`, `sudoer_adm`, `inbound`. That status object is **not** the queued request file.
+12. Product `--json` status **SHOULD** include `request_id`, `action`, `service`, `sudoer_cli`, `sudoer_adm`, `inbound`. That status object is **not** the queued request file.  
+13. **Inbound fidelity:** the queued body **is** the grant the approver will install. `[OK] submitted`, the purpose string, and the emit dual are **not** substitutes. When `${inbound}/${request_id}` is readable, submit **MUST** fail closed if `commands` lost a required elev verb (`backup` / `restore`). When it is not readable (production inbound often `0640` after LPU chown), stay-honest: do **not** claim the queued file equals emit.  
+14. Review / suite **MUST NOT** treat a stub `sudoer-cli` that `cp`s the input, or emit-only substring greps, as proof of sibling re-encode fidelity. Pretty-printed emit **MUST** be a fixture (INC-20260817-001).
 
 **Queued JSON (sibling-owned shape — this product must produce input that converts):**
 
-The queued artifact lives **in the inbound directory**. Filename grammar and closed schema are **owned by the sibling approval product**. This product **MUST** pass a self-scoped sudoers text dual (or already-valid request JSON) that the sibling can convert and queue. Worked basename + body for **this** product’s grant are in §2.5.
+The queued artifact lives **in the inbound directory**. Filename grammar and closed schema are **owned by the sibling approval product**. This product **MUST** pass a self-scoped sudoers text dual (or already-valid request JSON) that the sibling can convert and queue. Worked basename + body for **this** product’s grant are in §2.5. Sibling decode/re-encode **MUST** preserve every `commands[]` object (`requirement-sudoer-json-file` §2.7a); a restore-only inbound after a backup+restore emit is a **different** grant.
 
 #### 2.3.4 Fragment content constraints (mandatory)
 
@@ -417,7 +419,8 @@ esac
 15. Treat `/var/backup/folder-backup` (deposit) as the sudoer inbound.  
 16. Probe **only** `{{approver-home}}/sudoer-approving` as the preferred real inbound when `/var/sudoer-cli/sudoer-request` is the public dest.  
 17. Invent the queued JSON dest basename instead of calling the sibling allocator.  
-18. Put `cp` / `mkdir` / `tar` / `rm` / `install` / `chmod` (or deposit/stage/archive-name operands) into the **JSON sudoer file** — that body is `requirement-sudoer-json-file` (`{{PRJ_NAME}}` only).
+18. Put `cp` / `mkdir` / `tar` / `rm` / `install` / `chmod` (or deposit/stage/archive-name operands) into the **JSON sudoer file** — that body is `requirement-sudoer-json-file` (`{{PRJ_NAME}}` only).  
+19. Treat `[OK] Submitted` or checklist S14 Pass as proof the **inbound** `commands[]` still has `backup` and `restore`.
 
 **Violating this rule is a critical privilege regression.**
 
@@ -447,6 +450,7 @@ esac
 | AC-18 | Submit creates the queued artifact **only** by invoking sibling `add-sudoer-request` / `update-sudoer-request`; dest basename is sibling-allocated JSON under the public inbound |
 | AC-19 | About reports sudoer-cli / sudoer-adm / inbound (path or `not_found`) and writable flag |
 | AC-20 | Queued JSON **body** obeys `requirement-sudoer-json-file` (`{{PRJ_NAME}}` only; no OS-tool commands) |
+| AC-21 | When inbound `${request_id}` is readable after submit, body still contains required elev verbs; emit-only / stub-`cp` tests do not satisfy this AC |
 
 ---
 
@@ -481,6 +485,7 @@ esac
 | **TP-FOLDER-BACKUP-21** | same | have — detect prefers public inbound; Type 0 does not mkdir |
 | **TP-FOLDER-BACKUP-21b** | same | have — `SUDOER_QUEUE_INBOUND` wins over public |
 | **TP-FOLDER-BACKUP-22 / 22b / 22c** | same | **have** — JSON sudoer file body (`requirement-sudoer-json-file`) |
+| **TP-FOLDER-BACKUP-22e / 22f** | same | **have** — pretty emit + inbound body fidelity (AC-21) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -495,9 +500,10 @@ esac
 | 2026-08-14 | Active 1.4.0 | `submit-sudoer-request` compose (§2.3.3c) |
 | 2026-08-15 | Active 1.5.0 | Submit = JSON via sibling allocator into **public inbound** `/var/sudoer-cli/sudoer-request`; no Type 0 mkdir; legacy `sudoer-approving` last |
 | 2026-08-15 | Active 1.6.0 | JSON sudoer file **body** deferred to `requirement-sudoer-json-file`; OS-tool JSON samples withdrawn |
+| 2026-08-17 | Active 1.7.0 | Submit inbound fidelity §2.3.3c items 13–14; AC-21; INC-20260817-001 |
 
 ---
 
-**Last Updated**: 2026-08-15  
+**Last Updated**: 2026-08-17  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; mold `template-three-layer-privilege-model.md` (**`LM-THREE-LAYER-PRIVILEGE-MODEL`**); **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

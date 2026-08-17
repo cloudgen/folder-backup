@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.8.0  
-**Last plan update:** 2026-08-15  
-**Last suite run:** PASS=189 FAIL=0 SKIP=2 (2026-08-15)
+**Product VERSION:** 1.8.1  
+**Last plan update:** 2026-08-17  
+**Last suite run:** PASS=198 FAIL=0 SKIP=2 (2026-08-17) — includes TP-22e/22f re-encode fidelity
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -25,6 +25,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Help lists sudoers verbs (print / install-script / remove draft / submit + public inbound) | have | TP-CLI-04 |
 | Submit detect: public inbound first; env override; no Type 0 mkdir | have | TP-FOLDER-BACKUP-19/20/21/21b |
 | JSON sudoer file is `folder-backup` backup/restore only (no OS tools / path / filename) | have | TP-FOLDER-BACKUP-22/22b/22c |
+| Pretty emit + inbound body keep both verbs (sibling re-encode fidelity) | have | TP-FOLDER-BACKUP-22e/22f |
 | Domain surface: print-sudoers allowlist + test-mode gate | have | TP-FOLDER-BACKUP-01, 01b, 01c, 02 |
 | Admin install-script handoff (project-sudoers-file) | have | TP-FOLDER-BACKUP-14 |
 | Remove project-sudoers draft only | have | TP-FOLDER-BACKUP-15 |
@@ -99,6 +100,8 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-FOLDER-BACKUP-22b | JSON sudoer file contains no mkdir/cp/tar/rm/install/chmod | test_domain | **sudoer-json-file** AC-4 | **have** |
 | TP-FOLDER-BACKUP-22c | JSON sudoer file contains no deposit/stage path and no `*.tar.gz` | test_domain | **sudoer-json-file** AC-5 | **have** |
 | TP-FOLDER-BACKUP-22d | submit refuses OS-tool grant file | test_domain | **sudoer-json-file** AC-7 | **have** |
+| TP-FOLDER-BACKUP-22e | pretty emit through real sudoer-cli keeps backup **and** restore (convert + submit) | test_domain | **sudoer-json-file** AC-9 · three-layer AC-21 | **have** |
+| TP-FOLDER-BACKUP-22f | stub inbound **body** still contains both verbs (not file-count only) | test_domain | **sudoer-json-file** AC-9 | **have** |
 | TP-FOLDER-BACKUP-15 | remove-project-sudoers: force remove draft; refuse `/etc`; already absent; host elev probe | test_domain | three-layer §2.3.3b · project-sudoers-file | **have** |
 | TP-FOLDER-BACKUP-15b | multi-draft: list + non-interactive requires path; explicit path removes one only | test_domain | three-layer AC-15 · L-SUDOERS-04 | **have** |
 | TP-FOLDER-BACKUP-16 | restore dest whitelist: refuse `/etc/passwd` + exact `/etc` + `/etc/<other>`; W-ETC-USER `/etc/{{username}}` gate allow | test_domain | **folder-archive-backup** §2.6b.2a · INC-20260812-001 | **have** |
@@ -121,6 +124,10 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Remove draft only | 15 | §2.3.3b |
 | Deposit fail-closed | 05 | §2.3.7 |
 | Elev Tables S11–S12 | n/a automated (agent/harness) | mold + checklist; product OS-tool deposit |
+| JSON emit identity (no OS-tool / path hardcode) | 22 / 22b / 22c / 22d | **sudoer-json-file** AC-1..7 |
+| Pretty emit + real sibling convert/submit keeps both verbs | **22e** | **sudoer-json-file** AC-9 · three-layer AC-21 · **JR-3/JR-4** |
+| Stub inbound **body** still has both verbs | **22f** | AC-9 · **JR-6** (not file-count only) |
+| Review gate JSON re-encode | n/a automated | `what-to-review` **JR-1..8** · **S15** · INC-20260817-001 |
 
 ---
 
@@ -140,3 +147,5 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 2. Do not mark TP **have** without a suite assertion (or honest skip/n/a).  
 3. Do not reintroduce online TP-CURL/TP-CSUM as Core without product-mode change.  
 4. Trust-tier and project-sudoers-file changes require TP-FOLDER-BACKUP-01b/14/15 (or successors) stay **have**.  
+5. JSON grant / submit reviews require **TP-FOLDER-BACKUP-22e/22f** stay **have**. Do not mark re-encode fidelity **have** from emit-only 22/22b/22c or stub-`cp` 20.  
+6. Closing INC-20260817-001 host queue still needs a live inbound that lists both verbs (product/suite ≠ approved host file).  

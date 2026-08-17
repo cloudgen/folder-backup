@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] - 2026-08-17
+
+### Added
+
+- Submit **inbound fidelity** (AC-9 / three-layer AC-21): when the queued request file is readable, `submit-sudoer-request` **fails closed** if sibling re-encode dropped `backup` or `restore`. Purpose text is not completeness.
+- Suite **TP-FOLDER-BACKUP-22e / 22f**: pretty emit through real `sudoer-cli` keeps both verbs; stub inbound body is read (not only file count).
+- Law: `requirement-sudoer-json-file` **1.1.0** · three-layer **1.7.0**. Incident **INC-20260817-001**.
+
 ## [1.8.0] - 2026-08-15
 
 ### Changed

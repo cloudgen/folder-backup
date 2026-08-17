@@ -2,6 +2,9 @@
 
 | Date | Report | Scope | Verdict | Suite |
 |------|--------|-------|---------|-------|
+| 2026-08-17 | `reports/2026-08-17-json-reencode-fidelity.md` | JSON re-encode / inbound **JR-1..8**; suite 22e/22f | **PASS** (FB-JR-01 host inbound residual) | PASS=198 FAIL=0 SKIP=2 |
+| 2026-08-17 | `what-to-review` **JR-1..8** | Review plan gate: JSON re-encode / inbound fidelity (pretty convert + submit + S15) | living | PASS=198 FAIL=0 SKIP=2 |
+| 2026-08-17 | INC-20260817-001 knowledge lock | Re-encode fidelity: REQ 1.1.0 / three-layer 1.7.0 / S15 / TP-22e/22f | living | PASS=198 FAIL=0 SKIP=2 |
 | 2026-08-15 | `reports/2026-08-15-sudoer-json-file.md` | JSON sudoer file = `folder-backup` only; emit 1.8.0 | **PASS** (FB-SUDOER-01 residual runtime) | PASS=189 FAIL=0 SKIP=2 |
 | 2026-08-15 | `reports/2026-08-15-coverage-public-inbound.md` | Coverage P0–P2 + public inbound detect | **PASS** (findings closed) | PASS=175 FAIL=0 SKIP=2 |
 | 2026-08-13 | `reports/2026-08-13-bootstrap-specialize-cli-template.md` | Origin retarget A=cli-template → B; VERSION 1.6.1 alignment | **PASS** | PASS=157 FAIL=0 SKIP=2 |

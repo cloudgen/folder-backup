@@ -2,15 +2,15 @@
 
 **Product:** folder-backup (POSIX `/bin/sh` local self-managed CLI — folder tar.gz backup with narrow sudo deposit)  
 **Workspace state:** Specialized product law (left genesis); **software-development** class; bootstrap **cli-template → folder-backup** (domain extend; online install **intentionally absent** on A and B).  
-**Updated:** 2026-08-15
+**Updated:** 2026-08-17
 
 | ID / key | Title | Area | Status | Path | Updated |
 |----------|-------|------|--------|------|---------|
 | requirement-class-software-dev | Software-development class law + residual stack (posix-sh, local-only); multi-vault forge push identity §2.0.5a | class | Active | `requirement-class-software-dev.md` | 2026-08-11 |
 | requirement-bootstrap-chain | Bootstrap chain A=cli-template → B=folder-backup (domain extend) | architecture | Active (2.0.0) | `requirement-bootstrap-chain.md` | 2026-08-13 |
 | requirement-project-folder | Project layout (`src/`), install bins, `/var/backup` deposit | architecture | Active | `requirement-project-folder.md` | 2026-08-03 |
-| requirement-three-layer-privilege-model | Type 0 + narrow Type 1 deposit; sudoers emit + **install-script** handoff; **per-user** fragment names; **trust tiers** (S13); **submit-sudoer-request** workflow (JSON **body** owned by sudoer-json-file) | architecture | Active (1.6.0) | `requirement-three-layer-privilege-model.md` | 2026-08-15 |
-| requirement-sudoer-json-file | **JSON sudoer file** SSOT: grant is **`{{PRJ_NAME}}` only** (`folder-backup` backup/restore); forbids `cp`/`mkdir`/… (complexity weakens security) | architecture | Active (1.0.1) | `requirement-sudoer-json-file.md` | 2026-08-15 |
+| requirement-three-layer-privilege-model | Type 0 + narrow Type 1 deposit; sudoers emit + **install-script** handoff; **per-user** fragment names; **trust tiers** (S13); **submit-sudoer-request** workflow + inbound fidelity (JSON **body** owned by sudoer-json-file) | architecture | Active (1.7.0) | `requirement-three-layer-privilege-model.md` | 2026-08-17 |
+| requirement-sudoer-json-file | **JSON sudoer file** SSOT: `{{PRJ_NAME}}` only; pretty/compact legal; re-encode **MUST** keep every `commands[]` object | architecture | Active (1.1.0) | `requirement-sudoer-json-file.md` | 2026-08-17 |
 | requirement-folder-archive-backup | **Backup/restore ops SSOT**: backup + verify + **restore**; dest whitelist **W-ETC-USER** `/etc/{{username}}` (never `/etc/passwd`) | backup | Active (1.2.0) | `requirement-folder-archive-backup.md` | 2026-08-12 |
 | requirement-folder-archive-backup-retention-total | **Total retention**: max **30** archives per project basename; prune oldest after successful deposit | backup | Active (1.0.0) | `requirement-folder-archive-backup-retention-total.md` | 2026-08-12 |
 | requirement-folder-archive-backup-retention-daily | **Daily retention**: max **5** archives per basename per calendar day; prune oldest same-day `N` | backup | Active (1.0.0) | `requirement-folder-archive-backup-retention-daily.md` | 2026-08-12 |
