@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.3.1)  
+**Status**: Active (Version 1.6.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -54,6 +54,17 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 - Global flags  
 - Honest note that deposit requires admin-installed sudoers fragment  
 
+**Purpose split (orthogonal to Type 0/1):** this product classifies grant-emit verbs as **test-purpose** for help grouping and main-menu exclusion. Help **MUST** list them under a heading **apart** from operational work.
+
+| Purpose | Verbs |
+|---------|-------|
+| **Operational** | `backup`, `restore`, `remove-project-sudoers`, `submit-sudoer-request`; `menu` / `main` when routed |
+| **Self-managed** | `install`, `uninstall`, `where-is-me` |
+| **Diagnostics** | `version`, `about`, `help` |
+| **Test-purpose** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
+
+Ship unit `app_help` still lists grant-emit verbs under the Domain heading with operational work — honest **Gap** until those three sit under a test-purpose heading (AC-9). Tokens are already listed.
+
 In JSON mode, help **MUST NOT** dump long human text; return a short structured success/note object.
 
 ### 2.5 Implementation Notes (this project)
@@ -82,10 +93,15 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `version` | Type 0 | `app_version` | Local `VERSION` only; no network |
 | `about` | Type 0 | `app_about` | Diagnostics: install presence, paths, user, shell, TTY, storage, backup defaults; **no** channel one-liner |
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
-| `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
-| `print-sudoers` | Type 0 | `fb_print_sudoers` (domain) | Emit sudoers fragment for admin to install under `/etc/sudoers.d/` — **does not** write `/etc` itself |
-| `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound |
-| `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound |
+| `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | **Operational.** Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
+| `restore` | Type 0 (+ Type 1 stage fetch) | `fb_restore` (domain) | **Operational.** Put an archive back onto the hard-disk projects tree |
+| `print-sudoers` | Type 0 | `fb_print_sudoers` (domain) | **Test-purpose.** Emit sudoers fragment for admin to install under `/etc/sudoers.d/` — **does not** write `/etc` itself. Listed apart in help; **not** on the main menu |
+| `print-sudoers-install-script` | Type 0 | `fb_print_sudoers_install_script` (domain) | **Test-purpose.** Write admin handoff script under `/dev/shm` or temp — **does not** write `/etc`. Listed apart in help; **not** on the main menu |
+| `remove-project-sudoers` | Type 0 | `fb_remove_project_sudoers` (domain) | **Operational.** Remove the local grant draft only (not `/etc`) |
+| `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Test-purpose.** **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound. Listed apart in help; **not** on the main menu |
+| `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | **Operational.** Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound |
+| `menu` | Type 0 | `app_main_menu` | Numbered list of live **operational** work commands (`requirement-shell-cli-default-interaction`). **MUST NOT** steal empty argv. **MUST NOT** list version, about, self-managed, or test-purpose verbs |
+| `main` | Type 0 | `app_main_menu` | Alias of `menu`. **MUST NOT** appear as a choice on its own list. |
 
 #### Global flags (normative wiring)
 
@@ -102,8 +118,8 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 1. Unknown token after flag parse → `out_die` with pointer to `folder-backup help`.  
 2. Zero-arg → help (not install, not backup).  
-3. Command routing table in `app_main` **must** include every row above.  
-4. Help text **must** stay aligned with that table.  
+3. Command routing table in `app_main` **must** include every **Implemented** row above.  
+4. Help text **must** stay aligned with that table. Test-purpose verbs **MUST** appear under a heading **apart** from operational verbs.  
 5. Domain catalog detail (operands, archive naming, error codes) is owned by `requirement-domain-folder-backup.md` — this file owns the **listed verbs** and routing.
 
 #### Explicitly out of scope
@@ -146,7 +162,9 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 4. Bypass `out_*` for product user messages.  
 5. Run the entire CLI as root by default instead of narrow deposit elevation.  
 6. Put full domain archive semantics only here and omit the domain SSOT.  
-7. Add a second submit verb (`submit-sudoer`) without routing + help, or invent inbound `mkdir` as this CLI’s job.
+7. Add a second submit verb (`submit-sudoer`) without routing + help, or invent inbound `mkdir` as this CLI’s job.  
+8. Attach the numbered list to empty argv, or drop `menu`/`main` routing.  
+9. Mix test-purpose verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on the numbered main menu.
 
 **Violating this rule is a critical CLI interface regression.**
 
@@ -156,13 +174,15 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 | ID | Criterion |
 |----|-----------|
-| AC-1 | All commands in the table are routed and listed in help |
+| AC-1 | All **Implemented** commands in the table are routed and listed in help |
 | AC-2 | Global flags wire QUIET/JSON/DEBUG/FORCE as specified |
 | AC-3 | Empty argv is help (Type N) |
 | AC-4 | No online self-management verbs on the surface |
 | AC-5 | Domain verbs point to domain requirement for deep semantics |
 | AC-6 | `submit-sudoer-request` is Type 0, routed, listed in help; does not write `/etc` or create inbound |
 | AC-7 | `generate-sudoer-request` is Type 0, routed, listed in help; independent of submit; dest is invoking-user readable; does not write `/etc` or inbound |
+| AC-8 | `menu` and `main` are routed and listed in help; empty argv stays help (`requirement-shell-cli-default-interaction`) |
+| AC-9 | Help lists test-purpose `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` **apart** from operational verbs; those three are **not** main-menu rows. **Gap** until `app_help` splits headings |
 
 ---
 
@@ -171,6 +191,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | Key | Relationship |
 |-----|--------------|
 | `requirement-shell-cli-zero-arguments` | Empty argv Type N |
+| `requirement-shell-cli-default-interaction` | Claimed `menu`/`main` numbered list (case 3) |
 | `requirement-shell-local-self-management` | install/uninstall/where-is-me |
 | `requirement-shell-output-requirements` | `out_*` catalog |
 | `requirement-domain-folder-backup` | Domain four pillars |
@@ -184,6 +205,8 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | TP family / ID | Suite | Status |
 |----------------|-------|--------|
 | **TP-CLI-01..12** | `tests/test_cli.sh` | have |
+| **TP-CLI-13..16** | same | **have** — `menu`/`main` (`requirement-shell-cli-default-interaction`) |
+| **TP-CLI-17** | same | **todo** — help lists test-purpose grant-emit verbs apart (AC-9) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -197,9 +220,12 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | 2026-08-17 | Active 1.2.0 | `--add` / `--update`; default submit action from host `/etc/sudoers.d` probe |
 | 2026-08-17 | Active 1.3.0 | `generate-sudoer-request` Type 0; AC-7 |
 | 2026-08-17 | Active 1.3.1 | Generate dest must be readable for tests/review; independent of submit |
+| 2026-08-23 | Active 1.4.0 | `menu` / `main` listed (Gap); empty argv stays help |
+| 2026-08-23 | Active 1.5.0 | Restore / print-sudoers-install-script / remove-project-sudoers listed; test-purpose grant-emit verbs apart in help (AC-9) |
+| 2026-08-23 | Active 1.6.0 | `menu` / `main` routed (`app_main_menu`); empty argv stays help |
 
 ---
 
-**Last Updated**: 2026-08-17  
+**Last Updated**: 2026-08-23  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

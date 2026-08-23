@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-domain-folder-backup.md  
-**Status**: Active (Version 1.6.1)  
+**Status**: Active (Version 1.6.2)  
 **Area**: domain  
 **Key**: `requirement-domain-folder-backup`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -30,6 +30,8 @@ This file remains the sole Active **`requirement-domain-*`** (four pillars).
 | `generate-sudoer-request` | optional dest path; `--update` / `--add`; `--allow-test-local` | `fb_*` | Type 0 **independent** generate: write JSON grant to a dest **readable without sudo** (tests/review); compact; both verbs; no `/etc`; no inbound | workflow: **`requirement-three-layer-privilege-model`** §2.3.2a · §2.3.3d · JSON body: **`requirement-sudoer-json-file`** |
 | `submit-sudoer-request` | optional sudoers file; `--purpose`; `--update` / `--add`; `--allow-test-local` | `fb_*` | Type 0 submitter: detect sudoer-cli + sudoer-adm + **public inbound**; **default action=update** if this user’s `/etc/sudoers.d/{{APP_NAME}}-<user>` exists, else add; sibling allocates JSON (no `/etc` write; no inbound `mkdir`) | workflow: **`requirement-three-layer-privilege-model`** §2.3.3c · JSON body: **`requirement-sudoer-json-file`** |
 
+**Purpose (this product):** `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` are **test-purpose**. `backup`, `restore`, `remove-project-sudoers`, and `submit-sudoer-request` are **operational**. Test-purpose verbs stay on `help` under a heading **apart** from operational work and **MUST NOT** appear on the numbered main menu (`requirement-shell-cli-default-interaction`).
+
 **Routing:** Dispatcher in `app_main` (CLI interface) **MUST** route these verbs; unknown operands fail closed.
 
 **Non-goals as subcommands:** remote sync, cloud upload, restore UI, schedule daemon (unless a future requirement adds them).
@@ -50,17 +52,27 @@ Domain **MUST NOT** restate full operational backup rules in a second competing 
 
 ### 2.3 Pillar C — Specialized project help items
 
-`help` **MUST** show domain rows (in addition to Type 0 lifecycle):
+`help` **MUST** show domain rows (in addition to Type 0 lifecycle). **Operational** rows and **test-purpose** rows **MUST** be listed **apart** (separate heading). Ship unit `app_help` still mixes grant-emit verbs under Domain — honest **Gap** until headings split (`requirement-shell-cli-interface` AC-9).
+
+**Operational:**
 
 | Help row | Text intent |
 |----------|-------------|
 | `backup <source-folder>` | Create tar.gz, deposit under backup notation, verify counts |
 | `restore <archive\|prefix> [dest]` | Restore archive; default dest **hard-disk** host (reverse ram-drive-first) |
+| `remove-project-sudoers [path]` | Delete project-sudoers-file draft only (list/choose if multiple; confirm / `--force`; not `/etc`) |
+| `submit-sudoer-request [file]` | Queue a JSON sudoers-grant request via sudoer-cli into `/var/sudoer-cli/sudoer-request` (default **update** if this user’s host fragment exists; `--add`/`--update`; no `/etc` write; no inbound mkdir) |
+
+**Test-purpose** (grant-emit testers; **not** on the main menu):
+
+| Help row | Text intent |
+|----------|-------------|
 | `print-sudoers` | Emit **project-sudoers-file** (draft) for admin install |
 | `print-sudoers-install-script` | Write admin script (`/dev/shm` or temp) for sudo install/uninstall/replace of project-sudoers-file |
-| `remove-project-sudoers [path]` | Delete project-sudoers-file draft only (list/choose if multiple; confirm / `--force`; not `/etc`) |
 | `generate-sudoer-request [path]` | Independently write a JSON grant to a dest tests and review can read (compact; both verbs); no `/etc`; no inbound |
-| `submit-sudoer-request [file]` | Queue a JSON sudoers-grant request via sudoer-cli into `/var/sudoer-cli/sudoer-request` (default **update** if this user’s host fragment exists; `--add`/`--update`; no `/etc` write; no inbound mkdir) |
+
+| Help row | Text intent |
+|----------|-------------|
 | Env note | `BACKUP_*`, `PROJECTS_ROOT`, `RAM_ROOT`, `RESTORE_HOST_DEFAULT` |
 | Privilege note | Archive as user; deposit/restore-stage need allowlisted sudo after admin installs fragment |
 
@@ -140,7 +152,8 @@ folder-backup submit-sudoer-request
 4. Leave help listing `backup` without an Active operational backup requirement.  
 5. Create a second Active `requirement-domain-*` without superseding this one.  
 6. Document inbound as `sudoer-approving` (home dropbox) as the preferred dest.  
-7. Let Type 0 `mkdir` `/var/sudoer-cli/sudoer-request`.
+7. Let Type 0 `mkdir` `/var/sudoer-cli/sudoer-request`.  
+8. Mix test-purpose grant-emit verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on the numbered main menu.
 
 **Violating this rule is a critical domain regression.**
 
@@ -152,11 +165,12 @@ folder-backup submit-sudoer-request
 |----|-----------|
 | AC-1 | Four pillars present (subcommands, feature map, help, about) |
 | AC-2 | `backup`, `print-sudoers`, `print-sudoers-install-script`, `remove-project-sudoers`, `generate-sudoer-request`, and `submit-sudoer-request` listed with peer SSOT pointers |
-| AC-3 | Help lists backup + print-sudoers + install-script + remove-project-sudoers + generate-sudoer-request + submit-sudoer-request |
+| AC-3 | Help lists backup + print-sudoers + install-script + remove-project-sudoers + generate-sudoer-request + submit-sudoer-request; test-purpose grant-emit verbs listed **apart** from operational |
 | AC-4 | About lists backup root / notation / deposit dir + sudoer-cli / sudoer-adm / inbound (preferred public path) + `host_sudoers_present` |
 | AC-5 | Registered as sole Active domain SSOT |
 | AC-6 | No competing full backup ops body (defers to folder-archive-backup) |
 | AC-7 | Help/about describe submit as JSON into sibling public inbound, not a home `sudoer-approving` mkdir |
+| AC-8 | `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` are test-purpose on this product; they stay off the numbered main menu |
 
 ---
 
@@ -167,7 +181,8 @@ folder-backup submit-sudoer-request
 | `requirement-folder-archive-backup` | **Operational backup SSOT** |
 | `requirement-three-layer-privilege-model` | Elevation + sudoers workflow |
 | `requirement-sudoer-json-file` | JSON sudoer file body (`{{PRJ_NAME}}` only) |
-| `requirement-shell-cli-interface` | Routes domain verbs |
+| `requirement-shell-cli-interface` | Routes domain verbs; help purpose split |
+| `requirement-shell-cli-default-interaction` | Main menu omits test-purpose grant-emit verbs |
 | `requirement-bootstrap-chain` | Domain extend from cli-template |
 | `docs/requirements/index.md` | Registry |
 
@@ -180,6 +195,7 @@ folder-backup submit-sudoer-request
 | **TP-FOLDER-BACKUP-01,02** | `tests/test_domain_folder_backup.sh` | have | print-sudoers surface (privilege peer) |
 | **TP-FOLDER-BACKUP-09** | same | have | about domain fields |
 | **TP-CLI-04,06** | `tests/test_cli.sh` | have | help/about list domain verbs |
+| **TP-CLI-17** | same | **todo** | help lists test-purpose grant-emit verbs apart |
 | **TP-FOLDER-BACKUP-19,20** | `tests/test_domain_folder_backup.sh` | have | submit fail-closed / stub inbound (privilege peer) |
 | **TP-FOLDER-BACKUP-23,23b** | same | have | host `/etc/sudoers.d` probe → update; `--add` override |
 | **TP-FOLDER-BACKUP-24,24b,24c,24d** | same | have | generate-sudoer-request independent dest; suite reads without sudo |
@@ -205,9 +221,10 @@ folder-backup submit-sudoer-request
 | 2026-08-17 | Active 1.5.0 | Submit default update when this user’s host fragment exists; `--add`/`--update` |
 | 2026-08-17 | Active 1.6.0 | `generate-sudoer-request` surface (local verified JSON) |
 | 2026-08-17 | Active 1.6.1 | Generate is independent; dest readable for tests/review (three-layer §2.3.2a) |
+| 2026-08-23 | Active 1.6.2 | Grant-emit verbs classified test-purpose; help lists them apart; AC-8 |
 
 ---
 
-**Last Updated**: 2026-08-17  
+**Last Updated**: 2026-08-23  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

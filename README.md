@@ -1,15 +1,19 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.9.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.11.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
 
-POSIX `/bin/sh` local CLI that archives a folder to gzip tar, deposits it under `/var/backup/folder-backup/` with narrow Type 1 sudo, verifies counts and size, and restores archives with **hard-disk destination as the default SSOT** (reverse of ram-drive-first). Local install only (no online `curl|sh` channel).
+**folder-backup** packs a folder you name into a dated gzip archive, stores it under `/var/backup/folder-backup/`, checks the file count and size, and can put that folder back onto the hard-disk projects tree. A normal login can install the program locally, write a grant file you can read, and submit it. Copying the archive into `/var/backup` needs an admin-installed narrow grant first. There is no online `curl|sh` install.
+
+| You (your own login) | Admin / already root | Not this |
+|----------------------|----------------------|----------|
+| Install to `~/.local/bin`, generate and submit a grant, run `backup` / `restore` once the grant exists | Install into `/usr/local/bin` and install the sudoers fragment | No download-and-run install channel; a normal login does not write `/etc` |
 
 ## Features
 
-- **Local self-management**: `install`, `uninstall`, `where-is-me`, `version`, `about`, `help`
+- **Local self-management**: `install`, `uninstall`, `where-is-me`, `version`, `about`, `help`, `menu` / `main` (TTY numbered work list)
 - **Backup**: `backup <folder>` → stage tar.gz → elevated deposit → verify → **retention prune** (max **5**/day, **30** total per project basename)
 - **Retention**: `MAX_DAILY_BACKUPS` / `MAX_TOTAL_BACKUPS` (defaults 5 / 30); oldest first; never cross-basename
 - **Restore**: `restore <archive|prefix> [dest]` — default dest is hard-disk `${PROJECTS_ROOT}/<project>`
@@ -21,7 +25,7 @@ POSIX `/bin/sh` local CLI that archives a folder to gzip tar, deposits it under 
 
 ## Quick Installation
 
-**Local (Type 0 day-to-day):**
+**Local (your own login, no root needed):**
 
 ```sh
 # From this repository checkout
@@ -73,6 +77,7 @@ Config identity: `REPO_USER=cloudgen`, `REPO_NAME=folder-backup` (override with 
 
 ```sh
 folder-backup help
+folder-backup menu                          # TTY numbered work list; off-TTY is help
 folder-backup about
 folder-backup --json about
 
@@ -145,6 +150,9 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
+2026-08-23 — version **1.11.0** (`menu` / `main` numbered work list; TP-CLI-13..16).
+2026-08-23 — version **1.10.0** (`print-sudoers` / JSON emit `backup *` / `restore *`; TP-26; INC-20260823-001).
+2026-08-18 — housekeeping: Description rewritten in people-and-folders voice (no Type-1 lead); install heading says “your own login.” Version still **1.9.0** (no product-source change).
 2026-08-17 — version **1.9.0** (`generate-sudoer-request`; independent generate dest; operator-readable errors; TP-24/25).
 2026-08-17 — version **1.8.2** (submit **update** when `/etc/sudoers.d/folder-backup-<user>` exists; TP-23).
 2026-08-17 — version **1.8.1** (submit inbound fidelity; pretty JSON re-encode; TP-22e/22f; review JR-1..8).

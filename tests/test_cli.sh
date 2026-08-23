@@ -55,6 +55,8 @@ run_test_cli() {
     assert_contains "TP-CLI-04 help SUDOER_PUBLIC_ROOT" "$_out" "SUDOER_PUBLIC_ROOT"
     assert_contains "TP-CLI-04 help hard-disk default" "$_out" "hard-disk"
     assert_contains "TP-CLI-04 help --json" "$_out" "--json"
+    assert_contains "TP-CLI-04 help menu" "$_out" "Numbered list of live work commands"
+    assert_contains "TP-CLI-04 help main" "$_out" "Same as menu"
     assert_not_contains "TP-CLI-04 no self-update" "$_out" "self-update"
     assert_not_contains "TP-CLI-04 no self-uninstall" "$_out" "self-uninstall"
     assert_not_contains "TP-CLI-04 no version-check" "$_out" "version-check"
@@ -136,4 +138,68 @@ run_test_cli() {
         t_fail "TP-CLI-12 effective_storage missing: '${_eff:-empty}'"
     fi
     ci_cleanup_env
+
+    # TP-CLI-15 non-interactive menu is help; --json JSON help; empty argv stays help
+    _out=$(sh "${SCRIPT}" menu 2>/dev/null)
+    _ec=$?
+    assert_eq "TP-CLI-15 menu off-TTY exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-15 menu off-TTY is help" "$_out" "Usage:"
+    assert_not_contains "TP-CLI-15 menu off-TTY not the numbered list" "$_out" "9. Exit"
+
+    _out=$(sh "${SCRIPT}" main 2>/dev/null)
+    _ec=$?
+    assert_eq "TP-CLI-15 main off-TTY exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-15 main off-TTY is help" "$_out" "Usage:"
+
+    _out=$(sh "${SCRIPT}" --json menu 2>/dev/null)
+    _ec=$?
+    assert_eq "TP-CLI-15 menu --json off-TTY exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-15 menu --json off-TTY JSON help" "$_out" '"type":"success"'
+    assert_not_contains "TP-CLI-15 menu --json off-TTY not numbered list" "$_out" "9. Exit"
+
+    _out=$(sh "${SCRIPT}" 2>/dev/null)
+    assert_not_contains "TP-CLI-15 empty argv not numbered list" "$_out" "9. Exit"
+    assert_contains "TP-CLI-15 empty argv still help" "$_out" "Usage:"
+
+    _out=$(sh "${SCRIPT}" --quiet menu 2>/dev/null)
+    _ec=$?
+    assert_eq "TP-CLI-15 menu --quiet off-TTY exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-15 menu --quiet off-TTY still help" "$_out" "Usage:"
+
+    assert_contains "TP-CLI-15 help lists menu" "$(sh "${SCRIPT}" help 2>/dev/null)" "Numbered list of live work commands"
+    assert_contains "TP-CLI-15 help lists main" "$(sh "${SCRIPT}" help 2>/dev/null)" "Same as menu"
+
+    if command -v python3 >/dev/null 2>&1; then
+        _out=$(PTY_IN="9" ci_pty_run menu)
+        assert_contains "TP-CLI-13 TTY menu backup row" "$_out" "1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
+        assert_contains "TP-CLI-13 TTY menu restore row" "$_out" "2. restore: Put an archive back onto the hard-disk projects tree"
+        assert_contains "TP-CLI-13 TTY menu remove row" "$_out" "3. remove-project-sudoers: Remove the local grant draft only"
+        assert_contains "TP-CLI-13 TTY menu submit row" "$_out" "4. submit-sudoer-request: Hand the JSON grant to the approval queue"
+        assert_contains "TP-CLI-13 TTY menu Exit 9" "$_out" "9. Exit"
+        _out=$(PTY_IN="$(printf '%s\n' '1' '/tmp/does-not-exist-fb-menu')" ci_pty_run menu)
+        assert_contains "TP-CLI-13 TTY pick 1 uses typed folder" "$_out" "Source is not a directory: /tmp/does-not-exist-fb-menu"
+        assert_not_contains "TP-CLI-13 TTY pick 1 path not polluted by prompt" "$_out" "Source is not a directory: Folder to pack:"
+
+        _out=$(PTY_IN="9" ci_pty_run --json menu)
+        assert_contains "TP-CLI-14 TTY menu --json still numbered list" "$_out" "9. Exit"
+        assert_contains "TP-CLI-14 TTY menu --json backup row" "$_out" "1. backup: Pack a named folder"
+        assert_not_contains "TP-CLI-14 TTY menu --json ignores JSON help" "$_out" '"type":"success"'
+
+        _out=$(PTY_IN="9" ci_pty_run menu)
+        assert_not_contains "TP-CLI-16 no help row" "$_out" "help: Show this help"
+        assert_not_contains "TP-CLI-16 no install row" "$_out" "install: Copy this program"
+        assert_not_contains "TP-CLI-16 no uninstall row" "$_out" "uninstall: Remove the managed binary"
+        assert_not_contains "TP-CLI-16 no where-is-me row" "$_out" "where-is-me: Show running"
+        assert_not_contains "TP-CLI-16 no version row" "$_out" "version: Show the local version"
+        assert_not_contains "TP-CLI-16 no about row" "$_out" "about: Show diagnostics"
+        assert_not_contains "TP-CLI-16 no print-sudoers row" "$_out" "print-sudoers: Write a grant file"
+        assert_not_contains "TP-CLI-16 no install-script row" "$_out" "print-sudoers-install-script: Write an admin script"
+        assert_not_contains "TP-CLI-16 no generate row" "$_out" "generate-sudoer-request: Write a local JSON grant"
+        assert_not_contains "TP-CLI-16 no menu row" "$_out" "menu: Show the numbered list"
+        assert_not_contains "TP-CLI-16 no main row" "$_out" "main: Same numbered list"
+    else
+        t_skip "TP-CLI-13 TTY menu (no python3 for PTY)"
+        t_skip "TP-CLI-14 TTY menu --json (no python3 for PTY)"
+        t_skip "TP-CLI-16 TTY exclusions (no python3 for PTY)"
+    fi
 }

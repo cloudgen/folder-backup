@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.11.0] - 2026-08-23
+
+### Added
+
+- **`menu` / `main` numbered work list.** On a real terminal, `folder-backup menu` (or `main`) prints four operational rows plus **9. Exit** (`backup` / `restore` / `remove-project-sudoers` / `submit-sudoer-request`). Labels are `verb: explain`. Off-TTY, `menu` is help (JSON help with `--json`); `--quiet` does not swallow that help. Empty argv stays help. Self-managed, `version`/`about`, and test-purpose grant-emit verbs stay off the list. Law: **requirement-shell-cli-default-interaction** (Gap closed) · CLI-interface **1.6.0**. Suite **TP-CLI-13..16**.
+
+## [1.10.0] - 2026-08-23
+
+### Changed
+
+- **Sudoers emit matches `backup <folder>`.** `print-sudoers` / JSON grant now use sudoers `*` (one extra operand): text `… folder-backup backup *` and `restore *` (plus `--json` argv lines); JSON `args: ["backup", "*"]` / `["restore", "*"]`. Verb-only exact-argv is withdrawn (INC-20260823-001). Law: three-layer **1.11.0** AC-25 · sudoer-json **1.3.0**. Suite **TP-FOLDER-BACKUP-26 / 26b**.
+- Host fragment is still admin-installed. Type 0 does not write `/etc`. Deposit internals may still use `sudo -n mkdir`/`cp` when not already root.
+
 ## [1.9.0] - 2026-08-17
 
 ### Added

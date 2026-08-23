@@ -17,6 +17,7 @@
 # - requirement-sudoer-json-file.md  (JSON sudoer file: PRJ_NAME only)
 # - requirement-shell-cli-interface.md
 # - requirement-shell-cli-zero-arguments.md  (Type N empty argv = help)
+# - requirement-shell-cli-default-interaction.md  (menu/main numbered list)
 # - requirement-shell-local-self-management.md
 # - requirement-shell-cli-storage.md
 # - requirement-shell-idempotency.md
@@ -31,7 +32,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.9.0"
+# VERSION: hard-assign VERSION="1.11.0"
 #
 # =============================================================================
 
@@ -46,10 +47,10 @@ APP_NAME="folder-backup"
 : "${APP_NAME:=folder-backup}"
 : "${APP_DESC:=Local folder archive backup/restore with narrow sudo deposit}"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
-: "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
+: "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.9.0"
-: "${VERSION:=1.9.0}"
+VERSION="1.11.0"
+: "${VERSION:=1.11.0}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -1023,6 +1024,36 @@ prompt_ask() {
     else
         printf '%s' "${answer}"
     fi
+}
+
+# =============================================================================
+# prompt_line() - TTY one-line prompt; answer in _prompt_line (not stdout)
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Ask one field on a real terminal. Do not use $(prompt_ask): out_msg_n writes
+# stdout and would pollute the captured path. Consumes TTY / JSON / QUIET.
+#
+# ALIGNMENT:
+# - requirement-shell-interactive-vs-noninteractive.md
+# - requirement-shell-cli-default-interaction.md
+#
+# Last updated: 2026-08-23
+# =============================================================================
+prompt_line() {
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    : "${TTY:=0}"
+    _prompt_line=""
+    if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ] || [ "${TTY}" -ne 1 ]; then
+        return 0
+    fi
+    out_msg_n "${1-}: "
+    if ! read -r _prompt_line; then
+        _prompt_line=""
+        return 1
+    fi
+    return 0
 }
 
 # =============================================================================
@@ -2605,14 +2636,15 @@ fb_sudoers_trust_tier() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Build the sudoer-file text dual of fb_sudoers_json_text (same verbs, no *).
+# Build the sudoer-file text dual of fb_sudoers_json_text (verbs plus sudoers *).
 #
 # ALIGNMENT:
-# - requirement-sudoer-json-file.md
-# - requirement-three-layer-privilege-model.md
+# - requirement-sudoer-json-file.md 1.3.0
+# - requirement-three-layer-privilege-model.md 1.11.0 AC-25
 # - requirement-domain-folder-backup.md
+# - INC-20260823-001 (verb-only exact-argv does not match backup <folder>)
 #
-# Last reviewed: 2026-08-15
+# Last reviewed: 2026-08-23
 # =============================================================================
 fb_sudoers_fragment_text() {
     : "${APP_NAME:=folder-backup}"
@@ -2653,9 +2685,12 @@ ${_trust_banner}
 #
 # Grant is the project command only. Does NOT elevate ${_local_path}.
 # Does NOT allowlist mkdir/cp/tar/rm/install/chmod (complexity weakens security).
+# Trailing * = one extra operand (source folder / restore token). Verb-only does not match.
 # After elev, the ship unit performs deposit/verify/restore internally.
-${_user} ALL=(root) NOPASSWD: ${_global_path} backup
-${_user} ALL=(root) NOPASSWD: ${_global_path} restore
+${_user} ALL=(root) NOPASSWD: ${_global_path} backup *
+${_user} ALL=(root) NOPASSWD: ${_global_path} restore *
+${_user} ALL=(root) NOPASSWD: ${_global_path} --json backup *
+${_user} ALL=(root) NOPASSWD: ${_global_path} --json restore *
 EOF
 }
 
@@ -2666,8 +2701,8 @@ EOF
 # GENERAL PURPOSE:
 # JSON sudoer file (requirement-sudoer-json-file). action from SUBMIT_ACTION.
 #
-# ALIGNMENT: requirement-sudoer-json-file.md
-# Last reviewed: 2026-08-15
+# ALIGNMENT: requirement-sudoer-json-file.md 1.3.0 (args verb plus *)
+# Last reviewed: 2026-08-23
 # =============================================================================
 fb_sudoers_json_text() {
     : "${APP_NAME:=folder-backup}"
@@ -2694,13 +2729,13 @@ fb_sudoers_json_text() {
       "runas": "root",
       "tags": ["NOPASSWD"],
       "path": "${_global_path}",
-      "args": ["backup"]
+      "args": ["backup", "*"]
     },
     {
       "runas": "root",
       "tags": ["NOPASSWD"],
       "path": "${_global_path}",
-      "args": ["restore"]
+      "args": ["restore", "*"]
     }
   ]
 }
@@ -2711,6 +2746,7 @@ EOF
 # Sibling sudoer-cli 1.6.1 splits commands[] only on the token },{ — pretty
 # emit survives 1.6.2+; compact is the submit/generate handoff so inbound
 # still names backup and restore (INC-20260817-001 / 002).
+# args include sudoers * (INC-20260823-001).
 fb_sudoers_json_text_compact() {
     : "${APP_NAME:=folder-backup}"
     : "${GLOBAL_BIN:=/usr/local/bin}"
@@ -2724,7 +2760,7 @@ fb_sudoers_json_text_compact() {
         *) _action="add" ;;
     esac
 
-    printf '%s\n' "{\"schema_version\":1,\"purpose\":\"Allow ${_user} to run ${APP_NAME} backup and restore as root.\",\"username\":\"${_user}\",\"service\":\"${APP_NAME}\",\"action\":\"${_action}\",\"commands\":[{\"runas\":\"root\",\"tags\":[\"NOPASSWD\"],\"path\":\"${_global_path}\",\"args\":[\"backup\"]},{\"runas\":\"root\",\"tags\":[\"NOPASSWD\"],\"path\":\"${_global_path}\",\"args\":[\"restore\"]}]}"
+    printf '%s\n' "{\"schema_version\":1,\"purpose\":\"Allow ${_user} to run ${APP_NAME} backup and restore as root.\",\"username\":\"${_user}\",\"service\":\"${APP_NAME}\",\"action\":\"${_action}\",\"commands\":[{\"runas\":\"root\",\"tags\":[\"NOPASSWD\"],\"path\":\"${_global_path}\",\"args\":[\"backup\",\"*\"]},{\"runas\":\"root\",\"tags\":[\"NOPASSWD\"],\"path\":\"${_global_path}\",\"args\":[\"restore\",\"*\"]}]}"
 }
 
 # =============================================================================
@@ -2765,6 +2801,10 @@ fb_sudoers_verify_grant_verbs() {
         *'"restore"'*) ;;
         *) out_die "Sudoer file is incomplete: it does not allow restore. Path: ${_gf}" ;;
     esac
+    case "${_gb}" in
+        *'"*"'*) ;;
+        *) out_die "Sudoer file is incomplete: backup and restore need a sudoers operand wildcard (*). Path: ${_gf}" ;;
+    esac
     return 0
 }
 
@@ -2787,10 +2827,20 @@ fb_sudoers_verify_sibling_convert() {
         *) return 1 ;;
     esac
     _outf=$(util_mktemp sudoer-conv)
-    if ! "${_cli}" json-to-sudoers --file "${_gf}" --out "${_outf}" >/dev/null 2>&1; then
-        rm -f "${_outf}"
+    _cerr=$(util_mktemp sudoer-conv-err)
+    if ! "${_cli}" json-to-sudoers --file "${_gf}" --out "${_outf}" >/dev/null 2>"${_cerr}"; then
+        _emsg=$(cat "${_cerr}" 2>/dev/null || true)
+        rm -f "${_outf}" "${_cerr}"
+        case "${_emsg}" in
+            *"well-known system binary"*|*"test-well-known-binary"*)
+                # Isolated/test GLOBAL_BIN is user-rewritable; sibling 1.17+
+                # correctly refuses convert. Skip — do not block generate.
+                return 1
+                ;;
+        esac
         out_die "sudoer-cli json-to-sudoers failed for ${_gf}. The file is not safe to submit."
     fi
+    rm -f "${_cerr}"
     _txt=$(cat "${_outf}" 2>/dev/null || true)
     rm -f "${_outf}"
     case "${_txt}" in
@@ -2887,7 +2937,7 @@ fb_print_sudoers() {
         return 0
     fi
 
-    out_info "Sudoers fragment for user ${_user} → ${GLOBAL_BIN}/${APP_NAME} backup|restore (trust_tier=${_tier})"
+    out_info "Sudoers fragment for user ${_user} → ${GLOBAL_BIN}/${APP_NAME} backup *|restore * (trust_tier=${_tier})"
     out_warn "Host Type 1 still uses sudo mkdir/cp until backup/restore re-exec; installing this fragment now will fail those steps."
     out_info "Admin steps: review → visudo -c -f FILE → install -m 0440 FILE ${_installed}"
     out_empty_line
@@ -3154,7 +3204,7 @@ fb_generate_sudoer_request() {
     if [ "${_convert}" = "ok" ]; then
         out_info "Convert check: backup and restore still present after sudoer-cli json-to-sudoers"
     else
-        out_info "Convert check: skipped (sudoer-cli not found). File still lists backup and restore."
+        out_info "Convert check: skipped (no sudoer-cli, or convert refused a non-system path). File still lists backup and restore."
     fi
     out_info "Review the file, then submit it:"
     out_info "   ${APP_NAME} submit-sudoer-request ${_out_path}"
@@ -4116,11 +4166,175 @@ app_about() {
 }
 
 # =============================================================================
+# app_main_menu_print() - Numbered main-menu list (TTY)
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Print the four operational work rows plus Exit 9. Labels are the kept-list
+# human-readable form (verb: explain). Self-managed, diagnostics, and
+# test-purpose verbs are omitted.
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+#
+# Last updated: 2026-08-23
+# =============================================================================
+app_main_menu_print() {
+    : "${APP_NAME:=folder-backup}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+
+    out_info "${APP_NAME} — numbered list of live work commands"
+    out_plain "1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
+    out_plain "2. restore: Put an archive back onto the hard-disk projects tree"
+    out_plain "3. remove-project-sudoers: Remove the local grant draft only"
+    out_plain "4. submit-sudoer-request: Hand the JSON grant to the approval queue"
+    out_plain "9. Exit"
+}
+
+# =============================================================================
+# app_main_menu_run_pick() - Run one menu choice (number or verb)
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Map a numbered pick or verb token to a live operational handler. Missing
+# required operands: prompt one field at a time, or print Next: and return.
+# Returns 1 if the pick is not on the list (caller re-prompts).
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+#
+# Last updated: 2026-08-23
+# =============================================================================
+app_main_menu_run_pick() {
+    _pick="${1-}"
+    _a="${2-}"
+    _b="${3-}"
+    : "${APP_NAME:=folder-backup}"
+
+    case "${_pick}" in
+        1|backup)
+            if [ -z "${_a}" ]; then
+                prompt_line "Folder to pack" || true
+                _a="${_prompt_line}"
+            fi
+            if [ -z "${_a}" ]; then
+                out_info "Next: ${APP_NAME} backup <source-folder>"
+                return 0
+            fi
+            fb_backup "${_a}"
+            ;;
+        2|restore)
+            if [ -z "${_a}" ]; then
+                prompt_line "Archive or prefix" || true
+                _a="${_prompt_line}"
+            fi
+            if [ -z "${_a}" ]; then
+                out_info "Next: ${APP_NAME} restore <archive|prefix> [dest]"
+                return 0
+            fi
+            fb_restore "${_a}" "${_b}"
+            ;;
+        3|remove-project-sudoers)
+            fb_remove_project_sudoers "${_a}"
+            ;;
+        4|submit-sudoer-request)
+            fb_submit_sudoer_request "${_a}"
+            ;;
+        9|exit|quit|Exit|QUIT)
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+    return 0
+}
+
+# =============================================================================
+# app_main_menu() - Default interaction: TTY numbered menu / off-TTY help
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Commands menu / main. On a real terminal: ignore --json, show the numbered
+# list, run one pick. Off-TTY: help (JSON help when --json). Never hang.
+# Empty argv stays help (this function is not empty-argv).
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+# - requirement-shell-interactive-vs-noninteractive.md
+# - requirement-shell-cli-zero-arguments.md
+#
+# Last updated: 2026-08-23
+# =============================================================================
+app_main_menu() {
+    : "${TTY:=0}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    : "${APP_NAME:=folder-backup}"
+    _argv_pick="${1-}"
+    _argv_a="${2-}"
+    _argv_b="${3-}"
+
+    if [ "${TTY}" -ne 1 ]; then
+        _menu_quiet="${QUIET}"
+        if [ "${JSON}" -ne 1 ]; then
+            QUIET=0
+        fi
+        app_help
+        QUIET="${_menu_quiet}"
+        return 0
+    fi
+
+    _menu_json="${JSON}"
+    _menu_quiet="${QUIET}"
+    JSON=0
+    QUIET=0
+    export JSON QUIET
+
+    while true; do
+        app_main_menu_print
+        if [ -n "${_argv_pick}" ]; then
+            _pick="${_argv_pick}"
+            _argv_pick=""
+        else
+            if ! prompt_line "Choice"; then
+                JSON="${_menu_json}"
+                QUIET="${_menu_quiet}"
+                export JSON QUIET
+                return 0
+            fi
+            _pick="${_prompt_line}"
+        fi
+        case "${_pick}" in
+            9|exit|quit|Exit|QUIT)
+                JSON="${_menu_json}"
+                QUIET="${_menu_quiet}"
+                export JSON QUIET
+                return 0
+                ;;
+        esac
+        if app_main_menu_run_pick "${_pick}" "${_argv_a}" "${_argv_b}"; then
+            JSON="${_menu_json}"
+            QUIET="${_menu_quiet}"
+            export JSON QUIET
+            return 0
+        fi
+        out_warn "Not a menu choice. Type 1-4, 9 to leave, or a command name."
+        out_info "Next: ${APP_NAME} menu"
+        _argv_a=""
+        _argv_b=""
+    done
+}
+
+# =============================================================================
 # app_help() - Usage (local Type 0 + domain)
+# =============================================================================
+#
+# Last updated: 2026-08-23
 # =============================================================================
 app_help() {
     : "${SHORT_DESCRIPTION:=${APP_DESC:-Local folder archive backup/restore with narrow sudo deposit}}"
-    : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
+    : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
     : "${BACKUP_ROOT:=/var/backup}"
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${RESTORE_HOST_DEFAULT:=hard-disk}"
@@ -4129,7 +4343,7 @@ app_help() {
     if [ "${JSON}" -eq 1 ]; then
         out_json "success" "Help text available in human-readable mode. Run without --json." \
             "command" "help" \
-            "note" "Use --json with version, about, install, uninstall, where-is-me, backup, restore."
+            "note" "Use --json with version, about, install, uninstall, where-is-me, backup, restore. menu/main off-TTY uses this help."
         return 0
     fi
     if [ "${QUIET}" -eq 1 ]; then
@@ -4150,6 +4364,8 @@ app_help() {
     out_plain "  version              Show local version"
     out_plain "  about                Show diagnostics (incl. sudoers trust tier)"
     out_plain "  help                 Show this help"
+    out_plain "  menu                 Numbered list of live work commands (TTY; off-TTY is help)"
+    out_plain "  main                 Same as menu"
     out_empty_line
     out_info "Domain (Type 0 archive + Type 1 deposit/restore-stage):"
     out_plain "  backup <folder>      tar.gz folder → ${BACKUP_ROOT}/${BACKUP_NOTATION}/NAME-YYYYMMDD-N.tar.gz"
@@ -4206,6 +4422,7 @@ app_help() {
     out_plain "  SUDOERS_D_DIR           host sudoers.d dir (default /etc/sudoers.d; tests)"
     out_empty_line
     out_info "Examples:"
+    out_plain "  ${APP_NAME} menu"
     out_plain "  ${APP_NAME} install"
     out_plain "  sudo ${APP_NAME} install          # global (production sudoers trust)"
     out_plain "  ${APP_NAME} print-sudoers --allow-test-local  # → sudoers.fragment-<user>"
@@ -4237,10 +4454,11 @@ app_help() {
 # ALIGNMENT:
 # - requirement-shell-cli-interface.md
 # - requirement-shell-cli-zero-arguments.md
+# - requirement-shell-cli-default-interaction.md
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 #
-# Last reviewed: 2026-08-03
+# Last updated: 2026-08-23
 # =============================================================================
 app_main() {
     : "${COMMAND:=help}"
@@ -4272,6 +4490,7 @@ app_main() {
 
     _domain_arg=""
     _domain_arg2=""
+    _menu_pick=""
     : "${RESTORE_HOST:=}"
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -4310,11 +4529,23 @@ app_main() {
                 RESTORE_HOST="ram-drive"
                 export RESTORE_HOST
                 ;;
-            version|about|help|install|uninstall|where-is-me|backup|restore|print-sudoers|print-sudoers-install-script|remove-project-sudoers|generate-sudoer-request|submit-sudoer-request)
-                COMMAND="$1"
+            version|about|help|install|uninstall|where-is-me|backup|restore|print-sudoers|print-sudoers-install-script|remove-project-sudoers|generate-sudoer-request|submit-sudoer-request|menu|main)
+                if [ "${COMMAND}" = "menu" ] || [ "${COMMAND}" = "main" ]; then
+                    if [ -z "${_menu_pick}" ]; then
+                        _menu_pick="$1"
+                    elif [ -z "${_domain_arg}" ]; then
+                        _domain_arg="$1"
+                    elif [ -z "${_domain_arg2}" ]; then
+                        _domain_arg2="$1"
+                    else
+                        out_die "Unexpected argument: $1. See '${APP_NAME} help'."
+                    fi
+                else
+                    COMMAND="$1"
+                fi
                 ;;
             *)
-                # Positional operands for domain verbs
+                # Positional operands for domain verbs / menu pick
                 if [ "${COMMAND}" = "backup" ] || [ "${COMMAND}" = "print-sudoers" ] \
                     || [ "${COMMAND}" = "print-sudoers-install-script" ] \
                     || [ "${COMMAND}" = "remove-project-sudoers" ] \
@@ -4327,6 +4558,16 @@ app_main() {
                     fi
                 elif [ "${COMMAND}" = "restore" ]; then
                     if [ -z "${_domain_arg}" ]; then
+                        _domain_arg="$1"
+                    elif [ -z "${_domain_arg2}" ]; then
+                        _domain_arg2="$1"
+                    else
+                        out_die "Unexpected argument: $1. See '${APP_NAME} help'."
+                    fi
+                elif [ "${COMMAND}" = "menu" ] || [ "${COMMAND}" = "main" ]; then
+                    if [ -z "${_menu_pick}" ]; then
+                        _menu_pick="$1"
+                    elif [ -z "${_domain_arg}" ]; then
                         _domain_arg="$1"
                     elif [ -z "${_domain_arg2}" ]; then
                         _domain_arg2="$1"
@@ -4356,6 +4597,7 @@ app_main() {
         remove-project-sudoers) fb_remove_project_sudoers "${_domain_arg}" ;;
         generate-sudoer-request) fb_generate_sudoer_request "${_domain_arg}" ;;
         submit-sudoer-request) fb_submit_sudoer_request "${_domain_arg}" ;;
+        menu|main)    app_main_menu "${_menu_pick}" "${_domain_arg}" "${_domain_arg2}" ;;
         help|*)       app_help ;;
     esac
 }

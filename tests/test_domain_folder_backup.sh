@@ -88,6 +88,39 @@ run_test_domain_folder_backup() {
     assert_not_contains "TP-FOLDER-BACKUP-22c no deposit path" "${_jbody}" "/var/backup/folder-backup"
     assert_not_contains "TP-FOLDER-BACKUP-22c no tar.gz operand" "${_jbody}" ".tar.gz"
 
+    # TP-FOLDER-BACKUP-26 emit is backup * / restore * (AC-25; INC-20260823-001)
+    _fragtxt=$(cat "${_frag}")
+    _stdout26=$(HOME="${CI_HOME}" sh "${SCRIPT}" print-sudoers --allow-test-local 2>&1)
+    assert_contains "TP-FOLDER-BACKUP-26 stdout backup star" "${_stdout26}" "folder-backup backup *"
+    assert_contains "TP-FOLDER-BACKUP-26 file backup star" "${_fragtxt}" "folder-backup backup *"
+    assert_contains "TP-FOLDER-BACKUP-26 file restore star" "${_fragtxt}" "folder-backup restore *"
+    assert_contains "TP-FOLDER-BACKUP-26 file json backup star" "${_fragtxt}" "folder-backup --json backup *"
+    assert_contains "TP-FOLDER-BACKUP-26 file json restore star" "${_fragtxt}" "folder-backup --json restore *"
+    _vo=$(printf '%s\n' "${_fragtxt}" | grep -E 'folder-backup backup$' || true)
+    if [ -z "${_vo}" ]; then
+        t_pass "TP-FOLDER-BACKUP-26 no verb-only backup line"
+    else
+        t_fail "TP-FOLDER-BACKUP-26 no verb-only backup line" "found: ${_vo}"
+    fi
+    _vo=$(printf '%s\n' "${_fragtxt}" | grep -E 'folder-backup restore$' || true)
+    if [ -z "${_vo}" ]; then
+        t_pass "TP-FOLDER-BACKUP-26 no verb-only restore line"
+    else
+        t_fail "TP-FOLDER-BACKUP-26 no verb-only restore line" "found: ${_vo}"
+    fi
+    if printf '%s\n' "${_jbody}" | grep -Fq '"args": ["backup", "*"]'; then
+        t_pass "TP-FOLDER-BACKUP-26 JSON backup star args"
+    else
+        t_fail "TP-FOLDER-BACKUP-26 JSON backup star args" "missing literal args backup *"
+    fi
+    if printf '%s\n' "${_jbody}" | grep -Fq '"args": ["restore", "*"]'; then
+        t_pass "TP-FOLDER-BACKUP-26 JSON restore star args"
+    else
+        t_fail "TP-FOLDER-BACKUP-26 JSON restore star args" "missing literal args restore *"
+    fi
+    assert_not_contains "TP-FOLDER-BACKUP-26 JSON not verb-only backup" "${_jbody}" '"args": ["backup"]'
+    assert_not_contains "TP-FOLDER-BACKUP-26 JSON not verb-only restore" "${_jbody}" '"args": ["restore"]'
+
     # TP-FOLDER-BACKUP-22e pretty emit through real sudoer-cli keeps both verbs
     _srcli=""
     if [ -x "${REPO_ROOT}/../sudoer-cli/src/sudoer-cli" ]; then
@@ -100,11 +133,17 @@ run_test_domain_folder_backup() {
     if [ -n "${_srcli}" ] && [ -x "${_srcli}" ]; then
         _pback="${CI_HOME}/out/pretty-back.sudoers"
         mkdir -p "${CI_HOME}/out"
-        HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_jgrant}" --out "${_pback}" >/dev/null 2>&1
+        # Sibling 1.17+ refuses user-rewritable test GLOBAL_BIN. Convert a
+        # production-path copy of the same args (backup * / restore *).
+        _jconv="${CI_HOME}/out/pretty-wellknown.json"
+        sed 's|"path": *"[^"]*/folder-backup"|"path": "/usr/local/bin/folder-backup"|g' "${_jgrant}" >"${_jconv}"
+        HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_jconv}" --out "${_pback}" >/dev/null 2>&1
         assert_eq "TP-FOLDER-BACKUP-22e pretty convert exit 0" 0 "$?"
         _pbtxt=$(cat "${_pback}" 2>/dev/null || true)
         assert_contains "TP-FOLDER-BACKUP-22e convert keeps backup" "${_pbtxt}" "folder-backup backup"
         assert_contains "TP-FOLDER-BACKUP-22e convert keeps restore" "${_pbtxt}" "folder-backup restore"
+        assert_contains "TP-FOLDER-BACKUP-22e convert backup star" "${_pbtxt}" "folder-backup backup *"
+        assert_contains "TP-FOLDER-BACKUP-22e convert restore star" "${_pbtxt}" "folder-backup restore *"
     else
         t_skip "TP-FOLDER-BACKUP-22e sudoer-cli not installed"
     fi
@@ -615,6 +654,16 @@ STUB
     assert_contains "TP-FOLDER-BACKUP-24 compact token" "${_gen_body}" '},{'
     assert_contains "TP-FOLDER-BACKUP-24 has backup" "${_gen_body}" '"backup"'
     assert_contains "TP-FOLDER-BACKUP-24 has restore" "${_gen_body}" '"restore"'
+    if printf '%s\n' "${_gen_body}" | grep -Fq '"args":["backup","*"]'; then
+        t_pass "TP-FOLDER-BACKUP-26b generate compact backup star"
+    else
+        t_fail "TP-FOLDER-BACKUP-26b generate compact backup star" "missing compact args backup *"
+    fi
+    if printf '%s\n' "${_gen_body}" | grep -Fq '"args":["restore","*"]'; then
+        t_pass "TP-FOLDER-BACKUP-26b generate compact restore star"
+    else
+        t_fail "TP-FOLDER-BACKUP-26b generate compact restore star" "missing compact args restore *"
+    fi
     assert_contains "TP-FOLDER-BACKUP-24 human next submit" "${_out24}" "submit-sudoer-request"
     assert_not_contains "TP-FOLDER-BACKUP-24 no /etc dest" "${_out24}" "/etc/sudoers.d/"
 
@@ -642,11 +691,15 @@ STUB
     # TP-FOLDER-BACKUP-24c generated file through real sudoer-cli convert keeps both verbs
     if [ -n "${_srcli}" ] && [ -x "${_srcli}" ]; then
         _p24="${CI_HOME}/out/gen-convert.sudoers"
-        HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_gen_exp}" --out "${_p24}" >/dev/null 2>&1
+        _gconv="${CI_HOME}/out/gen-wellknown.json"
+        sed 's|"path": *"[^"]*/folder-backup"|"path": "/usr/local/bin/folder-backup"|g' "${_gen_exp}" >"${_gconv}"
+        HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_gconv}" --out "${_p24}" >/dev/null 2>&1
         assert_eq "TP-FOLDER-BACKUP-24c convert exit 0" 0 "$?"
         _c24=$(cat "${_p24}" 2>/dev/null || true)
         assert_contains "TP-FOLDER-BACKUP-24c convert backup" "${_c24}" "folder-backup backup"
         assert_contains "TP-FOLDER-BACKUP-24c convert restore" "${_c24}" "folder-backup restore"
+        assert_contains "TP-FOLDER-BACKUP-24c convert backup star" "${_c24}" "folder-backup backup *"
+        assert_contains "TP-FOLDER-BACKUP-24c convert restore star" "${_c24}" "folder-backup restore *"
     fi
 
     # TP-FOLDER-BACKUP-25 operator-readable inbound-fidelity error (restore-only queued body)
@@ -691,19 +744,24 @@ STUB25
     if [ -n "${_srcli}" ] && [ -x "${_srcli}" ]; then
         _q22="${CI_HOME}/sr-real-q"
         mkdir -p "${_q22}/sudoer-request" "${_q22}/sudoer-approved" "${_q22}/sudoer-rejected"
-        _out22e=$(HOME="${CI_HOME}" \
-            SUDOER_CLI="${_srcli}" \
-            SUDOER_ADM_USER="$(id -un)" \
-            SUDOER_QUEUE_INBOUND="${_q22}/sudoer-request" \
-            SUDOER_CLI_ALLOW_TEST_ROOTS=1 \
-            sh "${SCRIPT}" submit-sudoer-request --allow-test-local 2>&1)
-        _ec22e=$?
-        assert_eq "TP-FOLDER-BACKUP-22e real submit exit 0" 0 "${_ec22e}"
-        _n22=$(find "${_q22}/sudoer-request" -name 'sudoer-*.json' -type f | wc -l | tr -d ' ')
-        assert_eq "TP-FOLDER-BACKUP-22e real inbound has file" 1 "${_n22}"
-        _real_body=$(cat "${_q22}/sudoer-request/"sudoer-*.json 2>/dev/null || true)
-        assert_contains "TP-FOLDER-BACKUP-22e inbound backup" "${_real_body}" '"backup"'
-        assert_contains "TP-FOLDER-BACKUP-22e inbound restore" "${_real_body}" '"restore"'
+        _jsub="${CI_HOME}/out/pretty-wellknown.json"
+        if [ ! -f "${_jsub}" ]; then
+            t_skip "TP-FOLDER-BACKUP-22e real submit (no well-known grant fixture)"
+        else
+            _out22e=$(HOME="${CI_HOME}" \
+                SUDOER_CLI="${_srcli}" \
+                SUDOER_ADM_USER="$(id -un)" \
+                SUDOER_QUEUE_INBOUND="${_q22}/sudoer-request" \
+                SUDOER_CLI_ALLOW_TEST_ROOTS=1 \
+                sh "${SCRIPT}" submit-sudoer-request --allow-test-local "${_jsub}" 2>&1)
+            _ec22e=$?
+            assert_eq "TP-FOLDER-BACKUP-22e real submit exit 0" 0 "${_ec22e}"
+            _n22=$(find "${_q22}/sudoer-request" -name 'sudoer-*.json' -type f | wc -l | tr -d ' ')
+            assert_eq "TP-FOLDER-BACKUP-22e real inbound has file" 1 "${_n22}"
+            _real_body=$(cat "${_q22}/sudoer-request/"sudoer-*.json 2>/dev/null || true)
+            assert_contains "TP-FOLDER-BACKUP-22e inbound backup" "${_real_body}" '"backup"'
+            assert_contains "TP-FOLDER-BACKUP-22e inbound restore" "${_real_body}" '"restore"'
+        fi
     fi
 
     # TP-FOLDER-BACKUP-21 public inbound preferred over leftover home sudoer-approving

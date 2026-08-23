@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.9.0  
-**Last plan update:** 2026-08-17  
-**Last suite run:** `./tests/run.sh` (1.9.0: PASS=242 FAIL=0 SKIP=2 — generate TP-24* + operator-readable TP-25*)
+**Product VERSION:** 1.11.0  
+**Last plan update:** 2026-08-23  
+**Last suite run:** `./tests/run.sh` (1.11.0: PASS=296 FAIL=0 SKIP=2 — menu TP-CLI-13..16)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -18,6 +18,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Syntax `sh -n` | have | TP-CLI-01 |
 | version / help / about human + JSON | have | TP-CLI-02..06 |
 | Type N empty argv = help | have | TP-CLI-07 |
+| `menu`/`main` TTY list / off-TTY help | have | TP-CLI-13..16 |
 | Unknown + quiet + set -u HOME | have | TP-CLI-08..11 |
 | Storage isolation | have | TP-CLI-12 |
 | No online verbs / no SCRIPT_URL UX | have | TP-CLI-04, TP-CLI-10 |
@@ -59,6 +60,11 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-10 | online verbs rejected | test_cli | requirement-bootstrap-chain | **have** |
 | TP-CLI-11 | env -u HOME version | test_cli | class / defensive | **have** |
 | TP-CLI-12 | storage isolation | test_cli | requirement-shell-cli-storage | **have** |
+| TP-CLI-13 | interactive `menu` prints four labels + `9. Exit` | test_cli | **shell-cli-default-interaction** AC-3 | **have** |
+| TP-CLI-14 | interactive `menu --json` still prints the list | test_cli | **shell-cli-default-interaction** AC-4 | **have** |
+| TP-CLI-15 | non-interactive `menu` is help; `--json` JSON help | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
+| TP-CLI-16 | numbered list omits help/install/uninstall/where-is-me/version/about/test-purpose/menu | test_cli | **shell-cli-default-interaction** AC-6 | **have** |
+| TP-CLI-17 | help lists test-purpose grant-emit verbs under a heading apart from operational | test_cli | **shell-cli-interface** AC-9 | **todo** |
 
 ### TP-LC (local lifecycle)
 
@@ -115,6 +121,8 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-FOLDER-BACKUP-25 | inbound-fidelity error names incompleteness in operator words | test_domain | operator-readable-error AC-1 | **have** |
 | TP-FOLDER-BACKUP-25b | same error names `generate-sudoer-request` | test_domain | operator-readable-error AC-2 | **have** |
 | TP-FOLDER-BACKUP-25c | same error does not contain `sibling re-encode` | test_domain | operator-readable-error AC-3 | **have** |
+| TP-FOLDER-BACKUP-26 | print-sudoers text + JSON emit `backup *` / `restore *`; verb-only **Fail** | test_domain | three-layer AC-25 · **sudoer-json-file** AC-3/AC-8 · INC-20260823-001 | **have** |
+| TP-FOLDER-BACKUP-26b | generate compact JSON `args` include `*` after each verb | test_domain | **sudoer-json-file** AC-3 · three-layer AC-25 | **have** |
 | TP-FOLDER-BACKUP-15 | remove-project-sudoers: force remove draft; refuse `/etc`; already absent; host elev probe | test_domain | three-layer §2.3.3b · project-sudoers-file | **have** |
 | TP-FOLDER-BACKUP-15b | multi-draft: list + non-interactive requires path; explicit path removes one only | test_domain | three-layer AC-15 · L-SUDOERS-04 | **have** |
 | TP-FOLDER-BACKUP-16 | restore dest whitelist: refuse `/etc/passwd` + exact `/etc` + `/etc/<other>`; W-ETC-USER `/etc/{{username}}` gate allow | test_domain | **folder-archive-backup** §2.6b.2a · INC-20260812-001 | **have** |

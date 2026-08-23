@@ -118,6 +118,56 @@ ci_run() {
     sh "${SCRIPT}" "$@"
 }
 
+# Run the ship unit on a PTY (stdin+stdout are terminals). Writes the child
+# payload from PTY_IN (default "9") then captures combined output to stdout.
+# Requires python3. Caller assigns: _out=$(PTY_IN=9 ci_pty_run menu)
+ci_pty_run() {
+    PTY_IN="${PTY_IN:-9}" python3 - "${SCRIPT}" "$@" <<'PY'
+import os, pty, select, signal, sys, time
+script = sys.argv[1]
+cmd = sys.argv[2:]
+raw = os.environ.get("PTY_IN", "9")
+if not raw.endswith("\n"):
+    raw += "\n"
+payload = raw.encode()
+pid, fd = pty.fork()
+if pid == 0:
+    os.execv("/bin/sh", ["sh", script] + cmd)
+time.sleep(0.2)
+try:
+    os.write(fd, payload)
+except OSError:
+    pass
+out = bytearray()
+end = time.time() + 4
+while time.time() < end:
+    r, _, _ = select.select([fd], [], [], 0.2)
+    if fd in r:
+        try:
+            chunk = os.read(fd, 4096)
+        except OSError:
+            break
+        if not chunk:
+            break
+        out += chunk
+    wpid, _st = os.waitpid(pid, os.WNOHANG)
+    if wpid:
+        break
+else:
+    try:
+        os.kill(pid, signal.SIGTERM)
+        time.sleep(0.2)
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        pass
+try:
+    os.waitpid(pid, 0)
+except ChildProcessError:
+    pass
+sys.stdout.buffer.write(out.replace(b"\r\n", b"\n").replace(b"\r", b"\n"))
+PY
+}
+
 ci_capture() {
     _out="$1"; _err="$2"; shift 2
     if [ "$1" = "--" ]; then shift; fi

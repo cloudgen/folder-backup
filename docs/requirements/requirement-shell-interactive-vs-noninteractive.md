@@ -95,6 +95,7 @@ prompt_ask() {
 | `print-sudoers` | Print fragment | Print fragment (stdout/file); no `/etc` write |
 | `generate-sudoer-request` | May show path + verify via `out_*` | No prompts; write + verify; no hang |
 | `submit-sudoer-request` | May show detect/submit via `out_*` | No prompts; fail closed if sudoer-cli / inbound missing; no hang |
+| `menu` / `main` | Numbered list; ignore `--json` | Help (human; `--json` → JSON help). **MUST NOT** prompt |
 | Missing required operand | Clear error | Clear error; non-zero exit |
 
 ### 2.4 Implementation Notes (this project)

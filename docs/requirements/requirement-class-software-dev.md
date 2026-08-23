@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-class-software-dev.md  
-**Status**: Active (Version 1.0.0 – folder-backup class law + residual stack)  
+**Status**: Active (Version 1.1.0 – residual ARSA/fence honesty + human-facing)  
 **Area**: class  
 **Key**: `requirement-class-software-dev`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -9,6 +9,22 @@
 Declare this workspace as a **software-development** project class and hold the **residual collection** of software-engineering stack facts **not already owned** by more specific Active peer requirements: primary language, toolchain policy, package/test tooling, and runtime OS family.
 
 This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycle, domain backup, output, or storage tables (those stay on peer requirements).
+
+### 1.1 Human-facing
+
+This file says the workspace is a **shippable program** (folder-backup) and records leftover stack facts that no other requirement already owns.
+
+| You | Another role | Not this |
+|-----|--------------|----------|
+| Read this file to learn the project class and leftover stack (language, tools, “no dest approver”) | Peer requirements own backup ops, install, sudoers grant body, and CLI verbs | A dest approval machine, a second class file, or online-install law |
+
+**Includes:** class membership, residual stack, honest “none” for dest approver and dest fences.  
+**Excludes:** inventing an approver account; inventing dest fence rows; duplicating peer backup/install tables.
+
+| Step | What it means | What you type |
+|------|---------------|---------------|
+| Classify | Agents treat this tree as software-development, not a blank seed. | Open `docs/requirements/requirement-class-software-dev.md` |
+| Own-or-point | Stack facts live here until a peer requirement takes them. | Follow the residual ownership table in this file |
 
 ---
 
@@ -85,7 +101,7 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | **Architectures supported** | any arch with POSIX sh and the external tools the script invokes |
 | **Git surface** | used when product is published |
 | **Ship unit / install** | yes — `src/folder-backup` → `${USER_BIN}/folder-backup` (default `~/.local/bin/folder-backup`); **local-only** install (no online channel) |
-| **Product version SSOT** | `VERSION="1.8.0"` hard-assign in `src/folder-backup` |
+| **Product version SSOT** | `VERSION="1.11.0"` hard-assign in `src/folder-backup` |
 | **Bootstrap origin** | sibling product **cli-template** (`/home/leolio/prjs/cli-template`) — Type 0 local-only template; domain extend only |
 
 **Residual ownership table:**
@@ -110,6 +126,8 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | JSON sudoer file (grant body) | `requirement-sudoer-json-file` | `{{PRJ_NAME}}` only; no `cp`/`mkdir`/OS-tool commands |
 | Folder archive **backup operations** | `requirement-folder-archive-backup` | Create / name / deposit / verify (not domain) |
 | Domain surface (verbs, help, about) | `requirement-domain-folder-backup` | Four pillars only; ops pointer |
+| Actor / role / subject / approver | **this file** (residual) | **considered — no dest approver and no approval subject**. This product has no dest approval machine. **MUST NOT** invent an approver. |
+| Dest fence conditions | **this file** (residual) | **considered — no dest fence conditions**. No dest Fence table. **MUST NOT** invent a dest fence. |
 | Online install / remote self-management / companion checksum | **intentionally absent** | Absent on A; remain absent on B |
 
 ---
@@ -194,9 +212,10 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 | 2026-08-03 | Active | Specialized class law for folder-backup (left genesis; then named selfmanaged as origin) |
 | 2026-08-13 | Active | Origin retarget: A=cli-template → B=folder-backup |
 | 2026-08-15 | Active | Residual: JSON sudoer file → `requirement-sudoer-json-file` |
+| 2026-08-19 | Active (1.1.0) | Residual: **considered — no dest approver and no approval subject**; **considered — no dest fence conditions**. §1.1 Human-facing. Version SSOT note 1.9.0. |
 
 ---
 
-**Last Updated**: 2026-08-15  
+**Last Updated**: 2026-08-19  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

@@ -27,7 +27,8 @@ Type O (online-install empty-argv = install-ensure) does **not** apply.
 2. Empty argv **MUST NOT** perform install, backup, or any state-changing ensure.  
 3. Explicit `folder-backup help` remains a valid full-usage path (same content family as empty argv).  
 4. Explicit `folder-backup install` remains the only first-time local install path (plus documented force refresh).  
-5. Script entry **MUST** always call `app_main "$@"` (no basename product-name gate that blocks dispatch).
+5. Script entry **MUST** always call `app_main "$@"` (no basename product-name gate that blocks dispatch).  
+6. Empty argv **MUST NOT** become the numbered work list. That list is `folder-backup menu` (`requirement-shell-cli-default-interaction`).
 
 ### 2.2 Normative matrix
 
@@ -70,7 +71,8 @@ Type O (online-install empty-argv = install-ensure) does **not** apply.
 
 1. Change empty argv to install-ensure while the product remains local-only.  
 2. Copy a Type O empty-argv parent wholesale without updating this file and install mode.  
-3. Make bare invocation run domain `backup`.
+3. Make bare invocation run domain `backup`.  
+4. Attach the claimed numbered list to empty argv (that list is `folder-backup menu`).
 
 **Violating this rule is a critical dispatcher regression.**
 

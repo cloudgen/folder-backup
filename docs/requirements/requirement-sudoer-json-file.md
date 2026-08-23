@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-sudoer-json-file.md  
-**Status**: Active (Version 1.2.0)  
+**Status**: Active (Version 1.3.0)  
 **Area**: architecture  
 **Key**: `requirement-sudoer-json-file`  
 **Optional RQ-ID**: `RQ-SUDOER-JSON-FILE`  
@@ -20,6 +20,31 @@ This file does **not** own:
 | Backup / restore operations | `requirement-folder-archive-backup` |
 
 Queued **basename** allocation remains sibling-owned. This requirement owns **command identity and JSON body shape**.
+
+### 1.1 Human-facing
+
+**In one sentence:** The JSON grant says this login may run `folder-backup backup <folder>` and `restore <token>` as root — the `*` in args is a sudoers extra operand, not a disk path.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | The username in the JSON | live emit uses `id -un` |
+| The grant | Product binary + verb + `*` | `args: ["backup", "*"]` |
+| Not this file | How to install the fragment | `requirement-three-layer-privilege-model` |
+
+| Includes | Excludes |
+|----------|----------|
+| `backup` / `restore` plus one `*` | Verb-only `["backup"]` |
+| Optional `--json` as a **separate** command object | Frozen `/var/backup/…` or `*.tar.gz` in args |
+| Project command only | `mkdir` / `cp` / `tar` as root tools |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `folder-backup generate-sudoer-request` | command | JSON grant on a readable dest |
+| `./src/folder-backup` | ship unit | emit (Gap until 1.3.0 implemented) |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Generate the JSON grant | You can `cat` the dest without sudo. Both verbs must include `*`. | `folder-backup generate-sudoer-request` |
 
 ---
 
@@ -59,13 +84,13 @@ Elevating **`{{PRJ_NAME}}`** once is the smaller, stronger F6: after the operato
 
 ### 2.3 Arguments — product verbs, no path or filename hardcode
 
-1. `commands[].args` **MAY** name only product verbs that need elevation. For this product family the allowed verbs are **`backup`** and **`restore`**.  
+1. `commands[].args` **MUST** be a product elev verb plus **exactly one** sudoers operand wildcard: `["backup", "*"]` and `["restore", "*"]`. The string `*` is **not** a filesystem path.  
 2. **MUST** include a `backup` grant when durable deposit is in scope.  
 3. **MUST** include a `restore` grant when elevated restore-stage fetch is in scope.  
 4. **MUST NOT** put deposit paths, stage paths, host HOME, or archive filenames in `args` (no `/var/backup/…`, no `/dev/shm/…`, no `*.tar.gz`, no `NAME-YYYYMMDD-N.tar.gz`). Paths and names are **Config / product law**, not grant operands.  
 5. **MUST NOT** grant `install`, `uninstall`, `print-sudoers`, `print-sudoers-install-script`, `remove-project-sudoers`, `generate-sudoer-request`, or `submit-sudoer-request` as elevated commands (those stay Type 0).  
-6. **MUST NOT** grant `{{PRJ_NAME}}` with **no** verb when that would let the user run any subcommand as root. Verb-bound entries are required.  
-7. Extra flags the CLI accepts (`--json`, `--force`, `--disk`, `--ram`) **MUST NOT** be frozen as the only legal operands in the JSON; the product validates flags after elev.
+6. **MUST NOT** grant `{{PRJ_NAME}}` with **no** verb when that would let the user run any subcommand as root. Verb-bound entries are required. **MUST NOT** emit verb-only `["backup"]` / `["restore"]` (sudoers exact-argv would not match `backup <source-folder>`).  
+7. `--json` **MAY** appear only as the **first** element of a **separate** `commands[]` object (`["--json", "backup", "*"]`, `["--json", "restore", "*"]`). Other CLI flags (`--force`, `--disk`, `--ram`) **MUST NOT** be frozen as host paths; the product validates them after elev.
 
 ### 2.4 Closed schema (normative)
 
@@ -80,7 +105,7 @@ Elevating **`{{PRJ_NAME}}`** once is the smaller, stronger F6: after the operato
 | `commands[].runas` | string | yes | `root` |
 | `commands[].tags` | array | yes | `NOPASSWD` **MAY** appear when non-interactive deposit is product law; residual risk stays on the privilege peer |
 | `commands[].path` | string | yes | Absolute `{{GLOBAL_BIN}}/{{PRJ_NAME}}` only |
-| `commands[].args` | array of strings | yes | `["backup"]` or `["restore"]` only |
+| `commands[].args` | array of strings | yes | `["backup", "*"]` or `["restore", "*"]` (required). Optional extra objects: `["--json", "backup", "*"]` / `["--json", "restore", "*"]` |
 
 **MUST NOT** add undeclared privilege fields (extra binaries, `env_keep` shells, `ALL`). Unknown sibling metadata **MUST NOT** widen `commands`.
 
@@ -111,13 +136,13 @@ Normative **add** JSON (this project’s filled values — see §2.8):
       "runas": "root",
       "tags": ["NOPASSWD"],
       "path": "/usr/local/bin/folder-backup",
-      "args": ["backup"]
+      "args": ["backup", "*"]
     },
     {
       "runas": "root",
       "tags": ["NOPASSWD"],
       "path": "/usr/local/bin/folder-backup",
-      "args": ["restore"]
+      "args": ["restore", "*"]
     }
   ]
 }
@@ -137,13 +162,13 @@ Normative **update** JSON (same commands; `action` only changes):
       "runas": "root",
       "tags": ["NOPASSWD"],
       "path": "/usr/local/bin/folder-backup",
-      "args": ["backup"]
+      "args": ["backup", "*"]
     },
     {
       "runas": "root",
       "tags": ["NOPASSWD"],
       "path": "/usr/local/bin/folder-backup",
-      "args": ["restore"]
+      "args": ["restore", "*"]
     }
   ]
 }
@@ -153,8 +178,8 @@ Equivalent **text dual** of the same grant (not a second allowlist of OS tools):
 
 ```text
 # Purpose: Allow leolio to run folder-backup backup and restore as root.
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore
+leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup *
+leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore *
 ```
 
 **Withdrawn (forbidden) encoding** — do not copy into a JSON sudoer file:
@@ -194,7 +219,7 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 | **`{{PRJ_NAME}}` / `APP_NAME`** | `folder-backup` |
 | **`{{GLOBAL_BIN}}`** | `/usr/local/bin` |
 | **Elevated path** | `/usr/local/bin/folder-backup` |
-| **Allowed args** | `backup` · `restore` |
+| **Allowed args** | `backup *` · `restore *` (JSON: `["backup","*"]` / `["restore","*"]`). Optional `--json` objects. Ship unit **1.10.0** emit matches. |
 | **Forbidden paths (examples)** | `/usr/bin/mkdir`, `/bin/mkdir`, `/usr/bin/cp`, `/bin/cp`, `/usr/bin/install`, `/usr/bin/tar`, `/bin/tar`, `/bin/rm`, `/usr/bin/rm`, `/usr/bin/chmod`, `/bin/chmod` |
 | **Ship unit** | `src/folder-backup` |
 | **Submit verb** | `submit-sudoer-request` → `fb_submit_sudoer_request` |
@@ -203,13 +228,13 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 | **Service field** | `folder-backup` |
 | **Worked user in samples** | `leolio` (illustrative login; live emit uses `id -un`) |
 | **Privilege / workflow peer** | `requirement-three-layer-privilege-model` |
-| **Ship unit emit** | **1.8.0+** `fb_sudoers_json_text` / `fb_sudoers_fragment_text` — `{{GLOBAL_BIN}}/folder-backup` `backup`/`restore` only. `print-sudoers <path>` also writes `<path>.json`. Submit default input is the JSON grant. |
+| **Ship unit emit** | **1.10.0:** `fb_sudoers_json_text` / `fb_sudoers_fragment_text` emit `*` operand. `print-sudoers <path>` also writes `<path>.json`. Submit default input is the JSON grant. Host `/etc` fragment is still admin-installed. |
 
 ### 2.9 Why This Requirement Exists (Direct CIAO Alignment)
 
 - **CIAO Principle 10 – Least privilege**: F6 is one managed binary and two verbs — not a catalog of root `cp`/`mkdir`/`rm`.  
 - **CIAO Principle 1 – Caution**: Extra sudoers lines are extra ways to be wrong; complexity is treated as a vulnerability.  
-- **CIAO Principle 2 – Intentional**: The JSON file means “this user may run `{{PRJ_NAME}}` backup/restore as root,” nothing else.  
+- **CIAO Principle 2 – Intentional**: The JSON file means “this user may run `{{PRJ_NAME}} backup <folder>` and `restore <token>` as root” (`args` verb plus `*`), nothing else.  
 - **CIAO Principle 9 – Type 0 / 1 / 2**: JSON is the Type 1 **grant**. Live mkdir/copy/tar after elev are not a second grant.  
 - **CIAO Principle 21 – Dual policies**: Core rules use `{{PRJ_NAME}}` / `{{GLOBAL_BIN}}`; this section fills `folder-backup` and `/usr/local/bin`.
 
@@ -220,8 +245,8 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 - **Caution:** Refuse OS-tool JSON even if an older fragment or review used it.  
 - **Intentional:** `service` and `path` basename are the same name: `{{PRJ_NAME}}`.  
 - **Anti-fragile:** Paths and archive names stay in Config; changing `BACKUP_ROOT` must not require a new sudoers JSON.  
-- **Over-protect:** Verb-bound `backup` / `restore` only; no bare-binary grant; no `USER_BIN` path.  
-- **Stay-honest:** 1.8.1 emit matches this grant; inbound after submit must still list both verbs; do not revive OS-tool Cmnds.  
+- **Over-protect:** Verb-bound `backup *` / `restore *`; no bare-binary grant; no `USER_BIN` path; no verb-only exact argv.  
+- **Stay-honest:** 1.8.x emit is **Gap** vs 1.3.0 until ship unit includes `*`; inbound after submit must still list both verbs; do not revive OS-tool Cmnds.  
 - **Anti-fragile (codec):** Re-encode is lossy unless proven; pretty JSON is legal input.
 
 ---
@@ -235,6 +260,7 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 3. Hardcode deposit, stage, HOME, or archive **filenames** into `path` or `args`.  
 4. Elevate `{{USER_BIN}}/{{PRJ_NAME}}` in this JSON.  
 5. Grant `{{PRJ_NAME}}` with no verb (whole CLI as root).  
+5b. Emit verb-only `args: ["backup"]` / `["restore"]` when operate argv includes a source folder or restore token.  
 6. Claim an OS-tool emit (`mkdir`/`cp`/`tar`/`rm`) is compliant with this requirement.  
 7. Duplicate submit/install workflow law here (that stays on the privilege peer).  
 8. Store secrets in the JSON body.  
@@ -254,12 +280,12 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 |----|-----------|
 | AC-1 | Every `commands[].path` is `{{GLOBAL_BIN}}/{{PRJ_NAME}}` (this project: `/usr/local/bin/folder-backup`) |
 | AC-2 | `service` equals `{{PRJ_NAME}}` (`folder-backup`) |
-| AC-3 | `args` are only `backup` and/or `restore` |
+| AC-3 | `args` are `["backup", "*"]` and `["restore", "*"]` (optional extra objects `["--json", verb, "*"]`). Verb-only `["backup"]` **Fail** |
 | AC-4 | No `mkdir` / `cp` / `install` / `chmod` / `tar` / `rm` / shell basename appears in `path` or `args` |
 | AC-5 | No deposit/stage/HOME path and no `*.tar.gz` / archive filename in the JSON grant |
 | AC-6 | Add and update samples exist and differ only by `action` |
 | AC-7 | Submit of a file that violates AC-1–AC-5 fails closed |
-| AC-8 | Text dual of this grant (if emitted) lists only `{{PRJ_NAME}} backup` and `{{PRJ_NAME}} restore` |
+| AC-8 | Text dual of this grant lists `{{PRJ_NAME}} backup *` and `{{PRJ_NAME}} restore *` (not verb-only) |
 | AC-9 | Pretty-printed grant with both verbs survives sibling `json-to-sudoers` / submit re-encode as **both** verbs (or submit fail-closed if inbound readable and a verb is missing) |
 | AC-10 | Independent generate subcommand writes this JSON to an invoking-user-readable dest; suite opens it without sudo |
 
@@ -290,6 +316,7 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 | **TP-FOLDER-BACKUP-22e** | same | **have** — pretty emit through real `sudoer-cli` keeps `backup` and `restore` |
 | **TP-FOLDER-BACKUP-22f** | same | **have** — stub inbound body still contains both verbs (not file-count only) |
 | **TP-FOLDER-BACKUP-24 / 24d** | same | **have** — independent generate dest; suite reads file without sudo |
+| **TP-FOLDER-BACKUP-26 / 26b** | same | **have** — JSON `args` include `*` after each verb; verb-only **Fail** (do not reuse TP-25) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -302,9 +329,10 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 | 2026-08-15 | Active 1.0.1 | Ship unit 1.8.0 emit matches §2.6; DTV 22/22b/22c **have** |
 | 2026-08-17 | Active 1.1.0 | §2.7a re-encode fidelity; pretty JSON legal; AC-9; TP-22e/22f; INC-20260817-001 |
 | 2026-08-17 | Active 1.2.0 | §2.7 item 5 independent generate to a dest tests/review can read; AC-10; TP-24d |
+| 2026-08-23 | Active 1.3.0 | `args` **MUST** be verb plus `*`; verb-only withdrawn; AC-3/AC-8 |
 
 ---
 
-**Last Updated**: 2026-08-17  
+**Last Updated**: 2026-08-23  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

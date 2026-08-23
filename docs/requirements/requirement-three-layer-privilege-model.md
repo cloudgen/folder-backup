@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-three-layer-privilege-model.md  
-**Status**: Active (Version 1.10.0)  
+**Status**: Active (Version 1.11.0)  
 **Area**: architecture  
 **Key**: `requirement-three-layer-privilege-model`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -13,6 +13,32 @@ It is also the **product law SSOT for working with sudoers fragment files**: how
 **JSON sudoer file body** (command identity, schema, samples) is **not** owned here — it is **`requirement-sudoer-json-file`**. That peer **MUST** grant only `{{PRJ_NAME}}` (`folder-backup`); OS-tool commands (`cp`, `mkdir`, …) are forbidden there.
 
 Domain backup semantics (naming, tar, pillars) live in `requirement-domain-folder-backup.md`. Agent procedure for security-gated create is **`SK-CREATE-SUDOERS-FILE`** (not product-source authority).
+
+### 1.1 Human-facing
+
+**In one sentence:** You print a sudoers draft as yourself; an admin installs it; then `folder-backup backup <folder>` can run with the matching passwordless grant — including from automation that has no terminal.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Emit the draft; run `backup <folder>` after install | `folder-backup print-sudoers` |
+| Admin | Validate and install under `/etc/sudoers.d/` | `visudo -c` then mode `0440` |
+| Not this file | JSON command list shape | `requirement-sudoer-json-file` |
+
+| Includes | Excludes |
+|----------|----------|
+| Grant must match `backup <source-folder>` (`backup *`) | Verb-only `… backup` with no extra operand |
+| Trailing sudoers `*` = one argv wildcard | Frozen `/var/backup/…` or `*.tar.gz` paths in the fragment |
+| Non-interactive `sudo -n` of the **matching** line | Blaming “no TTY” when the grant is too narrow |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `./src/folder-backup` | ship unit | live emit **1.10.0** (`backup *` / `restore *`) |
+| `folder-backup help` | command | `print-sudoers` / `backup` |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Print the draft | You stay unprivileged. The text must include `backup *`. | `folder-backup print-sudoers` |
+| After admin install, back up a folder | Automation may use `sudo -n` because NOPASSWD matches the full argv. | `sudo -n /usr/local/bin/folder-backup backup /path/to/dir` |
 
 ---
 
@@ -122,7 +148,8 @@ This rule applies to every generate surface. Today that is `print-sudoers` (text
 9. **MUST** detect trust tier from global vs local managed install presence.  
 10. When trust tier is **`test_local`** (or unmanaged): **MUST** refuse emit unless `--allow-test-local` **or** env `ALLOW_TEST_LOCAL_SUDOERS=1`; **MUST** print a **TEST MODE ONLY / uninstall soon** warning; fragment header **MUST** carry the same warning.  
 11. When trust tier is **`production`**: emit without the test allow flag; header **SHOULD** note managed global path.  
-12. JSON emit **MUST** include `trust_tier` (`production` \| `test_local` \| `unmanaged`) and `test_mode` (`true`/`false`).
+12. JSON emit **MUST** include `trust_tier` (`production` \| `test_local` \| `unmanaged`) and `test_mode` (`true`/`false`).  
+13. Fragment text **MUST** match §2.3.4 / §2.3.4a: each of `backup` and `restore` **MUST** be followed by sudoers `*` (one extra operand). Verb-only lines **MUST NOT** be emitted. JSON argv lines (`--json backup *`) **SHOULD** be emitted.
 
 #### 2.3.3a `print-sudoers-install-script` (Type 0) product rules
 
@@ -228,11 +255,12 @@ Generated or admin-installed fragments for this product **MUST** match the JSON 
 |------|--------|
 | **User-bound** | Only the intended login — not `ALL` users |
 | **Cmnd absolute** | Only `{{GLOBAL_BIN}}/{{PRJ_NAME}}` (this product: `/usr/local/bin/folder-backup`) |
-| **Verbs only** | Args are **`backup`** and **`restore`** only |
+| **Verbs + one operand wildcard** | Each Cmnd **MUST** be `{{GLOBAL_BIN}}/{{PRJ_NAME}} backup *` and `… restore *`. The trailing `*` is a **sudoers(5) one-operand wildcard** so `backup <source-folder>` / `restore <token>` match. Verb-only (`… backup` with no `*`) **MUST NOT** be emitted or installed. |
+| **Optional JSON argv** | **SHOULD** also emit `--json backup *` and `--json restore *` (different argv). |
 | **No OS tools** | **MUST NOT** list `mkdir`, `cp`, `install`, `chmod`, `tar`, `rm`, or shells |
-| **No path operands** | **MUST NOT** freeze deposit/stage/HOME paths or `*.tar.gz` names into the fragment |
+| **No frozen paths** | **MUST NOT** freeze deposit/stage/HOME paths or `*.tar.gz` / archive **filenames** into the fragment. The sudoers `*` is **not** a path. |
 | **No broad rights** | **MUST NOT** include `ALL=(ALL) ALL`, `NOPASSWD: ALL`, or unrestricted shells |
-| **NOPASSWD scope** | `NOPASSWD:` **MAY** appear only on those two project-command lines so `sudo -n` works; residual risk **MUST** be stated in the security review |
+| **NOPASSWD scope** | `NOPASSWD:` **MUST** appear on those project-command lines so non-interactive `sudo -n` of the **full argv** works; residual risk **MUST** be stated in the security review |
 | **No secrets** | No passwords, API keys, or private key material in the file or comments |
 | **Comments** | Header **SHOULD** state purpose, product, date/generator, and that admin must `visudo -c` |
 
@@ -243,15 +271,25 @@ Runtime deposit/restore **MAY** still call `sudo -n mkdir`/`cp`/`tar`/`rm` inter
 **Normative text dual** of the JSON grant (same as `requirement-sudoer-json-file` §2.6).  
 **Not** a secret. Admin **MUST** still run `visudo -c` on the host before install.  
 Draft often at `${HOME}/.config/folder-backup/sudoers.fragment-<user>`; installed at `/etc/sudoers.d/folder-backup-<user>`.  
-`print-sudoers` **MUST** emit this shape (or an equivalent two-line `backup` + `restore` grant).
+`print-sudoers` **MUST** emit this shape (backup/restore with trailing `*`; JSON argv lines **SHOULD**).
 
 ```sudoers
 # Purpose: Allow leolio to run folder-backup backup and restore as root.
+# Trailing * = one extra operand (source folder / restore token). Verb-only does not match.
+leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup *
+leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore *
+leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json backup *
+leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json restore *
+```
+
+**What this example intentionally omits:** `NOPASSWD: ALL`, shell Cmnds, package managers, `mkdir`/`cp`/`install`/`chmod`/`tar`/`rm`, frozen `/var/backup/…` or `*.tar.gz` **paths**, elevation of `${USER_BIN}/folder-backup`.
+
+**Withdrawn (forbidden) emit** — verb-only; `sudo -n folder-backup backup /some/dir` does **not** match:
+
+```sudoers
 leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup
 leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore
 ```
-
-**What this example intentionally omits:** `NOPASSWD: ALL`, shell Cmnds, package managers, `mkdir`/`cp`/`install`/`chmod`/`tar`/`rm`, deposit/stage/archive operands, elevation of `${USER_BIN}/folder-backup`.
 
 **Test-local header (when tier is test_local — not production):**
 
@@ -274,11 +312,11 @@ leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore
 
 | Rule | Detail |
 |------|--------|
-| **Invocation** | Non-root deposit **MUST** use `sudo -n` after passwordless fragment install. The **grant** is `{{GLOBAL_BIN}}/folder-backup backup` (and `restore`). |
+| **Invocation** | After a `backup *` fragment, non-root deposit **SHOULD** re-exec `sudo -n {{GLOBAL_BIN}}/folder-backup backup <source-folder>` (same for restore). **Gap:** ship unit deposit still uses Type 1 inner `sudo -n mkdir`/`cp` until that re-exec is wired. |
 | **Scope** | Only the **just-staged** archive into `/var/backup/folder-backup/`. OS-tool `sudo -n` from Type 1 internals is residual — not a second sudoers catalog. |
 | **Root path** | If `id -u` is 0, deposit **MAY** copy without sudo into the destination |
 | **Logging** | Report success/failure via `out_*`; **never** print sudo passwords |
-| **Probe honesty** | Diagnostics that report sudo status **SHOULD NOT** claim elevation is impossible solely because `sudo -n true` fails when only **narrow** Cmnds are allowlisted (prefer probing an allowlisted no-op such as allowlisted `mkdir -p` of the deposit dir) |
+| **Probe honesty** | **MUST NOT** claim elevation is impossible solely because there is no TTY. **MUST NOT** treat `sudo -n … backup` **without** a folder operand as proof deposit works. **MUST NOT** treat `sudo -n true` failure as “no elev” when only narrow Cmnds are allowlisted. Verb-only grant + `backup <dir>` password prompt is **grant-too-narrow**, not missing TTY. |
 
 #### 2.3.7 Fail-closed (mandatory)
 
@@ -432,7 +470,10 @@ esac
 18. Put `cp` / `mkdir` / `tar` / `rm` / `install` / `chmod` (or deposit/stage/archive-name operands) into the **JSON sudoer file** — that body is `requirement-sudoer-json-file` (`{{PRJ_NAME}}` only).  
 19. Treat `[OK] Submitted` or checklist S14 Pass as proof the **inbound** `commands[]` still has `backup` and `restore`.  
 20. Hide sudoer generate only inside `submit-sudoer-request` (no independent Type 0 subcommand).  
-21. Treat inbound, `/etc`, or a deleted submit temp as the **review/test fixture** for a generated sudoer file. Tests and review **MUST** read an independent generate dest without sudo.
+21. Treat inbound, `/etc`, or a deleted submit temp as the **review/test fixture** for a generated sudoer file. Tests and review **MUST** read an independent generate dest without sudo.  
+22. Emit or install verb-only `NOPASSWD: … folder-backup backup` (no trailing `*`) when operate argv is `backup <source-folder>`.  
+23. Blame “no TTY” or “folder-backup needs a terminal” when `sudo -n … backup <folder>` fails because the grant is verb-only.  
+24. Treat `sudo -n … backup` with **no** folder operand as proof that deposit works.
 
 **Violating this rule is a critical privilege regression.**
 
@@ -466,6 +507,7 @@ esac
 | AC-22 | Default submit action is **update** when this user’s `/etc/sudoers.d/{{APP_NAME}}-{{user}}` (or legacy unsuffixed) exists; else **add**. `--add`/`--update` override. Other users’ fragments do not count |
 | AC-23 | `generate-sudoer-request` writes a local JSON grant with both verbs, refuses `/etc` and inbound, verifies the file (and sibling convert when `sudoer-cli` is present), and does not queue |
 | AC-24 | **Any** sudoer generate is an independent Type 0 subcommand (§2.3.2a) that writes an invoking-user-readable dest (not `/etc`, not inbound, not a deleted temp). Suite/review `cat` that dest without sudo |
+| AC-25 | `print-sudoers` text dual **MUST** contain `backup *` and `restore *`. Verb-only `… backup` / `… restore` lines **Fail**. `sudo -n {{GLOBAL_BIN}}/folder-backup backup <dir>` **MUST** be the intended NOPASSWD match (host proof after admin install) |
 
 ---
 
@@ -481,8 +523,6 @@ esac
 | `requirement-shell-cli-storage` | Staging roots for Type 1 internals (not fragment operands) |
 | `requirement-shell-output-requirements` | `out_*` for print-sudoers and deposit errors |
 | `docs/requirements/index.md` | Registry |
-
-**Harness (not product source law):** term `sudoers-fragment` · skill `skill-create-sudoers-file.md` · checklist `checklist-create-sudoers-security.md` · policy `policy-least-privilege.md`
 
 ---
 
@@ -503,6 +543,7 @@ esac
 | **TP-FOLDER-BACKUP-22e / 22f** | same | **have** — pretty emit + inbound body fidelity (AC-21) |
 | **TP-FOLDER-BACKUP-23 / 23b / 23c** | same | **have** — host fragment → update; `--add` override; other-user dest ignored |
 | **TP-FOLDER-BACKUP-24 / 24b / 24c / 24d** | same | **have** — generate compact verified JSON; refuse `/etc`; convert keeps both verbs; dest readable without sudo |
+| **TP-FOLDER-BACKUP-26 / 26b** | same | **have** — emit contains `backup *` / `restore *`; verb-only **Fail** (AC-25). Do not reuse TP-25 (operator-readable inbound errors). |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -522,9 +563,10 @@ esac
 | 2026-08-17 | Active 1.8.1 | §2.3.4 / §2.3.4a example is `folder-backup` backup/restore only (OS-tool illustration withdrawn); TP-23c |
 | 2026-08-17 | Active 1.9.0 | `generate-sudoer-request` §2.3.3d; submit compact handoff; AC-23; TP-24; INC-20260817-002 |
 | 2026-08-17 | Active 1.10.0 | §2.3.2a independent generate (any sudoer generate = Type 0 subcommand → readable dest); AC-24; TP-24d |
+| 2026-08-23 | Active 1.11.0 | Sudoers exact-argv: `backup *` / `restore *` required; verb-only withdrawn; AC-25; probe honesty |
 
 ---
 
-**Last Updated**: 2026-08-17 (1.10.0 independent generate dest)  
+**Last Updated**: 2026-08-23  
 **Owner**: project maintainers  
-**Alignment**: Registry `docs/requirements/index.md`; mold `template-three-layer-privilege-model.md` (**`LM-THREE-LAYER-PRIVILEGE-MODEL`**); **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
+**Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
