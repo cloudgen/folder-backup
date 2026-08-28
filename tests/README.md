@@ -16,7 +16,7 @@ Exit **0** when all assertions pass; **1** on failure; **2** if ship unit missin
 |------|--------|-------------|
 | `run.sh` | Entrypoint | — |
 | `helpers.sh` | Asserts + isolated HOME | — |
-| `test_cli.sh` | CLI surface, Type N empty argv, offline online-reject | **TP-CLI-*** |
+| `test_cli.sh` | CLI surface, case 2 empty argv, offline online-reject | **TP-CLI-*** |
 | `test_local_lifecycle.sh` | install / uninstall / where-is-me | **TP-LC-*** |
 | `test_domain_folder_backup.sh` | backup ops + domain surface + sudoers print + JSON grant + submit inbound detect | **TP-FOLDER-BACKUP-*** (ops → `requirement-folder-archive-backup`; grant → `requirement-sudoer-json-file`; submit → three-layer §2.3.3c) |
 

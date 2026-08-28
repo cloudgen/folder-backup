@@ -2,6 +2,8 @@
 
 | Date | Report | Scope | Verdict | Suite |
 |------|--------|-------|---------|-------|
+| 2026-08-28 | `reports/2026-08-28-requirement-coverage-case2.md` | C-full-product coverage + test plan; case 2 empty argv; Gaps TP-CLI-17 / TP-27 / coding-style REQ | Sufficient with Gaps | 1.12.0 |
+| 2026-08-28 | `cli-routed-verb-table.md` | Live dispatcher inventory; case 2 TTY empty argv = numbered list | living | 1.12.0 |
 | 2026-08-23 | `cli-routed-verb-table.md` | Live dispatcher inventory + human-readable `verb: explain`; test-purpose grant-emit verbs; `menu`/`main` routed | living | 1.11.0 |
 | 2026-08-17 | `reports/2026-08-17-review-revision-test-plans.md` | Review/test-plan revision vs 1.9.0 generate + operator-readable errors | **PASS** (plans aligned; suite green) | PASS=242 FAIL=0 SKIP=2 |
 | 2026-08-17 | 1.9.0 generate-sudoer-request | Local verified compact JSON; submit compact handoff; TP-24 | living | 1.9.0 |

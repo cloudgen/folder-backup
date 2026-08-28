@@ -2,22 +2,22 @@
 
 **Product:** folder-backup (POSIX `/bin/sh` local self-managed CLI — folder tar.gz backup with narrow sudo deposit)  
 **Workspace state:** Specialized product law (left genesis); **software-development** class; bootstrap **cli-template → folder-backup** (domain extend; online install **intentionally absent** on A and B).  
-**Updated:** 2026-08-23
+**Updated:** 2026-08-28
 
 | ID / key | Title | Area | Status | Path | Updated |
 |----------|-------|------|--------|------|---------|
-| requirement-class-software-dev | Software-development class law + residual stack (posix-sh, local-only); multi-vault forge push identity §2.0.5a; residual no dest approver / no dest fence; §1.1 | class | Active (1.1.0) | `requirement-class-software-dev.md` | 2026-08-19 |
-| requirement-bootstrap-chain | Bootstrap chain A=cli-template → B=folder-backup (domain extend) | architecture | Active (2.0.0) | `requirement-bootstrap-chain.md` | 2026-08-13 |
+| requirement-class-software-dev | Software-development class law + residual stack (posix-sh, local-only); multi-vault forge push identity §2.0.5a; residual no dest approver / no dest fence; §1.1 | class | Active (1.1.1) | `requirement-class-software-dev.md` | 2026-08-28 |
+| requirement-bootstrap-chain | Bootstrap chain A=cli-template → B=folder-backup (domain extend); empty argv case 2 | architecture | Active (2.1.0) | `requirement-bootstrap-chain.md` | 2026-08-28 |
 | requirement-project-folder | Project layout (`src/`), install bins, `/var/backup` deposit | architecture | Active | `requirement-project-folder.md` | 2026-08-03 |
-| requirement-three-layer-privilege-model | Type 0 + narrow Type 1 deposit; sudoers emit + **install-script** handoff; **per-user** fragment names; **trust tiers** (S13); submit workflow + inbound fidelity + **host-probe add/update** + **independent generate** (readable dest); fragment **MUST** be `backup *` / `restore *` (verb-only withdrawn) | architecture | Active (1.11.0) | `requirement-three-layer-privilege-model.md` | 2026-08-23 |
-| requirement-sudoer-json-file | **JSON sudoer file** SSOT: `{{PRJ_NAME}}` only; `args` **MUST** be verb plus `*`; pretty/compact legal; re-encode **MUST** keep every `commands[]` object; **independent generate** dest readable | architecture | Active (1.3.0) | `requirement-sudoer-json-file.md` | 2026-08-23 |
+| requirement-three-layer-privilege-model | Type 0 + narrow Type 1 deposit; sudoers emit + **install-script** handoff; **per-user** fragment names; **trust tiers** (S13); submit workflow + inbound fidelity + **host-probe add/update** + **independent generate** (readable dest); fragment **MUST** be `backup *` / `restore *` **and** `--json` twins | architecture | Active (1.12.0) | `requirement-three-layer-privilege-model.md` | 2026-08-23 |
+| requirement-sudoer-json-file | **JSON sudoer file** SSOT: `{{PRJ_NAME}}` only; `args` **MUST** be verb plus `*` **and** `--json` twins; pretty/compact legal; re-encode **MUST** keep every `commands[]` object; **independent generate** dest readable | architecture | Active (1.4.0) | `requirement-sudoer-json-file.md` | 2026-08-23 |
 | requirement-folder-archive-backup | **Backup/restore ops SSOT**: backup + verify + **restore**; dest whitelist **W-ETC-USER** `/etc/{{username}}` (never `/etc/passwd`) | backup | Active (1.2.0) | `requirement-folder-archive-backup.md` | 2026-08-12 |
 | requirement-folder-archive-backup-retention-total | **Total retention**: max **30** archives per project basename; prune oldest after successful deposit | backup | Active (1.0.0) | `requirement-folder-archive-backup-retention-total.md` | 2026-08-12 |
 | requirement-folder-archive-backup-retention-daily | **Daily retention**: max **5** archives per basename per calendar day; prune oldest same-day `N` | backup | Active (1.0.0) | `requirement-folder-archive-backup-retention-daily.md` | 2026-08-12 |
-| requirement-shell-cli-interface | Shell CLI interface (commands, flags, dispatch, modes); submit `--add`/`--update`; **generate-sudoer-request**; **`menu`/`main` routed**; test-purpose grant-emit listed apart | shell | Active (1.6.0) | `requirement-shell-cli-interface.md` | 2026-08-23 |
-| requirement-shell-cli-zero-arguments | Empty argv Type N help (local-only) | shell | Active | `requirement-shell-cli-zero-arguments.md` | 2026-08-03 |
-| requirement-shell-cli-default-interaction | Claimed TTY numbered list on `menu`/`main` (case 3; four work rows; test-purpose grant-emit omitted; **implemented**) | shell | Active (1.2.0) | `requirement-shell-cli-default-interaction.md` | 2026-08-23 |
-| requirement-shell-local-self-management | Local install / uninstall / where-is-me; **mode 0755** multi-user | shell | Active (1.2.0) | `requirement-shell-local-self-management.md` | 2026-08-09 |
+| requirement-shell-cli-interface | Shell CLI interface (commands, flags, dispatch, modes); submit `--add`/`--update`; **generate-sudoer-request**; **`menu`/`main` routed**; **case 2 TTY empty argv = menu**; test-purpose grant-emit listed apart | shell | Active (1.7.0) | `requirement-shell-cli-interface.md` | 2026-08-28 |
+| requirement-shell-cli-zero-arguments | **Withdrawn** — Type N always-help superseded by case 2 default-interaction | shell | Withdrawn (1.1.0) | `requirement-shell-cli-zero-arguments.md` | 2026-08-28 |
+| requirement-shell-cli-default-interaction | Claimed TTY numbered list on **empty argv** (case 2) and `menu`/`main`; four work rows; test-purpose grant-emit omitted; **implemented** | shell | Active (1.3.0) | `requirement-shell-cli-default-interaction.md` | 2026-08-28 |
+| requirement-shell-local-self-management | Local install / uninstall / where-is-me; **mode 0755** multi-user | shell | Active (1.2.1) | `requirement-shell-local-self-management.md` | 2026-08-28 |
 | requirement-shell-output-requirements | Central `out_*` output SSOT | shell | Active | `requirement-shell-output-requirements.md` | 2026-08-03 |
 | requirement-operator-readable-error | Operator-facing error **wording** (human-intro style: what happened / next step) | shell | Active (1.0.0) | `requirement-operator-readable-error.md` | 2026-08-17 |
 | requirement-shell-modular-function-design | Single-file modular prefixes (`out_`/`inst_`/`app_`/`fb_`) | shell | Active | `requirement-shell-modular-function-design.md` | 2026-08-03 |

@@ -1,7 +1,7 @@
 # =============================================================================
 # tests/test_cli.sh — CLI surface (local-only; no network)
 # =============================================================================
-# Primary REQs: requirement-shell-cli-interface, requirement-shell-cli-zero-arguments,
+# Primary REQs: requirement-shell-cli-interface, requirement-shell-cli-default-interaction,
 # requirement-shell-output-requirements, requirement-shell-cli-storage
 # TP family: TP-CLI-*
 # =============================================================================
@@ -84,12 +84,13 @@ run_test_cli() {
     assert_not_contains "TP-CLI-06 no CHECKSUM" "$_out" "CHECKSUM"
     assert_not_contains "TP-CLI-06 no SCRIPT_URL" "$_out" "SCRIPT_URL"
 
-    # TP-CLI-07 empty argv = Type N help (not install)
+    # TP-CLI-07 off-TTY empty argv = help (not install; case 2)
     _out=$(sh "${SCRIPT}" 2>/dev/null)
     _ec=$?
     assert_eq "TP-CLI-07 empty argv exit 0" 0 "$_ec"
     assert_contains "TP-CLI-07 empty argv is help" "$_out" "Usage:"
-    assert_contains "TP-CLI-07 empty argv mentions Type N or help" "$_out" "help"
+    assert_contains "TP-CLI-07 empty argv mentions help" "$_out" "help"
+    assert_not_contains "TP-CLI-07 empty argv not numbered list" "$_out" "9. Exit"
 
     # TP-CLI-08 unknown command fail-closed
     _err=$(sh "${SCRIPT}" no-such-command 2>&1 >/dev/null)
@@ -139,7 +140,7 @@ run_test_cli() {
     fi
     ci_cleanup_env
 
-    # TP-CLI-15 non-interactive menu is help; --json JSON help; empty argv stays help
+    # TP-CLI-15 non-interactive menu is help; --json JSON help; off-TTY empty argv is help
     _out=$(sh "${SCRIPT}" menu 2>/dev/null)
     _ec=$?
     assert_eq "TP-CLI-15 menu off-TTY exit 0" 0 "$_ec"
@@ -157,6 +158,12 @@ run_test_cli() {
     assert_contains "TP-CLI-15 menu --json off-TTY JSON help" "$_out" '"type":"success"'
     assert_not_contains "TP-CLI-15 menu --json off-TTY not numbered list" "$_out" "9. Exit"
 
+    _out=$(sh "${SCRIPT}" --json 2>/dev/null)
+    _ec=$?
+    assert_eq "TP-CLI-15 flags-only --json off-TTY exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-15 flags-only --json is JSON help" "$_out" '"type":"success"'
+    assert_not_contains "TP-CLI-15 flags-only --json not numbered list" "$_out" "9. Exit"
+
     _out=$(sh "${SCRIPT}" 2>/dev/null)
     assert_not_contains "TP-CLI-15 empty argv not numbered list" "$_out" "9. Exit"
     assert_contains "TP-CLI-15 empty argv still help" "$_out" "Usage:"
@@ -170,6 +177,13 @@ run_test_cli() {
     assert_contains "TP-CLI-15 help lists main" "$(sh "${SCRIPT}" help 2>/dev/null)" "Same as menu"
 
     if command -v python3 >/dev/null 2>&1; then
+        _out=$(PTY_IN="9" ci_pty_run)
+        assert_contains "TP-CLI-13 TTY empty argv backup row" "$_out" "1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
+        assert_contains "TP-CLI-13 TTY empty argv restore row" "$_out" "2. restore: Put an archive back onto the hard-disk projects tree"
+        assert_contains "TP-CLI-13 TTY empty argv remove row" "$_out" "3. remove-project-sudoers: Remove the local grant draft only"
+        assert_contains "TP-CLI-13 TTY empty argv submit row" "$_out" "4. submit-sudoer-request: Hand the JSON grant to the approval queue"
+        assert_contains "TP-CLI-13 TTY empty argv Exit 9" "$_out" "9. Exit"
+
         _out=$(PTY_IN="9" ci_pty_run menu)
         assert_contains "TP-CLI-13 TTY menu backup row" "$_out" "1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
         assert_contains "TP-CLI-13 TTY menu restore row" "$_out" "2. restore: Put an archive back onto the hard-disk projects tree"
@@ -184,6 +198,10 @@ run_test_cli() {
         assert_contains "TP-CLI-14 TTY menu --json still numbered list" "$_out" "9. Exit"
         assert_contains "TP-CLI-14 TTY menu --json backup row" "$_out" "1. backup: Pack a named folder"
         assert_not_contains "TP-CLI-14 TTY menu --json ignores JSON help" "$_out" '"type":"success"'
+
+        _out=$(PTY_IN="9" ci_pty_run --json)
+        assert_contains "TP-CLI-15 TTY flags-only --json is JSON help" "$_out" '"type":"success"'
+        assert_not_contains "TP-CLI-15 TTY flags-only --json not numbered list" "$_out" "9. Exit"
 
         _out=$(PTY_IN="9" ci_pty_run menu)
         assert_not_contains "TP-CLI-16 no help row" "$_out" "help: Show this help"

@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-three-layer-privilege-model.md  
-**Status**: Active (Version 1.11.0)  
+**Status**: Active (Version 1.12.0)  
 **Area**: architecture  
 **Key**: `requirement-three-layer-privilege-model`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -149,7 +149,7 @@ This rule applies to every generate surface. Today that is `print-sudoers` (text
 10. When trust tier is **`test_local`** (or unmanaged): **MUST** refuse emit unless `--allow-test-local` **or** env `ALLOW_TEST_LOCAL_SUDOERS=1`; **MUST** print a **TEST MODE ONLY / uninstall soon** warning; fragment header **MUST** carry the same warning.  
 11. When trust tier is **`production`**: emit without the test allow flag; header **SHOULD** note managed global path.  
 12. JSON emit **MUST** include `trust_tier` (`production` \| `test_local` \| `unmanaged`) and `test_mode` (`true`/`false`).  
-13. Fragment text **MUST** match §2.3.4 / §2.3.4a: each of `backup` and `restore` **MUST** be followed by sudoers `*` (one extra operand). Verb-only lines **MUST NOT** be emitted. JSON argv lines (`--json backup *`) **SHOULD** be emitted.
+13. Fragment text **MUST** match §2.3.4 / §2.3.4a: each of `backup` and `restore` **MUST** be followed by sudoers `*` (one extra operand). Verb-only lines **MUST NOT** be emitted. JSON argv lines (`--json backup *`) **MUST** be emitted (and matching JSON `commands[]` objects).
 
 #### 2.3.3a `print-sudoers-install-script` (Type 0) product rules
 
@@ -256,7 +256,7 @@ Generated or admin-installed fragments for this product **MUST** match the JSON 
 | **User-bound** | Only the intended login — not `ALL` users |
 | **Cmnd absolute** | Only `{{GLOBAL_BIN}}/{{PRJ_NAME}}` (this product: `/usr/local/bin/folder-backup`) |
 | **Verbs + one operand wildcard** | Each Cmnd **MUST** be `{{GLOBAL_BIN}}/{{PRJ_NAME}} backup *` and `… restore *`. The trailing `*` is a **sudoers(5) one-operand wildcard** so `backup <source-folder>` / `restore <token>` match. Verb-only (`… backup` with no `*`) **MUST NOT** be emitted or installed. |
-| **Optional JSON argv** | **SHOULD** also emit `--json backup *` and `--json restore *` (different argv). |
+| **JSON argv switches** | **MUST** also emit `--json backup *` and `--json restore *` (different argv). JSON grant **MUST** include matching `commands[]` objects (**`requirement-sudoer-json-file`** 1.4.0). |
 | **No OS tools** | **MUST NOT** list `mkdir`, `cp`, `install`, `chmod`, `tar`, `rm`, or shells |
 | **No frozen paths** | **MUST NOT** freeze deposit/stage/HOME paths or `*.tar.gz` / archive **filenames** into the fragment. The sudoers `*` is **not** a path. |
 | **No broad rights** | **MUST NOT** include `ALL=(ALL) ALL`, `NOPASSWD: ALL`, or unrestricted shells |
@@ -508,6 +508,7 @@ esac
 | AC-23 | `generate-sudoer-request` writes a local JSON grant with both verbs, refuses `/etc` and inbound, verifies the file (and sibling convert when `sudoer-cli` is present), and does not queue |
 | AC-24 | **Any** sudoer generate is an independent Type 0 subcommand (§2.3.2a) that writes an invoking-user-readable dest (not `/etc`, not inbound, not a deleted temp). Suite/review `cat` that dest without sudo |
 | AC-25 | `print-sudoers` text dual **MUST** contain `backup *` and `restore *`. Verb-only `… backup` / `… restore` lines **Fail**. `sudo -n {{GLOBAL_BIN}}/folder-backup backup <dir>` **MUST** be the intended NOPASSWD match (host proof after admin install) |
+| AC-26 | Text dual **MUST** also contain `--json backup *` and `--json restore *`. JSON grant **MUST** include the matching `commands[]` objects (`requirement-sudoer-json-file` 1.4.0). Bare-verb Cmnd **MUST NOT** be treated as covering `--json`. |
 
 ---
 
@@ -544,6 +545,7 @@ esac
 | **TP-FOLDER-BACKUP-23 / 23b / 23c** | same | **have** — host fragment → update; `--add` override; other-user dest ignored |
 | **TP-FOLDER-BACKUP-24 / 24b / 24c / 24d** | same | **have** — generate compact verified JSON; refuse `/etc`; convert keeps both verbs; dest readable without sudo |
 | **TP-FOLDER-BACKUP-26 / 26b** | same | **have** — emit contains `backup *` / `restore *`; verb-only **Fail** (AC-25). Do not reuse TP-25 (operator-readable inbound errors). |
+| **TP-FOLDER-BACKUP-27** | same | **todo** — compact JSON `--json` twins (AC-26). Text already has the four lines. |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -564,6 +566,7 @@ esac
 | 2026-08-17 | Active 1.9.0 | `generate-sudoer-request` §2.3.3d; submit compact handoff; AC-23; TP-24; INC-20260817-002 |
 | 2026-08-17 | Active 1.10.0 | §2.3.2a independent generate (any sudoer generate = Type 0 subcommand → readable dest); AC-24; TP-24d |
 | 2026-08-23 | Active 1.11.0 | Sudoers exact-argv: `backup *` / `restore *` required; verb-only withdrawn; AC-25; probe honesty |
+| 2026-08-23 | Active 1.12.0 | `--json backup *` / `--json restore *` **MUST** (not SHOULD); JSON body dual on `requirement-sudoer-json-file` 1.4.0 |
 
 ---
 

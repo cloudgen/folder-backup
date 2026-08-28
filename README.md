@@ -1,6 +1,6 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.11.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.12.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
@@ -13,7 +13,7 @@
 
 ## Features
 
-- **Local self-management**: `install`, `uninstall`, `where-is-me`, `version`, `about`, `help`, `menu` / `main` (TTY numbered work list)
+- **Local self-management**: `install`, `uninstall`, `where-is-me`, `version`, `about`, `help`; on a real terminal a bare `folder-backup` (or `menu` / `main`) shows the numbered work list
 - **Backup**: `backup <folder>` → stage tar.gz → elevated deposit → verify → **retention prune** (max **5**/day, **30** total per project basename)
 - **Retention**: `MAX_DAILY_BACKUPS` / `MAX_TOTAL_BACKUPS` (defaults 5 / 30); oldest first; never cross-basename
 - **Restore**: `restore <archive|prefix> [dest]` — default dest is hard-disk `${PROJECTS_ROOT}/<project>`
@@ -70,14 +70,30 @@ sudo sh /dev/shm/folder-backup-<user>-sudoers-admin.sh status
 
 This product is **local-only** for its install *channel* (no default `SCRIPT_URL` online install). Global vs local here means install *location*, not an online channel.
 
+After install, on a terminal:
+
+```text
+$ folder-backup
+[INFO] folder-backup — numbered list of live work commands
+1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup
+2. restore: Put an archive back onto the hard-disk projects tree
+3. remove-project-sudoers: Remove the local grant draft only
+4. submit-sudoer-request: Hand the JSON grant to the approval queue
+9. Exit
+Choice: 9
+```
+
+Choose a number, or type the command name. `9` exits. In a script or pipe, `folder-backup` with no arguments prints help instead.
+
 **Source repository:** [cloudgen/folder-backup](https://github.com/cloudgen/folder-backup)  
 Config identity: `REPO_USER=cloudgen`, `REPO_NAME=folder-backup` (override with env if needed; does not enable online install while `SCRIPT_URL` is empty).
 
 ## Usage
 
 ```sh
+folder-backup                               # TTY numbered work list; off-TTY is help
 folder-backup help
-folder-backup menu                          # TTY numbered work list; off-TTY is help
+folder-backup menu                          # same list as a bare TTY run; off-TTY is help
 folder-backup about
 folder-backup --json about
 
@@ -150,6 +166,7 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
+2026-08-28 — version **1.12.0** (TTY empty argv opens the numbered work list; off-TTY still help; TP-CLI-07/13).
 2026-08-23 — version **1.11.0** (`menu` / `main` numbered work list; TP-CLI-13..16).
 2026-08-23 — version **1.10.0** (`print-sudoers` / JSON emit `backup *` / `restore *`; TP-26; INC-20260823-001).
 2026-08-18 — housekeeping: Description rewritten in people-and-folders voice (no Type-1 lead); install heading says “your own login.” Version still **1.9.0** (no product-source change).

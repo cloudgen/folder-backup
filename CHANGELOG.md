@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.12.0] - 2026-08-28
+
+### Changed
+
+- **Bare `folder-backup` on a real terminal opens the numbered work list.** Off-TTY (scripts, pipes, CI) a bare run still prints help and does not install. Named `menu` / `main` still open the same list. Flags-only `--json` is JSON help (not the list). Law: **requirement-shell-cli-default-interaction** **1.3.0** (case 2); CLI-interface **1.7.0**. **requirement-shell-cli-zero-arguments** is **Withdrawn**. Suite **TP-CLI-07** (off-TTY help) · **TP-CLI-13** (TTY empty argv + `menu`) · **TP-CLI-15** (flags-only `--json`).
+
+- **Sudoers `--json` twins are now MUST in law.** Text `print-sudoers` already emits `--json backup *` / `--json restore *`. Compact JSON emit is an honest **Gap** until `fb_sudoers_json_text` includes those `commands[]` objects (AC-26). Suite **TP-FOLDER-BACKUP-27** remains **todo**. Law: sudoer-json **1.4.0** · three-layer **1.12.0**.
+
 ## [1.11.0] - 2026-08-23
 
 ### Added

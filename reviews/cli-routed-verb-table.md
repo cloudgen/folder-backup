@@ -3,7 +3,7 @@
 **Product:** folder-backup  
 **Ship unit:** `src/folder-backup`  
 **Dispatcher:** `app_main`  
-**Scan date:** 2026-08-23  
+**Scan date:** 2026-08-28  
 **Mode:** full (label + purpose refresh)  
 **Copied / re-checked:** 13 live copied · 2 re-checked (`menu`/`main` now routed) · 1 not-yet-wired  
 
@@ -41,4 +41,4 @@ Do not list `menu` / `main` as choices on their own menu.
 
 ## Honesty
 
-Dispatcher tokens on 2026-08-23: version, about, help, install, uninstall, where-is-me, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Online `self-*` / `version-check` are absent by design. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose**.
+Dispatcher tokens on 2026-08-28: version, about, help, install, uninstall, where-is-me, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Empty argv is **not** a token: on a real terminal it calls `app_main_menu` (case 2); off-TTY it is help. Online `self-*` / `version-check` are absent by design. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose**.

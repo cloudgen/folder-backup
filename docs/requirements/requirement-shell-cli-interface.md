@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.6.0)  
+**Status**: Active (Version 1.7.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -40,7 +40,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 
 1. **Single entry:** `app_main` **MUST** parse global flags and route commands.  
 2. **Unknown command:** **MUST** fail loudly with pointer to `help` (via output SSOT).  
-3. **Empty argv:** **Type N → help** (`requirement-shell-cli-zero-arguments.md`).  
+3. **Empty argv:** **case 2** — TTY numbered list; off-TTY help (`requirement-shell-cli-default-interaction.md`). **MUST NOT** install-ensure.  
 4. **No raw user I/O:** User-facing messages **MUST** go through `out_*`.  
 5. Script end **MUST** call `app_main "$@"` (no basename gate that blocks dispatch).
 
@@ -86,7 +86,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 | Command | Type | Handler family | Required behavior |
 |---------|------|----------------|-------------------|
-| *(no args — empty argv)* | Type 0 | `app_main` → `app_help` | **Type N help** — not install |
+| *(no args — empty argv)* | Type 0 | `app_main` → `app_main_menu` | **Case 2:** TTY numbered list; off-TTY help — not install |
 | `install` | Type 0 | `inst_local_install` | Copy running ship unit to privilege-correct bin; idempotent unless `--force` |
 | `uninstall` | Type 0 | `inst_local_uninstall` | Remove managed binary; confirm unless `--force` |
 | `where-is-me` | Type 0 | `app_where_is_me` | Running + install paths + installed flag |
@@ -100,7 +100,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `remove-project-sudoers` | Type 0 | `fb_remove_project_sudoers` (domain) | **Operational.** Remove the local grant draft only (not `/etc`) |
 | `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Test-purpose.** **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound. Listed apart in help; **not** on the main menu |
 | `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | **Operational.** Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound |
-| `menu` | Type 0 | `app_main_menu` | Numbered list of live **operational** work commands (`requirement-shell-cli-default-interaction`). **MUST NOT** steal empty argv. **MUST NOT** list version, about, self-managed, or test-purpose verbs |
+| `menu` | Type 0 | `app_main_menu` | Numbered list of live **operational** work commands (`requirement-shell-cli-default-interaction`). Same list as interactive empty argv. **MUST NOT** list version, about, self-managed, or test-purpose verbs |
 | `main` | Type 0 | `app_main_menu` | Alias of `menu`. **MUST NOT** appear as a choice on its own list. |
 
 #### Global flags (normative wiring)
@@ -117,7 +117,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 #### Dispatcher acceptance criteria
 
 1. Unknown token after flag parse → `out_die` with pointer to `folder-backup help`.  
-2. Zero-arg → help (not install, not backup).  
+2. Zero-arg → TTY numbered list; off-TTY help (not install, not backup).  
 3. Command routing table in `app_main` **must** include every **Implemented** row above.  
 4. Help text **must** stay aligned with that table. Test-purpose verbs **MUST** appear under a heading **apart** from operational verbs.  
 5. Domain catalog detail (operands, archive naming, error codes) is owned by `requirement-domain-folder-backup.md` — this file owns the **listed verbs** and routing.
@@ -157,13 +157,13 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
 1. Add online lifecycle commands without an explicit product-mode change and registry update.  
-2. Change empty argv away from Type N help while install mode remains local-only.  
+2. Change empty argv to install-ensure while install mode remains local-only.  
 3. List commands in help that are not routed (or route commands not listed).  
 4. Bypass `out_*` for product user messages.  
 5. Run the entire CLI as root by default instead of narrow deposit elevation.  
 6. Put full domain archive semantics only here and omit the domain SSOT.  
 7. Add a second submit verb (`submit-sudoer`) without routing + help, or invent inbound `mkdir` as this CLI’s job.  
-8. Attach the numbered list to empty argv, or drop `menu`/`main` routing.  
+8. Restore Type N always-help on empty argv while case 2 is Active, or drop `menu`/`main` routing.  
 9. Mix test-purpose verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on the numbered main menu.
 
 **Violating this rule is a critical CLI interface regression.**
@@ -176,12 +176,12 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 |----|-----------|
 | AC-1 | All **Implemented** commands in the table are routed and listed in help |
 | AC-2 | Global flags wire QUIET/JSON/DEBUG/FORCE as specified |
-| AC-3 | Empty argv is help (Type N) |
+| AC-3 | Empty argv is TTY numbered list / off-TTY help (case 2); never install-ensure |
 | AC-4 | No online self-management verbs on the surface |
 | AC-5 | Domain verbs point to domain requirement for deep semantics |
 | AC-6 | `submit-sudoer-request` is Type 0, routed, listed in help; does not write `/etc` or create inbound |
 | AC-7 | `generate-sudoer-request` is Type 0, routed, listed in help; independent of submit; dest is invoking-user readable; does not write `/etc` or inbound |
-| AC-8 | `menu` and `main` are routed and listed in help; empty argv stays help (`requirement-shell-cli-default-interaction`) |
+| AC-8 | `menu` and `main` are routed and listed in help; interactive empty argv opens the same list (`requirement-shell-cli-default-interaction`) |
 | AC-9 | Help lists test-purpose `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` **apart** from operational verbs; those three are **not** main-menu rows. **Gap** until `app_help` splits headings |
 
 ---
@@ -190,8 +190,8 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 | Key | Relationship |
 |-----|--------------|
-| `requirement-shell-cli-zero-arguments` | Empty argv Type N |
-| `requirement-shell-cli-default-interaction` | Claimed `menu`/`main` numbered list (case 3) |
+| `requirement-shell-cli-zero-arguments` | **Withdrawn** — do not treat as live empty-argv owner |
+| `requirement-shell-cli-default-interaction` | Case 2 empty argv + claimed `menu`/`main` numbered list |
 | `requirement-shell-local-self-management` | install/uninstall/where-is-me |
 | `requirement-shell-output-requirements` | `out_*` catalog |
 | `requirement-domain-folder-backup` | Domain four pillars |
@@ -223,9 +223,10 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | 2026-08-23 | Active 1.4.0 | `menu` / `main` listed (Gap); empty argv stays help |
 | 2026-08-23 | Active 1.5.0 | Restore / print-sudoers-install-script / remove-project-sudoers listed; test-purpose grant-emit verbs apart in help (AC-9) |
 | 2026-08-23 | Active 1.6.0 | `menu` / `main` routed (`app_main_menu`); empty argv stays help |
+| 2026-08-28 | Active 1.7.0 | Case 2: TTY empty argv = numbered list; off-TTY help; zero-arguments Withdrawn |
 
 ---
 
-**Last Updated**: 2026-08-23  
+**Last Updated**: 2026-08-28  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

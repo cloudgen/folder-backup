@@ -16,8 +16,7 @@
 # - requirement-three-layer-privilege-model.md
 # - requirement-sudoer-json-file.md  (JSON sudoer file: PRJ_NAME only)
 # - requirement-shell-cli-interface.md
-# - requirement-shell-cli-zero-arguments.md  (Type N empty argv = help)
-# - requirement-shell-cli-default-interaction.md  (menu/main numbered list)
+# - requirement-shell-cli-default-interaction.md  (case 2: TTY empty argv + menu/main numbered list)
 # - requirement-shell-local-self-management.md
 # - requirement-shell-cli-storage.md
 # - requirement-shell-idempotency.md
@@ -32,7 +31,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.11.0"
+# VERSION: hard-assign VERSION="1.12.0"
 #
 # =============================================================================
 
@@ -49,8 +48,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.11.0"
-: "${VERSION:=1.11.0}"
+VERSION="1.12.0"
+: "${VERSION:=1.12.0}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -4255,16 +4254,15 @@ app_main_menu_run_pick() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Commands menu / main. On a real terminal: ignore --json, show the numbered
-# list, run one pick. Off-TTY: help (JSON help when --json). Never hang.
-# Empty argv stays help (this function is not empty-argv).
+# Commands menu / main, and case-2 empty argv. On a real terminal: ignore
+# --json on menu/main, show the numbered list, run one pick. Off-TTY: help
+# (JSON help when --json). Never hang. Never install-ensure.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
 # - requirement-shell-interactive-vs-noninteractive.md
-# - requirement-shell-cli-zero-arguments.md
 #
-# Last updated: 2026-08-23
+# Last updated: 2026-08-28
 # =============================================================================
 app_main_menu() {
     : "${TTY:=0}"
@@ -4330,7 +4328,7 @@ app_main_menu() {
 # app_help() - Usage (local Type 0 + domain)
 # =============================================================================
 #
-# Last updated: 2026-08-23
+# Last updated: 2026-08-28
 # =============================================================================
 app_help() {
     : "${SHORT_DESCRIPTION:=${APP_DESC:-Local folder archive backup/restore with narrow sudo deposit}}"
@@ -4343,7 +4341,7 @@ app_help() {
     if [ "${JSON}" -eq 1 ]; then
         out_json "success" "Help text available in human-readable mode. Run without --json." \
             "command" "help" \
-            "note" "Use --json with version, about, install, uninstall, where-is-me, backup, restore. menu/main off-TTY uses this help."
+            "note" "Use --json with version, about, install, uninstall, where-is-me, backup, restore. Empty argv off-TTY, flags-only --json, and menu/main off-TTY use this help."
         return 0
     fi
     if [ "${QUIET}" -eq 1 ]; then
@@ -4364,7 +4362,7 @@ app_help() {
     out_plain "  version              Show local version"
     out_plain "  about                Show diagnostics (incl. sudoers trust tier)"
     out_plain "  help                 Show this help"
-    out_plain "  menu                 Numbered list of live work commands (TTY; off-TTY is help)"
+    out_plain "  menu                 Numbered list of live work commands (same list as a TTY empty run; off-TTY is help)"
     out_plain "  main                 Same as menu"
     out_empty_line
     out_info "Domain (Type 0 archive + Type 1 deposit/restore-stage):"
@@ -4422,6 +4420,7 @@ app_help() {
     out_plain "  SUDOERS_D_DIR           host sudoers.d dir (default /etc/sudoers.d; tests)"
     out_empty_line
     out_info "Examples:"
+    out_plain "  ${APP_NAME}                    # TTY numbered work list; off-TTY is help"
     out_plain "  ${APP_NAME} menu"
     out_plain "  ${APP_NAME} install"
     out_plain "  sudo ${APP_NAME} install          # global (production sudoers trust)"
@@ -4438,7 +4437,7 @@ app_help() {
     out_plain "  ${APP_NAME} restore genesis-template --ram"
     out_plain "  ${APP_NAME} restore genesis-template-20260803-3.tar.gz /tmp/restore-out"
     out_empty_line
-    out_info "Empty argv shows help (Type N — local-only; no curl|sh install-ensure)."
+    out_info "On a real terminal, no arguments shows the numbered work list; in a script, no arguments shows this help (local-only; no curl|sh install-ensure)."
     out_info "Restore default destination is hard-disk (not RAM) unless --ram or dest is set."
     out_info "Local install + sudoers is TEST MODE ONLY; prefer global for durable elevation."
 }
@@ -4449,16 +4448,15 @@ app_help() {
 #
 # GENERAL PURPOSE:
 # Single dispatcher for folder-backup (specialized from cli-template; local Type 0 + domain).
-# Empty argv = Type N help (not install-ensure).
+# Empty argv = case 2 (TTY numbered list; off-TTY help). Not install-ensure.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-interface.md
-# - requirement-shell-cli-zero-arguments.md
 # - requirement-shell-cli-default-interaction.md
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 #
-# Last updated: 2026-08-23
+# Last updated: 2026-08-28
 # =============================================================================
 app_main() {
     : "${COMMAND:=help}"
@@ -4482,9 +4480,9 @@ app_main() {
     export EFFECTIVE_STORAGE_DIR STORAGE_DIR
     export TMPDIR="${EFFECTIVE_STORAGE_DIR}"
 
-    # Type N: empty argv → help
+    # Case 2: empty argv → TTY numbered list; off-TTY help
     if [ $# -eq 0 ]; then
-        app_help
+        app_main_menu
         return 0
     fi
 
@@ -4606,6 +4604,6 @@ app_main() {
 # BOOTSTRAP
 # =============================================================================
 # Always invoke app_main. No basename gate (pipe-safe entry).
-# Product law: requirement-shell-cli-zero-arguments.md (Type N).
+# Product law: requirement-shell-cli-default-interaction.md (case 2 empty argv).
 # =============================================================================
 app_main "$@"

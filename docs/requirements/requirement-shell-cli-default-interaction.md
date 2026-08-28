@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-default-interaction.md  
-**Status**: Active (Version 1.2.0)  
+**Status**: Active (Version 1.3.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-default-interaction`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-DEFAULT-INTERACTION`  
@@ -7,36 +7,39 @@
 
 ## 1. Purpose
 
-This requirement is the **product Single Source of Truth** for folder-backup’s **claimed default interactive main menu**. Empty argv stays help (`requirement-shell-cli-zero-arguments`). The numbered list opens with **`folder-backup menu`** (or **`main`**). The ship unit routes those verbs to `app_main_menu`.
+This requirement is the **product Single Source of Truth** for folder-backup’s **claimed default interactive main menu** and for **empty-argv** dispatcher meaning.
+
+The product is **not** online-installable. There is **no** Active specialized zero-argument requirement. **Case 2** applies: on a real terminal, a bare `folder-backup` run opens the numbered work list; off-TTY that same bare run prints help. Named commands **`menu`** and **`main`** open the same list.
 
 ### 1.1 Human-facing
 
-**In one sentence:** At a real terminal, type `folder-backup menu` to see a numbered list of live work commands; typing only `folder-backup` still prints help.
+**In one sentence:** At a real terminal, type `folder-backup` with no extra words to see a numbered list of live work commands; in a pipe or script that same empty run prints help.
 
 | Box | Meaning | Example |
 |-----|---------|---------|
-| You / this login | Open the list or pick a number | `folder-backup menu` then `1` |
-| The other role | Scripts and CI must not hang on that list | `folder-backup menu` in a pipe → help |
-| Not this file | Empty argv meaning | `requirement-shell-cli-zero-arguments` |
+| You / this login | Open the list or pick a number | `folder-backup` then `1` |
+| The other role | Scripts and CI must not hang on that list | `folder-backup </dev/null` → help |
+| Not this file | Full command catalog, flags, unknown tokens | `requirement-shell-cli-interface` |
 
 | Includes | Excludes |
 |----------|----------|
 | Numbered live work commands | `help` as a row |
 | Line `command: what it does` | `install`, `uninstall`, `where-is-me`, `version`, `about` |
 | Exit as **9** (four command rows) | `setup`, `menu`/`main` as a choice |
-| `main` as the same list | Test-purpose: `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
+| Bare run on a real terminal | Install-ensure on empty argv |
+| `menu` / `main` as the same list | Test-purpose: `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
 
 | Surface | What you open | What for |
 |---------|---------------|----------|
-| `./src/folder-backup` | ship unit | live dispatch (`menu` / `main`) |
+| `./src/folder-backup` | ship unit | live dispatch (empty argv, `menu`, `main`) |
 | `folder-backup help` | command | listed verbs including lifecycle |
-| `folder-backup menu` | command | numbered list when implemented |
+| `folder-backup` | empty argv | numbered list on a real terminal |
 
 | You do… | What it means | What you type |
 |---------|---------------|---------------|
-| Open the list at a prompt | The program prints numbers 1–4 then 9 Exit. `--json` is ignored on a real terminal. | `folder-backup menu` |
-| Pack a folder from the list | Choose backup, then give the folder (one field at a time) or read Next. | `1` then `/home/you/prjs/genesis-template` |
-| Run menu in CI | No prompt. Human help, or JSON help with `--json`. | `folder-backup menu </dev/null` |
+| Open the list at a prompt | The program prints numbers 1–4 then 9 Exit. `--json` on `menu`/`main` is ignored on a real terminal. | `folder-backup` or `folder-backup menu` |
+| Pack a folder from the list | Choose backup, then give the folder (one field at a time) or read Next. | `1` then a source folder path |
+| Run a bare invocation in CI | No prompt. Human help, or JSON help with `--json` and no command. | `folder-backup </dev/null` |
 
 ---
 
@@ -45,21 +48,28 @@ This requirement is the **product Single Source of Truth** for folder-backup’s
 ### 2.1 Claim and case
 
 1. This product **claims** a default interactive main menu.  
-2. **Case 3** applies: a specialized zero-argument requirement exists **and** the product is **not** online-installable.  
-3. Empty argv **MUST** stay help (`requirement-shell-cli-zero-arguments`). **MUST NOT** attach this menu to empty argv.  
-4. The menu **MUST** be routed-verb **`menu`**. **`main` MAY** call the same handler.  
-5. `app_main` **MUST** route `menu` / `main` to `app_main_menu`.
+2. **Case 2** applies: **no** Active specialized zero-argument requirement **and** the product is **not** online-installable.  
+3. This file **owns empty argv**.  
+4. Interactive empty argv (`TTY=1`, `$# -eq 0` at `app_main`) **MUST** open the numbered list (`app_main_menu`).  
+5. Non-interactive empty argv (`TTY=0`, `$# -eq 0`) **MUST** be **help** (`app_help`). **MUST NOT** prompt. **MUST NOT** install-ensure.  
+6. `--json` with **no command token** **MUST** be JSON help (flags-only; `--json` is non-interactive).  
+7. Routed-verbs **`menu`** and **`main` MUST** call the same handler. They remain valid ways to open the list.  
+8. `app_main` **MUST** route `menu` / `main` to `app_main_menu`.  
+9. `requirement-shell-cli-zero-arguments` **MUST** stay **Withdrawn** while this case 2 claim is Active.
 
-### 2.2 Mode check (`menu` / `main` only)
+### 2.2 Mode check
 
 Measure interactive capability **outside functions** (`TTY=1` only when stdin and stdout are terminals). Helpers consume `TTY` (`requirement-shell-interactive-vs-noninteractive`).
 
 | Invocation | Mode | `--json` | MUST | MUST NOT |
 |------------|------|----------|------|----------|
+| `folder-backup` (no args) | Interactive (`TTY=1`) | *(none on empty argv)* | Draw the numbered list | Help; hang; install |
+| `folder-backup` (no args) | Non-interactive (`TTY=0`) | *(none)* | **Help** (human) | Draw the menu; hang; install |
+| Flags only, no command (e.g. `--json`) | Any | **Follow** | Help: human when JSON=0; JSON help when JSON=1 | Draw the menu |
 | `folder-backup menu` or `main` | Interactive (`TTY=1`) | **Ignore** | Draw the numbered list | Treat as JSON help; hang |
 | same | Non-interactive (`TTY=0`) | **Follow** | **Help**: human when JSON=0; JSON help when JSON=1 | Draw the menu; hang; silent return |
 
-`--quiet` off-TTY is still the help path (do not swallow help). Reuse `app_help` — **MUST NOT** invent a second JSON help catalog.
+`--quiet` off-TTY is still the help path (do not swallow that help). Reuse `app_help` — **MUST NOT** invent a second JSON help catalog.
 
 ### 2.3 Numbered list (when the case says menu)
 
@@ -78,15 +88,16 @@ Measure interactive capability **outside functions** (`TTY=1` only when stdin an
 |------|--------|
 | **Product** | `folder-backup` |
 | **Claimed** | yes |
-| **Case** | **3** (zero-arg REQ exists; local-only) |
-| **Empty argv owner** | `requirement-shell-cli-zero-arguments` (help) |
-| **Menu verbs** | `menu` (preferred); `main` alias |
+| **Case** | **2** (no Active zero-arg REQ; local-only) |
+| **Empty argv owner** | **this file** (TTY menu; off-TTY help) |
+| **Menu verbs** | empty argv on TTY; `menu` (preferred named); `main` alias |
 | **Handler** | `app_main_menu` |
-| **Ship unit** | Implemented — `app_main` routes `menu` / `main` to `app_main_menu` |
+| **Ship unit** | Implemented — `app_main` empty argv and `menu` / `main` call `app_main_menu` |
 | **Kept list** | `reviews/cli-routed-verb-table.md` |
 | **N** | 4 |
 | **Exit** | 9 |
 | **Test-purpose (this product)** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
+| **Withdrawn peer** | `requirement-shell-cli-zero-arguments` |
 
 **Normative menu draft** (operational only; self-managed, diagnostics, and test-purpose omitted):
 
@@ -101,17 +112,18 @@ Measure interactive capability **outside functions** (`TTY=1` only when stdin an
 **Invocation samples (CI-M1a):**
 
 ```text
+folder-backup
 folder-backup menu
 folder-backup main
 folder-backup menu --json
 ```
 
-On a real terminal those three **MUST** show the list. Off-TTY, `folder-backup menu` **MUST** call help; `folder-backup menu --json` **MUST** call JSON help.
+On a real terminal the first three **MUST** show the list. `folder-backup menu --json` on a real terminal **MUST** still show the list. Off-TTY, `folder-backup` and `folder-backup menu` **MUST** call help; `folder-backup --json` and `folder-backup menu --json` **MUST** call JSON help.
 
 ### 2.5 Why This Requirement Exists (CIAO)
 
-- **Principle 2 – Intentional**: Empty argv stays help; the list has a named command.  
-- **Principle 1 – Caution**: Scripts do not hang.  
+- **Principle 2 – Intentional**: Empty argv has one owner (this file, case 2). The list also has named commands.  
+- **Principle 1 – Caution**: Scripts do not hang; empty argv never install-ensure.  
 - **Principle 16 – Interactive vs non-interactive**: TTY vs pipe is explicit.  
 - **Principle 10 – Least privilege**: Install/uninstall, version/about, and test-purpose grant-emit verbs are not on the work list.
 
@@ -119,9 +131,9 @@ On a real terminal those three **MUST** show the list. Off-TTY, `folder-backup m
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
-- **Caution:** Do not steal empty argv; do not hang off-TTY.  
-- **Intentional:** Case 3; labels from the kept list.  
-- **Anti-fragile:** `main` may alias `menu`; Exit 9 when N=4.  
+- **Caution:** Do not hang off-TTY; do not steal empty argv for install.  
+- **Intentional:** Case 2; labels from the kept list.  
+- **Anti-fragile:** `menu` / `main` may open the same list as a bare TTY run; Exit 9 when N=4.  
 - **Over-protect:** Self-managed, diagnostics, and test-purpose verbs stay off the list even if they are live.
 
 ---
@@ -130,14 +142,16 @@ On a real terminal those three **MUST** show the list. Off-TTY, `folder-backup m
 
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
-1. Attach this menu to empty argv while `requirement-shell-cli-zero-arguments` is Active.  
-2. Invent menu labels instead of `command: what it does` from the kept list.  
-3. Put `help`, `install`, `uninstall`, `where-is-me`, `version`, `about`, `setup`, `menu`, `main`, or a test-purpose verb (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) on the numbered list.  
-4. Number Exit as 5 when N=4 (Exit **MUST** be 9).  
-5. Draw the menu in non-interactive mode.  
-6. Treat interactive `folder-backup menu --json` as JSON help.  
-7. Claim the ship unit lacks the menu while `app_main` routes `menu` / `main`.  
-8. Auto-write `/etc` from a menu choice (print/submit stay Type 0 drafts).
+1. Restore Type N always-help on empty argv while this case 2 claim is Active (do not reactivate `requirement-shell-cli-zero-arguments`).  
+2. Attach empty argv to install-ensure (Type O).  
+3. Invent menu labels instead of `command: what it does` from the kept list.  
+4. Put `help`, `install`, `uninstall`, `where-is-me`, `version`, `about`, `setup`, `menu`, `main`, or a test-purpose verb (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) on the numbered list.  
+5. Number Exit as 5 when N=4 (Exit **MUST** be 9).  
+6. Draw the menu in non-interactive mode (including off-TTY empty argv).  
+7. Treat interactive `folder-backup menu --json` as JSON help.  
+8. Drop `menu`/`main` routing after attaching the list to empty argv.  
+9. Auto-write `/etc` from a menu choice (print/submit stay Type 0 drafts).  
+10. Claim the ship unit lacks the TTY empty-argv menu while `app_main` routes empty argv to `app_main_menu`.
 
 **Violating this rule is a critical dispatcher / hang / honesty regression.**
 
@@ -147,9 +161,9 @@ On a real terminal those three **MUST** show the list. Off-TTY, `folder-backup m
 
 | ID | Criterion |
 |----|-----------|
-| AC-1 | Empty argv remains help |
-| AC-2 | Case 3 recorded; `menu` / `main` named and routed |
-| AC-3 | Interactive `menu` draws the four-row list + Exit 9 |
+| AC-1 | Non-interactive empty argv is help (not install, not the numbered list) |
+| AC-2 | Case 2 recorded; this file owns empty argv; `menu` / `main` named and routed |
+| AC-3 | Interactive empty argv **and** interactive `menu` draw the four-row list + Exit 9 |
 | AC-4 | Interactive `menu --json` still draws the list |
 | AC-5 | Non-interactive `menu` is help; `--json` is JSON help |
 | AC-6 | Numbered choices omit help, install, uninstall, where-is-me, version, about, setup, menu, main, and test-purpose (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) |
@@ -161,8 +175,8 @@ On a real terminal those three **MUST** show the list. Off-TTY, `folder-backup m
 
 | Key | Relationship |
 |-----|--------------|
-| `requirement-shell-cli-zero-arguments` | Empty argv stays help |
-| `requirement-shell-cli-interface` | Dual mention: `menu` / `main` on the command table |
+| `requirement-shell-cli-zero-arguments` | **Withdrawn** predecessor (Type N always-help) |
+| `requirement-shell-cli-interface` | Dual mention: empty argv row + `menu` / `main` on the command table |
 | `requirement-shell-interactive-vs-noninteractive` | `TTY`; no hang |
 | `requirement-shell-output-requirements` | `out_*`; reuse `app_help` |
 | `requirement-shell-local-self-management` | install/uninstall/where-is-me stay on help, not this list |
@@ -174,10 +188,10 @@ On a real terminal those three **MUST** show the list. Off-TTY, `folder-backup m
 
 | TP family / ID | Suite | Status |
 |----------------|-------|--------|
-| **TP-CLI-07** | `tests/test_cli.sh` | **have** — empty argv still help (AC-1) |
-| **TP-CLI-13** | `tests/test_cli.sh` | **have** — interactive `menu` prints the four labels + `9. Exit` (AC-3) |
+| **TP-CLI-07** | `tests/test_cli.sh` | **have** — off-TTY empty argv is help, not install (AC-1) |
+| **TP-CLI-13** | `tests/test_cli.sh` | **have** — interactive empty argv **and** `menu` print the four labels + `9. Exit` (AC-3) |
 | **TP-CLI-14** | same | **have** — interactive `menu --json` still prints the list (AC-4) |
-| **TP-CLI-15** | same | **have** — non-interactive `menu` is help; `--json` JSON help (AC-5) |
+| **TP-CLI-15** | same | **have** — non-interactive empty argv and `menu` are help; `--json` JSON help (AC-5) |
 | **TP-CLI-16** | same | **have** — numbered list omits help/install/uninstall/where-is-me/version/about/test-purpose/menu (AC-6) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
@@ -189,10 +203,11 @@ On a real terminal those three **MUST** show the list. Off-TTY, `folder-backup m
 |------|--------|------|
 | 2026-08-23 | Active 1.0.0 | Case 3 claimed; menu/main Gap; nine-row list; Exit 99 |
 | 2026-08-23 | Active 1.1.0 | Colon labels; exclude version/about; test-purpose print-sudoers / generate-sudoer-request / print-sudoers-install-script; N=4 Exit 9 |
-| 2026-08-23 | Active 1.2.0 | Ship unit routes `menu` / `main`; Gap closed |
+| 2026-08-23 | Active 1.2.0 | Ship unit routes `menu` / `main`; Gap closed; empty argv stayed help (case 3) |
+| 2026-08-28 | Active 1.3.0 | **Case 2**: TTY empty argv = numbered list; off-TTY empty argv = help; zero-arguments Withdrawn |
 
 ---
 
-**Last Updated**: 2026-08-23  
+**Last Updated**: 2026-08-28  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

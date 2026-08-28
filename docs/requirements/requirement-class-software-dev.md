@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-class-software-dev.md  
-**Status**: Active (Version 1.1.0 – residual ARSA/fence honesty + human-facing)  
+**Status**: Active (Version 1.1.1 – residual empty-argv pointer to case 2)  
 **Area**: class  
 **Key**: `requirement-class-software-dev`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -101,8 +101,8 @@ This file says the workspace is a **shippable program** (folder-backup) and reco
 | **Architectures supported** | any arch with POSIX sh and the external tools the script invokes |
 | **Git surface** | used when product is published |
 | **Ship unit / install** | yes — `src/folder-backup` → `${USER_BIN}/folder-backup` (default `~/.local/bin/folder-backup`); **local-only** install (no online channel) |
-| **Product version SSOT** | `VERSION="1.11.0"` hard-assign in `src/folder-backup` |
-| **Bootstrap origin** | sibling product **cli-template** (`/home/leolio/prjs/cli-template`) — Type 0 local-only template; domain extend only |
+| **Product version SSOT** | `VERSION="1.12.0"` hard-assign in `src/folder-backup` |
+| **Bootstrap origin** | sibling product **cli-template** (`{{PROJECTS_ROOT}}/cli-template`) — Type 0 local-only template; domain extend only |
 
 **Residual ownership table:**
 
@@ -114,7 +114,7 @@ This file says the workspace is a **shippable program** (folder-backup) and reco
 | Bootstrap lineage / keep-extend | `requirement-bootstrap-chain` | A=cli-template → B + domain extend |
 | Project layout / ship path | `requirement-project-folder` | `src/` + bin targets |
 | Type 0 CLI surface / flags / dispatch | `requirement-shell-cli-interface` | Do not duplicate |
-| Empty argv Type N help | `requirement-shell-cli-zero-arguments` | Local-only |
+| Empty argv TTY numbered list / off-TTY help | `requirement-shell-cli-default-interaction` | Case 2; local-only |
 | Local self-managed lifecycle | `requirement-shell-local-self-management` | install / uninstall / where-is-me |
 | Output SSOT (`out_*`) | `requirement-shell-output-requirements` | Do not duplicate |
 | Operator-readable error wording | `requirement-operator-readable-error` | Human-intro-style `[ERROR]` copy; do not duplicate |
@@ -189,7 +189,7 @@ This file says the workspace is a **shippable program** (folder-backup) and reco
 | `requirement-bootstrap-chain` | Lineage A=cli-template → B=folder-backup (domain extend) |
 | `requirement-project-folder` | Layout and install locations |
 | `requirement-shell-cli-interface` | Command surface, flags, dispatch |
-| `requirement-shell-cli-zero-arguments` | Type N empty argv |
+| `requirement-shell-cli-default-interaction` | Case 2 empty argv (TTY menu / off-TTY help) |
 | `requirement-shell-local-self-management` | Local install lifecycle |
 | `requirement-shell-output-requirements` | `out_*` SSOT |
 | `requirement-operator-readable-error` | Operator error wording |
@@ -213,9 +213,10 @@ This file says the workspace is a **shippable program** (folder-backup) and reco
 | 2026-08-13 | Active | Origin retarget: A=cli-template → B=folder-backup |
 | 2026-08-15 | Active | Residual: JSON sudoer file → `requirement-sudoer-json-file` |
 | 2026-08-19 | Active (1.1.0) | Residual: **considered — no dest approver and no approval subject**; **considered — no dest fence conditions**. §1.1 Human-facing. Version SSOT note 1.9.0. |
+| 2026-08-28 | Active (1.1.1) | Residual pointer: empty argv → default-interaction case 2 (zero-arguments Withdrawn) |
 
 ---
 
-**Last Updated**: 2026-08-19  
+**Last Updated**: 2026-08-28  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

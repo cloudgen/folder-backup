@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-local-self-management.md  
-**Status**: Active (Version 1.2.0)  
+**Status**: Active (Version 1.2.1)  
 **Area**: shell  
 **Key**: `requirement-shell-local-self-management`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -126,7 +126,7 @@ This product ships as a **POSIX shell script** (interpreted). Execution by any n
 
 1. Replace local `uninstall` with online `self-uninstall` as the primary remove verb.  
 2. Require `SCRIPT_URL` for install.  
-3. Make empty argv install-ensure while this product remains local-only (Type N owns empty argv).  
+3. Make empty argv install-ensure while this product remains local-only (default-interaction case 2 owns empty argv).  
 4. Delete user data or `/var/backup` content during uninstall.  
 5. Fetch remote version inside `version`.  
 6. Install the managed binary with execute-only group/other bits (`0711` / `chmod +x` after `0600` stage) — **must** keep absolute **`0755`** so global install remains multi-user runnable for a shell ship unit.
@@ -155,7 +155,7 @@ This product ships as a **POSIX shell script** (interpreted). Execution by any n
 | Key | Relationship |
 |-----|--------------|
 | `requirement-shell-cli-interface` | Command table + flags |
-| `requirement-shell-cli-zero-arguments` | Type N empty argv |
+| `requirement-shell-cli-default-interaction` | Case 2 empty argv (TTY menu / off-TTY help); never install-ensure |
 | `requirement-project-folder` | Path defaults |
 | `requirement-shell-idempotency` | Already installed / uninstalled |
 | `requirement-bootstrap-chain` | Why online package is absent |
@@ -180,9 +180,10 @@ This product ships as a **POSIX shell script** (interpreted). Execution by any n
 |------|--------|------|
 | 2026-08-03 | Active | Local-only lifecycle for folder-backup |
 | 2026-08-09 | Active 1.2.0 | §2.3.1 mode **0755** multi-user; ban `chmod +x`→`0711` trap; AC-6..8; TP-LC-09/10 |
+| 2026-08-28 | Active 1.2.1 | Empty-argv owner is default-interaction case 2; Type O fence unchanged |
 
 ---
 
-**Last Updated**: 2026-08-09  
+**Last Updated**: 2026-08-28  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
