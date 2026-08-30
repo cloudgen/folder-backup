@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.14.0] - 2026-08-30
+
+### Changed
+
+- **Storage means cache folder and persistence.** Persistence is `${HOME}/.local/folder-backup/` (created; shown as **Persistence storage** / JSON `persistent_storage`). Cache family is unchanged (preferred `/dev/shm/cache/cache-folder-backup`). Persistence is **not** `${HOME}/.local/bin`. Sudoers drafts stay under `${HOME}/.config/folder-backup/` until a later dest re-home. Law: **requirement-shell-cli-storage** **1.2.0**. Suite **TP-CLI-06** · **TP-CLI-12**.
+
+## [1.13.0] - 2026-08-30
+
+### Changed
+
+- **About names cache folders, not “storage effective.”** Human `about` prints **Cache folder (preferred)** `/dev/shm/cache/cache-folder-backup` and **Cache folder (fallback)** `${XDG_CACHE_HOME}/cache-folder-backup`. JSON adds `cache_preferred` / `cache_fallback` (live chosen root remains `effective_storage`). Preferred cache is no longer `/dev/shm/folder-backup-<user>` (that looks like a ram-drive project folder). Law: **requirement-shell-cli-storage** **1.1.0**. Suite **TP-CLI-06** · **TP-CLI-12**.
+
 ## [1.12.0] - 2026-08-28
 
 ### Changed

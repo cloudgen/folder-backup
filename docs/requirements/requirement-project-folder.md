@@ -46,13 +46,14 @@ Rules:
 
 | Purpose | Pattern |
 |---------|---------|
-| Effective storage root | From `util_resolve_storage` (see `requirement-shell-cli-storage`) |
-| Archive staging | `${EFFECTIVE_STORAGE_DIR}/stage/` (or `mktemp` under that root) |
+| Cache / staging root | From `util_resolve_storage` (see `requirement-shell-cli-storage`); preferred `/dev/shm/cache/cache-folder-backup` |
+| Persistence storage | `${HOME}/.local/folder-backup/` (`util_resolve_persistent_storage`) — **not** `${HOME}/.local/bin` |
+| Archive staging | under `${EFFECTIVE_STORAGE_DIR}` (or `mktemp` under that root) |
 | Sudoers fragment draft | User-writable path under config: `…/sudoers.fragment-<user>` (legacy un-suffixed still discoverable; never auto-write `/etc/sudoers.d`) |
 
 Rules:
 
-1. Scratch **MUST** be per-user isolated (`APP_NAME` + `USERNAME`).  
+1. Scratch **MUST** use the cache resolver (`requirement-shell-cli-storage`): preferred `/dev/shm/cache/cache-${APP_NAME}`; fallback under the invoking user’s XDG cache. **MUST NOT** use `/dev/shm/${APP_NAME}` as cache. Persistence **MUST** be `${HOME}/.local/${APP_NAME}/` — **MUST NOT** use `${HOME}/.local/bin` as persistence.  
 2. Temps **MUST** clean up (`trap`) after success/failure of a backup run.  
 3. Staging archives are **EPHEMERAL** until successfully deposited; do not leave world-writable archives.
 
@@ -116,7 +117,7 @@ Rules:
 2. Make online channel paths required for install.  
 3. Grant the product unrestricted write under `/var` or `/etc`.  
 4. Collapse staging and durable deposit into one world-writable directory.  
-5. Rename protected temp isolation away from per-user roots.
+5. Collapse cache into a ram-drive-shaped `/dev/shm/${APP_NAME}` or `/dev/shm/${APP_NAME}-${USERNAME}` leaf.
 
 **Violating this rule is a critical path/privilege regression.**
 

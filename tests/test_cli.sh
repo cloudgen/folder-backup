@@ -68,12 +68,18 @@ run_test_cli() {
     assert_eq "TP-CLI-05 help --json exit 0" 0 "$?"
     assert_contains "TP-CLI-05 help json success" "$_out" '"type":"success"'
 
-    # TP-CLI-06 about json domain + storage, no channel
+    # TP-CLI-06 about json domain + cache folders, no channel
     _out=$(sh "${SCRIPT}" --json about 2>/dev/null)
     _ec=$?
     assert_eq "TP-CLI-06 about --json exit 0" 0 "$_ec"
     assert_contains "TP-CLI-06 type about" "$_out" '"type":"about"'
+    assert_contains "TP-CLI-06 cache_preferred field" "$_out" '"cache_preferred"'
+    assert_contains "TP-CLI-06 cache_preferred path" "$_out" '"cache_preferred":"/dev/shm/cache/cache-'"${APP_NAME}"'"'
+    assert_contains "TP-CLI-06 cache_fallback field" "$_out" '"cache_fallback"'
+    assert_contains "TP-CLI-06 cache_fallback leaf" "$_out" "cache-${APP_NAME}"
     assert_contains "TP-CLI-06 effective_storage" "$_out" '"effective_storage"'
+    assert_contains "TP-CLI-06 persistent_storage field" "$_out" '"persistent_storage"'
+    assert_contains "TP-CLI-06 persistent_storage leaf" "$_out" "/.local/${APP_NAME}"
     assert_contains "TP-CLI-06 backup_notation" "$_out" '"backup_notation"'
     assert_contains "TP-CLI-06 deposit_dir" "$_out" '"deposit_dir"'
     assert_contains "TP-CLI-06 sudoer_cli" "$_out" '"sudoer_cli"'
@@ -83,6 +89,14 @@ run_test_cli() {
     assert_contains "TP-CLI-06 restore_host_default" "$_out" '"restore_host_default"'
     assert_not_contains "TP-CLI-06 no CHECKSUM" "$_out" "CHECKSUM"
     assert_not_contains "TP-CLI-06 no SCRIPT_URL" "$_out" "SCRIPT_URL"
+
+    _hout=$(sh "${SCRIPT}" about 2>/dev/null)
+    assert_contains "TP-CLI-06 human Cache folder preferred" "$_hout" "Cache folder (preferred): /dev/shm/cache/cache-${APP_NAME}"
+    assert_contains "TP-CLI-06 human Cache folder fallback" "$_hout" "Cache folder (fallback):"
+    assert_contains "TP-CLI-06 human Persistence storage" "$_hout" "Persistence storage:"
+    assert_contains "TP-CLI-06 human Persistence path leaf" "$_hout" "/.local/${APP_NAME}"
+    assert_not_contains "TP-CLI-06 no Storage (effective) label" "$_hout" "Storage (effective)"
+    assert_not_contains "TP-CLI-06 no Storage (fallback) label" "$_hout" "Storage (fallback)"
 
     # TP-CLI-07 off-TTY empty argv = help (not install; case 2)
     _out=$(sh "${SCRIPT}" 2>/dev/null)
@@ -128,15 +142,31 @@ run_test_cli() {
     assert_eq "TP-CLI-11 env -u HOME version exit 0" 0 "$_ec"
     assert_contains "TP-CLI-11 env -u HOME version text" "$_out" "${PRODUCT_VERSION}"
 
-    # TP-CLI-12 storage isolation under temp HOME
+    # TP-CLI-12 cache folder exists; preferred is /dev/shm/cache/cache-${APP_NAME}
     ci_isolated_env
     _out=$(HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" sh "${SCRIPT}" --json about 2>/dev/null)
-    assert_contains "TP-CLI-12 isolated about has app in storage" "$_out" "${APP_NAME}"
+    assert_contains "TP-CLI-12 isolated about has app in cache" "$_out" "${APP_NAME}"
+    assert_contains "TP-CLI-12 cache_preferred path" "$_out" '"cache_preferred":"/dev/shm/cache/cache-'"${APP_NAME}"'"'
     _eff=$(printf '%s' "$_out" | sed -n 's/.*"effective_storage":"\([^"]*\)".*/\1/p' | head -n1)
     if [ -n "$_eff" ] && [ -d "$_eff" ]; then
         t_pass "TP-CLI-12 effective_storage directory exists"
     else
         t_fail "TP-CLI-12 effective_storage missing: '${_eff:-empty}'"
+    fi
+    case "$_eff" in
+        */cache/cache-${APP_NAME}|*/cache/cache-${APP_NAME}/*)
+            t_pass "TP-CLI-12 live cache uses cache-${APP_NAME} leaf"
+            ;;
+        *)
+            t_fail "TP-CLI-12 live cache unexpected: '${_eff:-empty}'"
+            ;;
+    esac
+    _pers=$(printf '%s' "$_out" | sed -n 's/.*"persistent_storage":"\([^"]*\)".*/\1/p' | head -n1)
+    assert_eq "TP-CLI-12 persistent_storage path" "${CI_HOME}/.local/${APP_NAME}" "$_pers"
+    if [ -n "$_pers" ] && [ -d "$_pers" ]; then
+        t_pass "TP-CLI-12 persistent_storage directory exists"
+    else
+        t_fail "TP-CLI-12 persistent_storage missing: '${_pers:-empty}'"
     fi
     ci_cleanup_env
 

@@ -352,7 +352,7 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | Invocation | `sudo -n` after passwordless fragment; non-interactive without ticket **fails closed** |
 | Scope | Deposit only — not package install, not shell |
 | Destination create | Deposit dir `/var/backup/folder-backup` **SHOULD** exist (admin or project command after elev) |
-| Staging | Per-user storage under `/dev/shm/folder-backup-<user>` (preferred), else `/tmp/...`, else cache fallback — Type 1 internals, **not** fragment operands |
+| Staging | Cache under `/dev/shm/cache/cache-folder-backup` (preferred), else `/tmp/cache/cache-folder-backup`, else XDG `cache-folder-backup` — Type 1 internals, **not** fragment operands |
 
 ### 2.5 Implementation Notes (this project)
 

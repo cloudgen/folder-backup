@@ -31,7 +31,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.12.0"
+# VERSION: hard-assign VERSION="1.14.0"
 #
 # =============================================================================
 
@@ -48,8 +48,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.12.0"
-: "${VERSION:=1.12.0}"
+VERSION="1.14.0"
+: "${VERSION:=1.14.0}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -847,79 +847,169 @@ util_backup() {
 }
 
 # =============================================================================
-# util_resolve_storage() - Storage resolver
+# util_preferred_cache_dir() - Policy preferred cache leaf (class B)
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Returns the best available volatile storage directory for prompt files.
-# Prefers /dev/shm (fastest, in-memory) → /tmp → fallback to XDG_CACHE_HOME.
-# All paths include ${USERNAME} to isolate per-user storage.
+# Returns the preferred RAM cache folder. Not a ram-drive project tree.
+# About human/JSON "Cache folder (preferred)" uses this path.
 #
-# Safe Variable Defaults
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# Last updated: 2026-08-30
+# =============================================================================
+util_preferred_cache_dir() {
+    : "${APP_NAME:=folder-backup}"
+    printf '%s' "/dev/shm/cache/cache-${APP_NAME}"
+}
+
+# =============================================================================
+# util_fallback_cache_dir() - Policy fallback cache leaf (class B)
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Returns the user XDG cache folder used when RAM/tmp cache leaves are unusable.
+# About human/JSON "Cache folder (fallback)" uses this path.
+#
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# Last updated: 2026-08-30
+# =============================================================================
+util_fallback_cache_dir() {
+    : "${APP_NAME:=folder-backup}"
+    : "${HOME:=/tmp}"
+    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
+    printf '%s' "${XDG_CACHE_HOME}/cache-${APP_NAME}"
+}
+
+# =============================================================================
+# util_resolve_storage() - Cache folder resolver
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Returns the best available volatile cache directory for scratch/staging.
+# Prefers /dev/shm/cache/cache-${APP_NAME} → /tmp/cache/cache-${APP_NAME}
+# → ${XDG_CACHE_HOME}/cache-${APP_NAME}. Create chosen leaf before echo.
 #
 # CIAO PRINCIPLES APPLIED:
-# - Caution: Must work correctly when the same computer is used by multiple
-#   different users (normal user, sudo, root, shared servers, containers).
-# - Intentionality: Never allow one user's files to be readable/writable by
-#   another user. Every directory creation must be ownership-aware.
-# - Anti-fragile: Survive permission conflicts and multi-user environments.
+# - Caution: Multi-user hosts; sticky /dev/shm/cache so sibling cache-<app>
+#   leaves can be created; if the preferred leaf is not writable, fall through.
+# - Intentional: One resolver SSOT. Cache leaves are cache-${APP_NAME}, not
+#   ram-drive-shaped /dev/shm/${APP_NAME} or /dev/shm/${APP_NAME}-${USERNAME}.
+# - Anti-fragile: Missing /dev/shm still works via /tmp then XDG.
 #
-# CRITICAL WARNING - MULTI-USER PROBLEM AI FREQUENTLY OVERLOOKS:
-# Many good applications on a computer are run by different users over time
-# (e.g. normal user → sudo → another login account). 
-#
-# AI assistants often simply "add mkdir -p" when solving a storage task without
-# considering ownership and cross-user write privilege. This approach is
-# untested and problematic — it can create directories owned by one user that
-# another user cannot read/write, or allow unintended access between users.
-#
-# That is why we intentionally isolate folders per user (${APP_NAME}-${USERNAME})
-# and why any change to this function must preserve strict per-user isolation.
-# Rewriting this with a generic shared folder is forbidden and has caused
-# permission bugs in the past.
+# CRITICAL WARNING - RAM-DRIVE COLLISION:
+# /dev/shm/${APP_NAME} and /dev/shm/${APP_NAME}-${USERNAME} look like project
+# trees on the RAM disk. Cache MUST live under /dev/shm/cache/cache-${APP_NAME}.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # Designed to be reusable in other projects.
 #
 # ECHO EXCEPTION (class B – function return-via-stdout):
-# echo of storage paths is a data return for $(util_resolve_storage) capture,
+# echo of cache paths is a data return for $(util_resolve_storage) capture,
 # not a product user message. Failures use out_die.
 # See requirement-shell-output-requirements.md §2.1.1.
 #
 # Lessons Learned (CIAO Reflection):
 # 2026-07-13: STORAGE_DIR was bare/unset on third fallback (INC-20260713-001 P1).
-# 2026-07-14: Third fallback uses XDG_CACHE_HOME / HOME/.cache / /tmp with
-#             per-user ${APP_NAME}-${USERNAME} isolation under set -u.
+# 2026-07-14: Third fallback uses XDG_CACHE_HOME / HOME/.cache under set -u.
 # 2026-07-16: Create chosen tier root before echo (fail-closed) for all tiers;
 #             wire from app_main (EFFECTIVE_STORAGE_DIR + TMPDIR). SM-STOR-01.
+# 2026-08-30: Preferred /dev/shm/cache/cache-${APP_NAME}; about labels are
+#             Cache folder (preferred)/(fallback), not Storage (effective)/(fallback).
 #
-# Last reviewed: 2026-07-16
+# Last updated: 2026-08-30
 # SSOT: requirement-shell-cli-storage.md
 # =============================================================================
 util_resolve_storage() {
-    # --- Safe Variable Defaults ----
-    # Defensive defaults - never assume globals are set
-    : "${USERNAME:=unknown}"
-    : "${APP_NAME:=app}"
+    : "${APP_NAME:=folder-backup}"
     : "${HOME:=/tmp}"
     : "${XDG_CACHE_HOME:=${HOME}/.cache}"
+    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/cache-${APP_NAME}}"
 
-    # Pick first available tier, then create root (all tiers fail-closed)
     _storage_candidate=""
     if [ -d "/dev/shm" ] && [ -w "/dev/shm" ]; then
-        _storage_candidate="/dev/shm/${APP_NAME}-${USERNAME}"
-    elif [ -w "/tmp" ]; then
-        _storage_candidate="/tmp/${APP_NAME}-${USERNAME}"
-    else
-        : "${STORAGE_DIR:=${XDG_CACHE_HOME}/${APP_NAME}-${USERNAME}}"
-        _storage_candidate="${STORAGE_DIR}"
+        if ! mkdir -m 1777 -p /dev/shm/cache 2>/dev/null; then
+            mkdir -p /dev/shm/cache 2>/dev/null || true
+        fi
+        _pref="/dev/shm/cache/cache-${APP_NAME}"
+        if mkdir -p "${_pref}" 2>/dev/null; then
+            if [ -w "${_pref}" ]; then
+                _storage_candidate="${_pref}"
+            fi
+        fi
     fi
-
-    if ! mkdir -p "${_storage_candidate}" 2>/dev/null; then
-        out_die "Cannot create storage directory ${_storage_candidate}"
+    if [ -z "${_storage_candidate}" ] && [ -w "/tmp" ]; then
+        if ! mkdir -m 1777 -p /tmp/cache 2>/dev/null; then
+            mkdir -p /tmp/cache 2>/dev/null || true
+        fi
+        _tmpc="/tmp/cache/cache-${APP_NAME}"
+        if mkdir -p "${_tmpc}" 2>/dev/null; then
+            if [ -w "${_tmpc}" ]; then
+                _storage_candidate="${_tmpc}"
+            fi
+        fi
+    fi
+    if [ -z "${_storage_candidate}" ]; then
+        _storage_candidate="${STORAGE_DIR}"
+        if ! mkdir -p "${_storage_candidate}" 2>/dev/null; then
+            out_die "Cannot create cache folder ${_storage_candidate}"
+        fi
+        if [ ! -w "${_storage_candidate}" ]; then
+            out_die "Cannot create cache folder ${_storage_candidate}"
+        fi
     fi
     echo "${_storage_candidate}"
-    unset _storage_candidate
+    unset _storage_candidate _pref _tmpc
+    return 0
+}
+
+# =============================================================================
+# util_persistent_storage_dir() - Policy persistence leaf (class B)
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Returns durable Type 0 persistence storage: ${HOME}/.local/${APP_NAME}.
+# Not the install binary (${HOME}/.local/bin) and not cache.
+#
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# Last updated: 2026-08-30
+# =============================================================================
+util_persistent_storage_dir() {
+    : "${APP_NAME:=folder-backup}"
+    : "${HOME:=/tmp}"
+    printf '%s' "${HOME}/.local/${APP_NAME}"
+}
+
+# =============================================================================
+# util_resolve_persistent_storage() - Persistence storage resolver
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Creates and returns ${HOME}/.local/${APP_NAME} for durable product files.
+# Create-before-return; fail closed.
+#
+# ECHO EXCEPTION (class B – function return-via-stdout):
+# echo of the persistence path is a data return for $(…) capture.
+# See requirement-shell-output-requirements.md §2.1.1.
+#
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# Last updated: 2026-08-30
+# =============================================================================
+util_resolve_persistent_storage() {
+    : "${APP_NAME:=folder-backup}"
+    : "${HOME:=/tmp}"
+    _persist=$(util_persistent_storage_dir)
+    if ! mkdir -p "${_persist}" 2>/dev/null; then
+        out_die "Cannot create persistence storage ${_persist}"
+    fi
+    if [ ! -w "${_persist}" ]; then
+        out_die "Cannot create persistence storage ${_persist}"
+    fi
+    echo "${_persist}"
+    unset _persist
     return 0
 }
 
@@ -2054,8 +2144,8 @@ fb_backup() {
         out_die "Could not allocate archive name under ${_dest_dir}"
     fi
 
-    # Stage at one path segment under storage root so sudoers wildcards match
-    # (e.g. /dev/shm/folder-backup-user/NAME.tar.gz → /dev/shm/folder-backup-*/*).
+    # Stage at one path segment under the resolved cache root
+    # (e.g. /dev/shm/cache/cache-folder-backup/NAME.tar.gz).
     _stage_file="${EFFECTIVE_STORAGE_DIR}/${_archive_name}"
     _parent=$(dirname -- "${_source_abs}")
     _leaf=$(basename -- "${_source_abs}")
@@ -3978,7 +4068,7 @@ app_version() {
 # - requirement-domain-folder-backup.md (about domain fields)
 # - requirement-shell-cli-storage.md
 #
-# Last reviewed: 2026-08-03
+# Last updated: 2026-08-30
 # =============================================================================
 app_about() {
     : "${JSON:=0}"
@@ -4004,7 +4094,12 @@ app_about() {
     if [ -z "${EFFECTIVE_STORAGE_DIR:-}" ]; then
         EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
     fi
-    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/${APP_NAME}-${USERNAME}}"
+    : "${STORAGE_DIR:=$(util_fallback_cache_dir)}"
+    _cache_pref=$(util_preferred_cache_dir)
+    _cache_fb=$(util_fallback_cache_dir)
+    if [ -z "${PERSISTENT_STORAGE_DIR:-}" ]; then
+        PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)
+    fi
 
     _installed="false"
     inst_is_installed && _installed="true"
@@ -4074,8 +4169,11 @@ app_about() {
             "shell" "${_shell}" \
             "interactive" "${_interactive}" \
             "user" "${_user}" \
+            "cache_preferred" "${_cache_pref}" \
+            "cache_fallback" "${_cache_fb}" \
             "effective_storage" "${EFFECTIVE_STORAGE_DIR}" \
             "storage_dir" "${STORAGE_DIR}" \
+            "persistent_storage" "${PERSISTENT_STORAGE_DIR}" \
             "backup_root" "${BACKUP_ROOT}" \
             "backup_notation" "${BACKUP_NOTATION}" \
             "deposit_dir" "${BACKUP_ROOT}/${BACKUP_NOTATION}" \
@@ -4132,8 +4230,9 @@ app_about() {
         out_info "TTY / Interactive: no"
     fi
     out_empty_line
-    out_info "Storage (effective): ${EFFECTIVE_STORAGE_DIR}"
-    out_info "Storage (fallback):  ${STORAGE_DIR}"
+    out_info "Cache folder (preferred): ${_cache_pref}"
+    out_info "Cache folder (fallback):  ${_cache_fb}"
+    out_info "Persistence storage:      ${PERSISTENT_STORAGE_DIR}"
     out_empty_line
     out_info "Backup root:       ${BACKUP_ROOT}"
     out_info "Backup notation:   ${BACKUP_NOTATION}"
@@ -4474,10 +4573,11 @@ app_main() {
     : "${HOME:=/tmp}"
     : "${XDG_CACHE_HOME:=${HOME}/.cache}"
     : "${APP_NAME:=folder-backup}"
-    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/${APP_NAME}-${USERNAME}}"
+    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/cache-${APP_NAME}}"
 
     EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
-    export EFFECTIVE_STORAGE_DIR STORAGE_DIR
+    PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)
+    export EFFECTIVE_STORAGE_DIR STORAGE_DIR PERSISTENT_STORAGE_DIR
     export TMPDIR="${EFFECTIVE_STORAGE_DIR}"
 
     # Case 2: empty argv → TTY numbered list; off-TTY help

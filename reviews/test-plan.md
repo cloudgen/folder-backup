@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.12.0  
-**Last plan update:** 2026-08-28  
-**Last suite run:** `./tests/run.sh` (1.12.0: PASS=307 FAIL=0 SKIP=2 — case 2 TTY empty argv + flags-only --json)
+**Product VERSION:** 1.14.0  
+**Last plan update:** 2026-08-30  
+**Last suite run:** `./tests/run.sh` (1.14.0: PASS=323 FAIL=0 SKIP=2 — cache folder + persistence `${HOME}/.local/folder-backup/`)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -20,7 +20,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Off-TTY empty argv = help (not install) | have | TP-CLI-07 |
 | TTY empty argv + `menu`/`main` list / off-TTY help | have | TP-CLI-13..16 |
 | Unknown + quiet + set -u HOME | have | TP-CLI-08..11 |
-| Storage isolation | have | TP-CLI-12 |
+| Cache folder + persistence `${HOME}/.local/folder-backup/` | have | TP-CLI-06 · TP-CLI-12 |
 | No online verbs / no SCRIPT_URL UX | have | TP-CLI-04, TP-CLI-10 |
 | Local install / idempotent / uninstall / mode 0755 | have | TP-LC-01..10 |
 | Help lists sudoers verbs (print / install-script / remove draft / **generate** / submit + public inbound) | have | TP-CLI-04 |
@@ -53,13 +53,13 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-03 | version JSON | test_cli | requirement-shell-output-requirements | **have** |
 | TP-CLI-04 | help local verbs; print-sudoers + install-script + remove-project-sudoers + generate-sudoer-request + submit-sudoer-request; no online | test_cli | requirement-shell-cli-interface · domain | **have** |
 | TP-CLI-05 | help JSON short | test_cli | requirement-shell-output-requirements | **have** |
-| TP-CLI-06 | about JSON storage + domain fields | test_cli | requirement-shell-cli-storage · domain | **have** |
+| TP-CLI-06 | about JSON cache + persistent_storage + human Cache folder + Persistence storage + domain fields | test_cli | requirement-shell-cli-storage · domain | **have** |
 | TP-CLI-07 | off-TTY empty argv help (not install) | test_cli | requirement-shell-cli-default-interaction | **have** |
 | TP-CLI-08 | unknown fail-closed | test_cli | requirement-shell-cli-interface | **have** |
 | TP-CLI-09 | quiet suppresses version | test_cli | requirement-shell-output-requirements | **have** |
 | TP-CLI-10 | online verbs rejected | test_cli | requirement-bootstrap-chain | **have** |
 | TP-CLI-11 | env -u HOME version | test_cli | class / defensive | **have** |
-| TP-CLI-12 | storage isolation | test_cli | requirement-shell-cli-storage | **have** |
+| TP-CLI-12 | cache folder exists; persistence `${HOME}/.local/folder-backup` exists | test_cli | requirement-shell-cli-storage | **have** |
 | TP-CLI-13 | interactive empty argv **and** `menu` print four labels + `9. Exit` | test_cli | **shell-cli-default-interaction** AC-3 | **have** |
 | TP-CLI-14 | interactive `menu --json` still prints the list | test_cli | **shell-cli-default-interaction** AC-4 | **have** |
 | TP-CLI-15 | non-interactive `menu` is help; `--json` JSON help; flags-only `--json` JSON help (not the list) | test_cli | **shell-cli-default-interaction** AC-5 | **have** |

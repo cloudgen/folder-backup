@@ -300,7 +300,7 @@ Errors **MUST** use structured error emission with stable codes when feasible (e
 | **RESTORE_HOST_DEFAULT** | `hard-disk` (reverse of ram-drive-first) |
 | **PROJECTS_ROOT** | env or auto-detect (e.g. `…/prjs`) |
 | **RAM_ROOT** | `/dev/shm` |
-| **Stage roots** | `/dev/shm/folder-backup-<user>`, `/tmp/folder-backup-<user>`, cache fallback |
+| **Stage roots** | `/dev/shm/cache/cache-folder-backup` (preferred), `/tmp/cache/cache-folder-backup`, XDG `cache-folder-backup` fallback |
 | **Archive pattern** | `${SOURCE_FOLDER_NAME}-YYYYMMDD-N.tar.gz` |
 | **Worked sample basename** | `genesis-template-20260803-3.tar.gz` |
 | **Verify modes implemented** | `dest_tar_list+size`, `stage_counts+dest_size` |

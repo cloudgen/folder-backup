@@ -1,8 +1,8 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-08-28 (1.12.0)  
-**Product VERSION:** 1.12.0  
-**Suite:** `tests/run.sh` (PASS=307 FAIL=0 SKIP=2)
+**Updated:** 2026-08-30 (1.14.0)  
+**Product VERSION:** 1.14.0  
+**Suite:** `tests/run.sh` (PASS=323 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
@@ -23,7 +23,7 @@
 | requirement-shell-modular-function-design | shell | (indirect) | `fb_print_sudoers*`, `fb_remove_project_sudoers`, deposit/restore |
 | requirement-shell-idempotency | shell | TP-LC-03,07 · TP-FOLDER-BACKUP-06,08 | Re-install; next-N |
 | requirement-shell-interactive-vs-noninteractive | shell | TP-LC-05 · TP-FOLDER-BACKUP-15 · **15b** | Uninstall / remove-project-sudoers confirm; multi-draft non-interactive path required |
-| requirement-shell-cli-storage | shell | TP-CLI-12 · domain staging | Isolation + per-user stage roots |
+| requirement-shell-cli-storage | shell | TP-CLI-06 · TP-CLI-12 · domain staging | Cache folder **and** persistence `${HOME}/.local/folder-backup/` |
 | requirement-domain-folder-backup | domain | TP-FOLDER-BACKUP-01,02,09,14,15,19,20,**21**,**21b**,**23**,**23b**,**24** · TP-CLI-04,06 | Surface verbs/help/about; submit public inbound; generate-sudoer-request; host-probe add/update |
 
 **Checklist / mold (harness, not product suite):** **S11–S12** elev tables (when claimed); **S13** trust tier; **S14** emit; **S15** convert/inbound; **S16** independent generate dest — agent path `SK-CREATE-SUDOERS-FILE` / `CL-CREATE-SUDOERS-SECURITY`. Operator errors: `SK-OPERATOR-READABLE-ERROR` / `CL-OPERATOR-READABLE-ERROR`.

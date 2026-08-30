@@ -4,9 +4,9 @@
 **Class:** software-development · domain SSOT present · **local-only** install channel (online package intentionally absent).  
 **Always load first:** `reviews/lessons.md`
 
-**Last plan update:** 2026-08-28  
-**Ship unit VERSION:** 1.12.0  
-**Suite baseline:** PASS=307 FAIL=0 SKIP=2 (see `reviews/test-plan.md`)
+**Last plan update:** 2026-08-30  
+**Ship unit VERSION:** 1.14.0  
+**Suite baseline:** PASS=323 FAIL=0 SKIP=2 (see `reviews/test-plan.md`)
 
 ---
 
@@ -46,7 +46,7 @@
 | Modular design | `requirement-shell-modular-function-design.md` | `fb_*` domain prefix |
 | Idempotency | `requirement-shell-idempotency.md` | Re-install; next-N archives |
 | Interactive modes | `requirement-shell-interactive-vs-noninteractive.md` | Uninstall / remove-project-sudoers confirm |
-| CLI storage | `requirement-shell-cli-storage.md` | Per-user staging isolation |
+| CLI storage | `requirement-shell-cli-storage.md` | Cache folder **and** persistence `${HOME}/.local/folder-backup/` |
 | Domain | `requirement-domain-folder-backup.md` | Four pillars; sudoers verbs |
 | Ops backup | `requirement-folder-archive-backup.md` | backup/restore/verify |
 

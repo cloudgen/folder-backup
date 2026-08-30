@@ -2,7 +2,7 @@
 
 **Product:** folder-backup (POSIX `/bin/sh` local self-managed CLI — folder tar.gz backup with narrow sudo deposit)  
 **Workspace state:** Specialized product law (left genesis); **software-development** class; bootstrap **cli-template → folder-backup** (domain extend; online install **intentionally absent** on A and B).  
-**Updated:** 2026-08-28
+**Updated:** 2026-08-30
 
 | ID / key | Title | Area | Status | Path | Updated |
 |----------|-------|------|--------|------|---------|
@@ -23,7 +23,7 @@
 | requirement-shell-modular-function-design | Single-file modular prefixes (`out_`/`inst_`/`app_`/`fb_`) | shell | Active | `requirement-shell-modular-function-design.md` | 2026-08-03 |
 | requirement-shell-idempotency | Re-run safety; archive next-N no overwrite | shell | Active | `requirement-shell-idempotency.md` | 2026-08-03 |
 | requirement-shell-interactive-vs-noninteractive | Interactive vs non-interactive / confirm policy | shell | Active | `requirement-shell-interactive-vs-noninteractive.md` | 2026-08-03 |
-| requirement-shell-cli-storage | Scratch/cache resolve + backup staging root | shell | Active | `requirement-shell-cli-storage.md` | 2026-08-03 |
+| requirement-shell-cli-storage | Cache folder **and** persistence `${HOME}/.local/folder-backup/`; about Cache folder + Persistence storage | shell | Active (1.2.0) | `requirement-shell-cli-storage.md` | 2026-08-30 |
 | requirement-domain-folder-backup | Domain **surface** SSOT (four pillars); ops defer to folder-archive-backup; submit public inbound; **host-probe add/update**; **independent generate-sudoer-request**; grant-emit **test-purpose** (help apart) | domain | Active (1.6.2) | `requirement-domain-folder-backup.md` | 2026-08-23 |
 
 ## Intentionally absent (by design — inherited from cli-template)
