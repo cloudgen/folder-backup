@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.7.0)  
+**Status**: Active (Version 1.8.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -58,7 +58,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 
 | Purpose | Verbs |
 |---------|-------|
-| **Operational** | `backup`, `restore`, `remove-project-sudoers`, `submit-sudoer-request`; `menu` / `main` when routed |
+| **Operational** | `backup`, `restore`, `remove-project-sudoers`, `submit-sudoer-request`; `menu` / `main` when routed. Grant/draft setup verbs share the **sudoers** family row on the numbered list (`requirement-shell-cli-default-interaction`) |
 | **Self-managed** | `install`, `uninstall`, `where-is-me` |
 | **Diagnostics** | `version`, `about`, `help` |
 | **Test-purpose** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
@@ -95,12 +95,12 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
 | `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | **Operational.** Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
 | `restore` | Type 0 (+ Type 1 stage fetch) | `fb_restore` (domain) | **Operational.** Put an archive back onto the hard-disk projects tree |
-| `print-sudoers` | Type 0 | `fb_print_sudoers` (domain) | **Test-purpose.** Emit sudoers fragment for admin to install under `/etc/sudoers.d/` — **does not** write `/etc` itself. Listed apart in help; **not** on the main menu |
-| `print-sudoers-install-script` | Type 0 | `fb_print_sudoers_install_script` (domain) | **Test-purpose.** Write admin handoff script under `/dev/shm` or temp — **does not** write `/etc`. Listed apart in help; **not** on the main menu |
-| `remove-project-sudoers` | Type 0 | `fb_remove_project_sudoers` (domain) | **Operational.** Remove the local grant draft only (not `/etc`) |
-| `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Test-purpose.** **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound. Listed apart in help; **not** on the main menu |
-| `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | **Operational.** Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound |
-| `menu` | Type 0 | `app_main_menu` | Numbered list of live **operational** work commands (`requirement-shell-cli-default-interaction`). Same list as interactive empty argv. **MUST NOT** list version, about, self-managed, or test-purpose verbs |
+| `print-sudoers` | Type 0 | `fb_print_sudoers` (domain) | **Test-purpose.** Emit sudoers fragment for admin to install under `/etc/sudoers.d/` — **does not** write `/etc` itself. Listed apart in help; **not** on the **main** menu; **on** the sudoers submenu. Live CLI verb |
+| `print-sudoers-install-script` | Type 0 | `fb_print_sudoers_install_script` (domain) | **Test-purpose.** Write admin handoff script under `/dev/shm` or temp — **does not** write `/etc`. Listed apart in help; **not** on the **main** menu; **on** the sudoers submenu. Live CLI verb |
+| `remove-project-sudoers` | Type 0 | `fb_remove_project_sudoers` (domain) | **Operational.** Remove the local grant draft only (not `/etc`). **Not** on the **main** menu; **on** the sudoers submenu. Live CLI verb |
+| `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Test-purpose.** **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound. Listed apart in help; **not** on the **main** menu; **on** the sudoers submenu. Live CLI verb |
+| `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | **Operational.** Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound. **Not** on the **main** menu; **on** the sudoers submenu. Live CLI verb |
+| `menu` | Type 0 | `app_main_menu` | Numbered list of live **operational** work commands plus family **sudoers** (`requirement-shell-cli-default-interaction`). Same list as interactive empty argv. **MUST NOT** list version, about, self-managed, or test-purpose verbs on the **main** list. **`sudoers` is not a command** |
 | `main` | Type 0 | `app_main_menu` | Alias of `menu`. **MUST NOT** appear as a choice on its own list. |
 
 #### Global flags (normative wiring)
@@ -164,7 +164,8 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 6. Put full domain archive semantics only here and omit the domain SSOT.  
 7. Add a second submit verb (`submit-sudoer`) without routing + help, or invent inbound `mkdir` as this CLI’s job.  
 8. Restore Type N always-help on empty argv while case 2 is Active, or drop `menu`/`main` routing.  
-9. Mix test-purpose verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on the numbered main menu.
+9. Mix test-purpose verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on the numbered **main** menu (they belong on the sudoers submenu).  
+10. Wire `sudoers` as a live dispatcher token, or drop a grant/draft setup verb from the dispatcher.
 
 **Violating this rule is a critical CLI interface regression.**
 
@@ -182,7 +183,8 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | AC-6 | `submit-sudoer-request` is Type 0, routed, listed in help; does not write `/etc` or create inbound |
 | AC-7 | `generate-sudoer-request` is Type 0, routed, listed in help; independent of submit; dest is invoking-user readable; does not write `/etc` or inbound |
 | AC-8 | `menu` and `main` are routed and listed in help; interactive empty argv opens the same list (`requirement-shell-cli-default-interaction`) |
-| AC-9 | Help lists test-purpose `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` **apart** from operational verbs; those three are **not** main-menu rows. **Gap** until `app_help` splits headings |
+| AC-9 | Help lists test-purpose `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` **apart** from operational verbs; those three are **not** **main**-menu rows (they live on the sudoers submenu). **Gap** until `app_help` splits headings |
+| AC-10 | Five grant/draft setup verbs remain routed live CLI commands; `sudoers` is **not** a dispatcher token |
 
 ---
 
@@ -224,9 +226,10 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | 2026-08-23 | Active 1.5.0 | Restore / print-sudoers-install-script / remove-project-sudoers listed; test-purpose grant-emit verbs apart in help (AC-9) |
 | 2026-08-23 | Active 1.6.0 | `menu` / `main` routed (`app_main_menu`); empty argv stays help |
 | 2026-08-28 | Active 1.7.0 | Case 2: TTY empty argv = numbered list; off-TTY help; zero-arguments Withdrawn |
+| 2026-09-03 | Active 1.8.0 | Grant/draft setup verbs stay live CLI commands; numbered **main** list uses family **sudoers** (submenu); `sudoers` not dispatched; AC-10 |
 
 ---
 
-**Last Updated**: 2026-08-28  
+**Last Updated**: 2026-09-03  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

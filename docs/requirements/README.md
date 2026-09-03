@@ -9,7 +9,7 @@ Authoritative specialized product law for **folder-backup** lives here.
 | Field | Value |
 |-------|--------|
 | Product / `APP_NAME` | `folder-backup` |
-| Version SSOT | `1.15.0` (ship unit hard-assign) |
+| Version SSOT | `1.16.0` (ship unit hard-assign) |
 | Ship unit | `src/folder-backup` |
 | Default install | `~/.local/bin/folder-backup` |
 | Install mode | **Local-only** |

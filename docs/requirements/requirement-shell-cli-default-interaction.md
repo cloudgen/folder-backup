@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-default-interaction.md  
-**Status**: Active (Version 1.4.0)  
+**Status**: Active (Version 1.5.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-default-interaction`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-DEFAULT-INTERACTION`  
@@ -9,11 +9,11 @@
 
 This requirement is the **product Single Source of Truth** for folder-backup’s **claimed default interactive main menu** and for **empty-argv** dispatcher meaning.
 
-The product is **not** online-installable. There is **no** Active specialized zero-argument requirement. **Case 2** applies: on a real terminal, a bare `folder-backup` run opens the numbered work list; off-TTY that same bare run prints help. Named commands **`menu`** and **`main`** open the same list.
+The product is **not** online-installable. There is **no** Active specialized zero-argument requirement. **Case 2** applies: on a real terminal, a bare `folder-backup` run opens the numbered work list; off-TTY that same bare run prints help. Named commands **`menu`** and **`main`** open the same list. Related grant/draft commands sit behind one **family** row **`sudoers`** (submenu). Each grant/draft setup remains a **live CLI verb** (`generate-sudoer-request`, `submit-sudoer-request`, `print-sudoers`, `print-sudoers-install-script`, `remove-project-sudoers`). **`sudoers` is not a live dispatcher token.**
 
 ### 1.1 Human-facing
 
-**In one sentence:** At a real terminal, type `folder-backup` with no extra words to see a numbered list of live work commands; in a pipe or script that same empty run prints help.
+**In one sentence:** At a real terminal, type `folder-backup` with no extra words to see a numbered list of live work commands; pick **sudoers** for grant and draft setup; in a pipe or script that same empty run prints help.
 
 | Box | Meaning | Example |
 |-----|---------|---------|
@@ -23,11 +23,12 @@ The product is **not** online-installable. There is **no** Active specialized ze
 
 | Includes | Excludes |
 |----------|----------|
-| Numbered live work commands | `help` as a row |
+| Numbered live work commands plus family **sudoers** | `help` as a row |
 | Line `command: what it does` | `install`, `uninstall`, `where-is-me`, `version`, `about` |
-| Exit as **9** (four command rows) | `setup`, `menu`/`main` as a choice |
+| Sudoers submenu (Back **8**, Exit **9**) | `setup`, `menu`/`main` as a choice |
+| Exit as **9** (three main rows) | A live `sudoers` CLI command |
 | Bare run on a real terminal | Install-ensure on empty argv |
-| `menu` / `main` as the same list | Test-purpose: `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
+| `menu` / `main` as the same list | Test-purpose grant-emit verbs on the **main** list (they live on the submenu) |
 
 | Surface | What you open | What for |
 |---------|---------------|----------|
@@ -37,8 +38,11 @@ The product is **not** online-installable. There is **no** Active specialized ze
 
 | You do… | What it means | What you type |
 |---------|---------------|---------------|
-| Open the list at a prompt | The program prints **folder-backup**(*live version*) then numbers 1–4 then 9 Exit. On a real terminal the name is bold, the version italic, and each “what it does” line after the colon is italic and light gray. `--json` on `menu`/`main` is ignored on a real terminal. | `folder-backup` or `folder-backup menu` |
+| Open the list at a prompt | The program prints **folder-backup**(*live version*) then numbers 1–3 then 9 Exit. On a real terminal the name is bold, the version italic, and each “what it does” line after the colon is italic and light gray. `--json` on `menu`/`main` is ignored on a real terminal. | `folder-backup` or `folder-backup menu` |
 | Pack a folder from the list | Choose backup, then give the folder (one field at a time) or read Next. | `1` then a source folder path |
+| Set up a grant or draft | Family row **3**, then a number. **1** writes JSON you can read; **2** queues it inbound; **3** emits sudoers text; **4** writes the admin install script; **5** removes the local draft. Each of those names is also a typed command. | `3` then `1` — or `folder-backup generate-sudoer-request` |
+| Leave the grant list | Back to the start list | `8` |
+| Leave the menu | Exit | `9` |
 | Run a bare invocation in CI | No prompt. Human help, or JSON help with `--json` and no command. | `folder-backup </dev/null` |
 
 ---
@@ -71,20 +75,56 @@ Measure interactive capability **outside functions** (`TTY=1` only when stdin an
 
 `--quiet` off-TTY is still the help path (do not swallow that help). Reuse `app_help` — **MUST NOT** invent a second JSON help catalog.
 
-### 2.3 Numbered list (when the case says menu)
+### 2.3 Main menu
 
 0. **Look (mandatory):** the numbered list **MUST** use the default CLI main menu style. Header **MUST** print live `folder-backup(VERSION)` (no space; same Config scalars as `version`) then the board title. On a TTY the name is **bold** and the version *italic*. Each numbered `explain` **MUST** be *italic* and light gray on a TTY (SGR 3 + 37). Number and command name stay unstyled. Off-TTY / JSON: **plain** — **MUST NOT** emit CSI. Typical helpers: `util_app_ident` then `out_menu_choice`. **MUST NOT** a bare `folder-backup` on that header. **MUST NOT** print `explain` unstyled on a TTY.  
-1. Print a **numbered list** at the start of the interactive menu path.  
+1. Print a **numbered list** of **daily backup work** plus one **family** row, then **Exit**.  
 2. Each command row is one live **operational** command that is **not** excluded below, numbered **1 … N** in kept-list order.  
-3. Printed line **MUST** be the kept-list **human-readable** value: **`{{short-descript}}: {{explain}}`** (short-descript = the command token).  
-4. **MUST NOT** list `help`, `menu`, `main`, gap/forbidden names, **diagnostics** (`version`, `about`), **self-managed / install-setup** tokens (`install`, `uninstall`, `where-is-me`, `setup`), or **test-purpose** verbs. On this product the test-purpose verbs **MUST** be `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request`. Those stay on `help`, listed apart from operational work.  
-5. Accept a **number** or the **verb token**. Extra operands: prompt **one field at a time** on TTY, or print `Next: folder-backup <verb> …` and return.  
-5b. **Do not capture `read`:** the choice **MUST** be read in the **current shell**. Typical: `prompt_line "Choice"` then `_pick="${_prompt_line}"`. **MUST NOT** `_pick=$(prompt_line …)` / `_pick=$(prompt_ask …)` / `$()` / backticks of **any** function whose body contains `read` (do-not-capture-read / **PP-A-22**). stderr+$() is **not** a license.  
-6. Last extra row is **Exit** (not a command). For this product **N = 4**, so Exit **MUST** be **9**. Unused integers 5–8 are omitted. Exit row is not a command explain; gray-italic is not required on `Exit`.  
-7. Exit number, `exit`, or `quit` returns 0 with no further prompt.  
-8. Typical handler: `app_main_menu`.
+3. Printed command-row text **MUST** be the kept-list **human-readable** value: **`{{short-descript}}: {{explain}}`** (short-descript = the command token). The family row **MUST** use this file’s table (it is not a routed-verb).  
+4. **MUST NOT** list `help`, `menu`, `main`, gap/forbidden names, **diagnostics** (`version`, `about`), **self-managed / install-setup** tokens (`install`, `uninstall`, `where-is-me`, `setup`), or **test-purpose** verbs on the **main** list. On this product the test-purpose verbs **MUST** be `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request`. Those stay on `help`, listed apart from operational work, and live on the sudoers submenu (§2.4).  
+5. **MUST NOT** list the five sudoers verbs on the **main** list (they live on the submenu).  
+6. Accept a **number** or the **verb token**. Extra operands: prompt **one field at a time** on TTY, or print `Next: folder-backup <verb> …` and return.  
+6b. **Do not capture `read`:** the choice **MUST** be read in the **current shell**. Typical: `prompt_line "Choice"` then `_pick="${_prompt_line}"`. **MUST NOT** `_pick=$(prompt_line …)` / `_pick=$(prompt_ask …)` / `$()` / backticks of **any** function whose body contains `read` (do-not-capture-read / **PP-A-22**). stderr+$() is **not** a license.  
+7. Main command rows **N = 3** (two verbs + one family). Exit **MUST** be **9**. Unused integers **4–8** are omitted. Exit row is not a command explain; gray-italic is not required on `Exit`.  
+8. Exit number, `exit`, or `quit` returns 0 with no further prompt.  
+9. **`sudoers` is not a live CLI command.** Choosing **3** or typing `sudoers` at the pick prompt **MUST** open the submenu (§2.4). `folder-backup sudoers` **MUST** remain unknown.  
+10. Typing a submenu verb at the **main** pick prompt **MAY** run that handler (shortcut).  
+11. Typical handler: `app_main_menu`.
 
-### 2.4 Implementation Notes (this product)
+Normative **main** order:
+
+| # | Token | Label |
+|---|-------|-------|
+| *(header)* | — | `**folder-backup**(*VERSION*) — numbered list of live work commands` |
+| 1 | `backup` | `backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup` |
+| 2 | `restore` | `restore: Put an archive back onto the hard-disk projects tree` |
+| 3 | family `sudoers` | `sudoers: Grant and drafts` |
+| **9** | **Exit** | leave the menu |
+
+### 2.4 Sudoers submenu
+
+Choosing main **3** / `sudoers` **MUST** print a second numbered list of the grouped live verbs. Submenu header **MUST** use the same `folder-backup(VERSION)` nametag. Explain text **MUST** follow the same default CLI main menu style as the main list (*italic* + light gray SGR **3** + **37** on a TTY via `out_menu_choice`). **MUST NOT** hang off-TTY (submenu exists only on the interactive menu path).
+
+The five grouped verbs are the **different types of sudoer-file setup**. Each **MUST** remain a live Type 0 CLI verb (`folder-backup generate-sudoer-request`, and so on). The submenu is a picker, not a second dispatcher.
+
+| # | Command | Label |
+|---|---------|-------|
+| 1 | `generate-sudoer-request` | `generate-sudoer-request: Write a local JSON grant you can read without sudo` |
+| 2 | `submit-sudoer-request` | `submit-sudoer-request: Hand the JSON grant to the approval queue` |
+| 3 | `print-sudoers` | `print-sudoers: Write a grant file an admin can install` |
+| 4 | `print-sudoers-install-script` | `print-sudoers-install-script: Write an admin script to install or remove the grant` |
+| 5 | `remove-project-sudoers` | `remove-project-sudoers: Remove the local grant draft only` |
+| **8** | **Back** | return to the main list (not a command) |
+| **9** | **Exit** | leave the menu |
+
+Submenu command rows **N = 5**. Exit **MUST** be **9**. **Back MUST** be **8**. Unused **6** and **7** are omitted.
+
+- **8** / `back` / `Back` returns to the main list (does not run a handler).  
+- **9** / `exit` / `quit` returns 0 from `menu` (same as main Exit).  
+- A listed number or verb runs that handler, then returns 0 from `menu` (one command, then done).  
+- All five grouped verbs **MUST** appear here. **MUST NOT** put install/version/about/`help`/`menu`/`main` on this list.
+
+### 2.5 Implementation Notes (this product)
 
 | Item | Value |
 |------|--------|
@@ -93,24 +133,25 @@ Measure interactive capability **outside functions** (`TTY=1` only when stdin an
 | **Case** | **2** (no Active zero-arg REQ; local-only) |
 | **Empty argv owner** | **this file** (TTY menu; off-TTY help) |
 | **Menu verbs** | empty argv on TTY; `menu` (preferred named); `main` alias |
-| **Handler** | `app_main_menu` |
+| **Handler** | `app_main_menu`; submenu printer/loop under the same `app_main_menu_*` family |
+| **Family row** | `sudoers` — menu-only; **not** dispatched |
 | **Ship unit** | Implemented — `app_main` empty argv and `menu` / `main` call `app_main_menu` |
 | **Kept list** | `reviews/cli-routed-verb-table.md` |
 | **Look** | Default CLI main menu style — header `folder-backup(VERSION)`; TTY italic + light-gray explain; `out_menu_choice` / `util_app_ident` |
 | **Choice read** | Current-shell `prompt_line` → `_prompt_line` (not `$()`) |
-| **N** | 4 |
+| **N** | 3 (main) · 5 (submenu) |
 | **Exit** | 9 |
-| **Test-purpose (this product)** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
+| **Back** | 8 (submenu only) |
+| **Test-purpose (this product)** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` — off the **main** list; on the sudoers submenu |
 | **Withdrawn peer** | `requirement-shell-cli-zero-arguments` |
 
-**Normative menu draft** (operational only; self-managed, diagnostics, and test-purpose omitted). README / this fence transcribe markdown emphasis; the live TTY uses SGR, never paste CSI here:
+**Normative menu draft** (daily work + family; self-managed, diagnostics omitted). README / this fence transcribe markdown emphasis; the live TTY uses SGR, never paste CSI here:
 
 ```text
 [INFO] **folder-backup**(*VERSION*) — numbered list of live work commands
 1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup
 2. restore: Put an archive back onto the hard-disk projects tree
-3. remove-project-sudoers: Remove the local grant draft only
-4. submit-sudoer-request: Hand the JSON grant to the approval queue
+3. sudoers: Grant and drafts
 9. Exit
 ```
 
@@ -121,25 +162,30 @@ folder-backup
 folder-backup menu
 folder-backup main
 folder-backup menu --json
+folder-backup generate-sudoer-request
+folder-backup submit-sudoer-request
+folder-backup print-sudoers
+folder-backup print-sudoers-install-script
+folder-backup remove-project-sudoers
 ```
 
-On a real terminal the first three **MUST** show the list. `folder-backup menu --json` on a real terminal **MUST** still show the list. Off-TTY, `folder-backup` and `folder-backup menu` **MUST** call help; `folder-backup --json` and `folder-backup menu --json` **MUST** call JSON help.
+On a real terminal the first three **MUST** show the list. `folder-backup menu --json` on a real terminal **MUST** still show the list. Off-TTY, `folder-backup` and `folder-backup menu` **MUST** call help; `folder-backup --json` and `folder-backup menu --json` **MUST** call JSON help. The five grant/draft names **MUST** run as live commands. `folder-backup sudoers` **MUST** fail as unknown.
 
-### 2.5 Why This Requirement Exists (CIAO)
+### 2.6 Why This Requirement Exists (CIAO)
 
-- **Principle 2 – Intentional**: Empty argv has one owner (this file, case 2). The list also has named commands.  
+- **Principle 2 – Intentional**: Empty argv has one owner (this file, case 2). Daily backup work is the start list; grant/draft setup is one extra pick.  
 - **Principle 1 – Caution**: Scripts do not hang; empty argv never install-ensure.  
 - **Principle 16 – Interactive vs non-interactive**: TTY vs pipe is explicit.  
-- **Principle 10 – Least privilege**: Install/uninstall, version/about, and test-purpose grant-emit verbs are not on the work list.
+- **Principle 10 – Least privilege**: Install/uninstall, version/about stay off both lists; `sudoers` is not a dispatcher token.
 
 ---
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - **Caution:** Do not hang off-TTY; do not steal empty argv for install.  
-- **Intentional:** Case 2; labels from the kept list.  
-- **Anti-fragile:** `menu` / `main` may open the same list as a bare TTY run; Exit 9 when N=4.  
-- **Over-protect:** Self-managed, diagnostics, and test-purpose verbs stay off the list even if they are live.
+- **Intentional:** Case 2; labels from the kept list; related rare commands share one family row.  
+- **Anti-fragile:** `menu` / `main` may open the same list as a bare TTY run; Back returns to the start list; Exit 9 from either screen.  
+- **Over-protect:** Self-managed, diagnostics stay off both lists; the five sudoers verbs stay off the main list; Exit is **9**, not **3**.
 
 ---
 
@@ -150,16 +196,19 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 1. Restore Type N always-help on empty argv while this case 2 claim is Active (do not reactivate `requirement-shell-cli-zero-arguments`).  
 2. Attach empty argv to install-ensure (Type O).  
 3. Invent menu labels instead of `command: what it does` from the kept list.  
-4. Put `help`, `install`, `uninstall`, `where-is-me`, `version`, `about`, `setup`, `menu`, `main`, or a test-purpose verb (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) on the numbered list.  
-5. Number Exit as 5 when N=4 (Exit **MUST** be 9).  
+4. Put `help`, `install`, `uninstall`, `where-is-me`, `version`, `about`, `setup`, `menu`, `main`, or a test-purpose verb (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) on the **main** list.  
+4b. Put the five sudoers verbs on the **main** list.  
+4c. Drop a grouped sudoers verb from the submenu.  
+5. Number main Exit as 4 when N=3 (Exit **MUST** be 9). Number submenu Exit as 6 (Exit **MUST** be 9; Back **MUST** be 8).  
 6. Draw the menu in non-interactive mode (including off-TTY empty argv).  
 7. Treat interactive `folder-backup menu --json` as JSON help.  
 8. Drop `menu`/`main` routing after attaching the list to empty argv.  
 9. Auto-write `/etc` from a menu choice (print/submit stay Type 0 drafts).  
 10. Claim the ship unit lacks the TTY empty-argv menu while `app_main` routes empty argv to `app_main_menu`.  
 11. Capture the menu choice (or extra field) with `$()` / backticks of a `read` helper, or “fix” a freeze by stderr+$() (**PP-A-22** / do-not-capture-read).  
-12. Print the main-menu header as a bare `folder-backup` without live `VERSION`, or unstyled on a TTY.  
-13. Draw the numbered list off the default CLI main menu style — **MUST NOT** print numbered-choice `explain` unstyled on a TTY (it **MUST** be *italic* and light gray). **MUST NOT** emit CSI off-TTY.
+12. Print the main-menu (or APP_NAME-led submenu) header as a bare `folder-backup` without live `VERSION`, or unstyled on a TTY.  
+13. Draw the numbered list off the default CLI main menu style — **MUST NOT** print numbered-choice `explain` unstyled on a TTY (it **MUST** be *italic* and light gray). **MUST NOT** emit CSI off-TTY.  
+14. Wire `sudoers` as a live `app_main` command.
 
 **Violating this rule is a critical dispatcher / hang / honesty / look regression.**
 
@@ -171,13 +220,15 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 |----|-----------|
 | AC-1 | Non-interactive empty argv is help (not install, not the numbered list) |
 | AC-2 | Case 2 recorded; this file owns empty argv; `menu` / `main` named and routed |
-| AC-3 | Interactive empty argv **and** interactive `menu` draw the four-row list + Exit 9 |
+| AC-3 | Interactive empty argv **and** interactive `menu` draw the three-row list (backup, restore, family sudoers) + Exit 9 |
 | AC-4 | Interactive `menu --json` still draws the list |
 | AC-5 | Non-interactive `menu` is help; `--json` is JSON help |
-| AC-6 | Numbered choices omit help, install, uninstall, where-is-me, version, about, setup, menu, main, and test-purpose (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) |
-| AC-7 | Labels match kept-list human-readable `verb: explain` |
-| AC-8 | TTY header is live `folder-backup(VERSION)` with bold name and italic version; numbered `explain` is italic and light gray; number and verb unstyled; no CSI off-TTY |
+| AC-6 | Numbered **main** list omits help, install, uninstall, where-is-me, version, about, setup, menu, main, the five sudoers verbs, and test-purpose grant-emit as main rows |
+| AC-7 | Command-row labels match kept-list human-readable `verb: explain`; family explain is this file’s table |
+| AC-8 | TTY header is live `folder-backup(VERSION)` with bold name and italic version; numbered `explain` is italic and light gray; number and verb unstyled; no CSI off-TTY; submenu nametag matches |
 | AC-9 | Menu choice is current-shell `prompt_line` / `_prompt_line`; **MUST NOT** `$()` a `read` helper |
+| AC-10 | Choosing main **3** / `sudoers` opens the submenu with the five grant/draft verbs, Back 8, Exit 9 |
+| AC-11 | `folder-backup sudoers` is unknown; the five grant/draft names remain live CLI verbs |
 
 ---
 
@@ -186,10 +237,11 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 | Key | Relationship |
 |-----|--------------|
 | `requirement-shell-cli-zero-arguments` | **Withdrawn** predecessor (Type N always-help) |
-| `requirement-shell-cli-interface` | Dual mention: empty argv row + `menu` / `main` on the command table |
+| `requirement-shell-cli-interface` | Dual mention: empty argv row + `menu` / `main` on the command table; five grant/draft verbs routed |
 | `requirement-shell-interactive-vs-noninteractive` | `TTY`; no hang |
 | `requirement-shell-output-requirements` | `out_*`; reuse `app_help` |
 | `requirement-shell-local-self-management` | install/uninstall/where-is-me stay on help, not this list |
+| `requirement-domain-folder-backup` | Grant-emit verbs; help apart |
 | `docs/requirements/index.md` | Registry |
 
 ---
@@ -199,11 +251,11 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 | TP family / ID | Suite | Status |
 |----------------|-------|--------|
 | **TP-CLI-07** | `tests/test_cli.sh` | **have** — off-TTY empty argv is help, not install (AC-1) |
-| **TP-CLI-13** | `tests/test_cli.sh` | **have** — interactive empty argv **and** `menu` print the four labels + `9. Exit` (AC-3) |
+| **TP-CLI-13** | `tests/test_cli.sh` | **have** — interactive empty argv **and** `menu` print backup / restore / family sudoers + `9. Exit`; submenu Back/Exit; `sudoers` not dispatched (AC-3 / AC-10 / AC-11) |
 | **TP-CLI-14** | same | **have** — interactive `menu --json` still prints the list (AC-4) |
 | **TP-CLI-15** | same | **have** — non-interactive empty argv and `menu` are help; `--json` JSON help (AC-5) |
-| **TP-CLI-16** | same | **have** — numbered list omits help/install/uninstall/where-is-me/version/about/test-purpose/menu (AC-6) |
-| **TP-CLI-18** | same | **have** — default CLI main menu style (AC-8); product alias of portable **TP-CLI-17** (this product already assigned **TP-CLI-17** to help heading split) |
+| **TP-CLI-16** | same | **have** — numbered **main** list omits help/install/uninstall/where-is-me/version/about/test-purpose/menu and the five sudoers verbs (AC-6) |
+| **TP-CLI-18** | same | **have** — default CLI main menu style (AC-8); product alias of portable **TP-CLI-17** (this product already assigned **TP-CLI-17** to help heading split); submenu nametag |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -217,6 +269,7 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 | 2026-08-23 | Active 1.2.0 | Ship unit routes `menu` / `main`; Gap closed; empty argv stayed help (case 3) |
 | 2026-08-28 | Active 1.3.0 | **Case 2**: TTY empty argv = numbered list; off-TTY empty argv = help; zero-arguments Withdrawn |
 | 2026-09-03 | Active 1.4.0 | Default CLI main menu style (header nametag + TTY gray italic explain); do-not-capture-read MUST; **TP-CLI-18** |
+| 2026-09-03 | Active 1.5.0 | Family row **sudoers** + submenu (five grant/draft setup verbs remain live CLI commands; Back 8 / Exit 9); main **N = 3**; `sudoers` not dispatched |
 
 ---
 

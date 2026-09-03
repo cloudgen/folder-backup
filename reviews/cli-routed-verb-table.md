@@ -3,7 +3,7 @@
 **Product:** folder-backup  
 **Ship unit:** `src/folder-backup`  
 **Dispatcher:** `app_main`  
-**Scan date:** 2026-08-28  
+**Scan date:** 2026-09-03  
 **Mode:** full (label + purpose refresh)  
 **Copied / re-checked:** 13 live copied · 2 re-checked (`menu`/`main` now routed) · 1 not-yet-wired  
 
@@ -26,8 +26,8 @@ Inventory from dispatcher case, not help. Human-readable is `{{short-descript}}:
 | remove-project-sudoers | `fb_remove_project_sudoers` | you | 2026-08-09 | operational | remove-project-sudoers: Remove the local grant draft only |
 | generate-sudoer-request | `fb_generate_sudoer_request` | you | 2026-08-17 | test-purpose | generate-sudoer-request: Write a local JSON grant you can read without sudo |
 | submit-sudoer-request | `fb_submit_sudoer_request` | you | 2026-08-17 | operational | submit-sudoer-request: Hand the JSON grant to the approval queue |
-| menu | `app_main_menu` | you | 2026-08-23 | operational | menu: Show the numbered list of live work commands |
-| main | `app_main_menu` | you | 2026-08-23 | operational | main: Same numbered list as menu |
+| menu | `app_main_menu` | you | 2026-09-03 | operational | menu: Show the numbered list of live work commands |
+| main | `app_main_menu` | you | 2026-09-03 | operational | main: Same numbered list as menu |
 
 ## Not-yet-wired
 
@@ -37,8 +37,10 @@ Inventory from dispatcher case, not help. Human-readable is `{{short-descript}}:
 
 Do not list `menu` / `main` as choices on their own menu.
 
-**Main menu** uses only **operational** rows other than `menu`/`main`: backup, restore, remove-project-sudoers, submit-sudoer-request. Self-managed, diagnostics, and test-purpose stay off the numbered list.
+A TTY **main** menu **MUST** print daily-work **human-readable** lines as a **numbered list**, with related grant/draft verbs behind family row **`sudoers`** (submenu; **Back 8**, **Exit 9**). folder-backup is **case 2**. **`sudoers` is not a live dispatcher token.** Main **N = 3**; submenu **K = 5**; **Exit 9**. Self-managed, diagnostics, and test-purpose stay off the **main** list. The five grant/draft setup verbs remain live CLI commands.
+
+**Main menu** command rows: backup, restore, family `sudoers`. **Submenu:** generate-sudoer-request, submit-sudoer-request, print-sudoers, print-sudoers-install-script, remove-project-sudoers.
 
 ## Honesty
 
-Dispatcher tokens on 2026-08-28: version, about, help, install, uninstall, where-is-me, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Empty argv is **not** a token: on a real terminal it calls `app_main_menu` (case 2); off-TTY it is help. Online `self-*` / `version-check` are absent by design. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose**.
+Dispatcher tokens on 2026-09-03: version, about, help, install, uninstall, where-is-me, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Empty argv is **not** a token: on a real terminal it calls `app_main_menu` (case 2); off-TTY it is help. Online `self-*` / `version-check` are absent by design. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose** (off the **main** list; on the sudoers submenu). **`sudoers` is not a dispatcher token.**

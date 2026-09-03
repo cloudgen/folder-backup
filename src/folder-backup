@@ -31,7 +31,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.15.0"
+# VERSION: hard-assign VERSION="1.16.0"
 #
 # =============================================================================
 
@@ -48,8 +48,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.15.0"
-: "${VERSION:=1.15.0}"
+VERSION="1.16.0"
+: "${VERSION:=1.16.0}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -324,7 +324,8 @@ out_plain() {
 #
 # GENERAL PURPOSE:
 # Print `n. verb: explain`. On a TTY the explain is italic + light gray.
-# Number and verb stay unstyled. Quiet/JSON follow out_text.
+# Number and verb stay unstyled. Rows with no explain (Exit / Back) print
+# `n. label` only. Quiet/JSON follow out_text.
 #
 # ALIGNMENT:
 # - requirement-shell-output-requirements.md
@@ -332,7 +333,16 @@ out_plain() {
 #
 # Last updated: 2026-09-03
 # =============================================================================
-out_menu_choice() { out_text menu_choice "" "${1-}" "${2-}" "${3-}"; }
+out_menu_choice() {
+    _n="${1-}"
+    _label="${2-}"
+    _desc="${3-}"
+    if [ -n "${_desc}" ]; then
+        out_text menu_choice "" "${_n}" "${_label}" "${_desc}"
+    else
+        out_plain "${_n}. ${_label}"
+    fi
+}
 
 # =============================================================================
 # out_msg_n() - Output message WITHOUT trailing newline (for interactive prompts)
@@ -4305,10 +4315,10 @@ app_about() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Print the four operational work rows plus Exit 9. Labels are the kept-list
-# human-readable form (verb: explain). Look is default CLI main menu style
-# (header nametag + TTY gray italic explain). Self-managed, diagnostics, and
-# test-purpose verbs are omitted.
+# Print daily backup work (backup, restore), family sudoers, then Exit 9.
+# Labels are the kept-list human-readable form (verb: explain). Look is
+# default CLI main menu style (header nametag + TTY gray italic explain).
+# Self-managed, diagnostics, and the five sudoers verbs are omitted here.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
@@ -4324,24 +4334,53 @@ app_main_menu_print() {
     out_info "$(util_app_ident) — numbered list of live work commands"
     out_menu_choice 1 backup "Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
     out_menu_choice 2 restore "Put an archive back onto the hard-disk projects tree"
-    out_menu_choice 3 remove-project-sudoers "Remove the local grant draft only"
-    out_menu_choice 4 submit-sudoer-request "Hand the JSON grant to the approval queue"
-    out_plain "9. Exit"
+    out_menu_choice 3 sudoers "Grant and drafts"
+    out_menu_choice 9 Exit
 }
 
 # =============================================================================
-# app_main_menu_run_pick() - Run one menu choice (number or verb)
+# app_main_menu_print_sudoers() - Sudoers family submenu (TTY)
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Map a numbered pick or verb token to a live operational handler. Missing
-# required operands: prompt one field at a time, or print Next: and return.
-# Returns 1 if the pick is not on the list (caller re-prompts).
+# Print the grant/draft list grouped behind main-menu family row sudoers.
+# The five verbs remain live CLI commands; this list is a picker only.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
 #
-# Last updated: 2026-08-23
+# Last updated: 2026-09-03
+# =============================================================================
+app_main_menu_print_sudoers() {
+    : "${APP_NAME:=folder-backup}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+
+    out_info "$(util_app_ident) — sudoers (grant and drafts)"
+    out_menu_choice 1 generate-sudoer-request "Write a local JSON grant you can read without sudo"
+    out_menu_choice 2 submit-sudoer-request "Hand the JSON grant to the approval queue"
+    out_menu_choice 3 print-sudoers "Write a grant file an admin can install"
+    out_menu_choice 4 print-sudoers-install-script "Write an admin script to install or remove the grant"
+    out_menu_choice 5 remove-project-sudoers "Remove the local grant draft only"
+    out_menu_choice 8 Back
+    out_menu_choice 9 Exit
+}
+
+# =============================================================================
+# app_main_menu_run_pick() - Run one main-menu choice (number or verb)
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Map a numbered pick or verb token to a live operational handler. Family
+# row sudoers is not handled here (caller opens the submenu). Missing
+# required operands: prompt one field at a time, or print Next: and return.
+# Returns 1 if the pick is not on the list (caller re-prompts).
+# Submenu verbs MAY run as a shortcut from the main pick prompt.
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+#
+# Last updated: 2026-09-03
 # =============================================================================
 app_main_menu_run_pick() {
     _pick="${1-}"
@@ -4372,13 +4411,22 @@ app_main_menu_run_pick() {
             fi
             fb_restore "${_a}" "${_b}"
             ;;
-        3|remove-project-sudoers)
-            fb_remove_project_sudoers "${_a}"
+        generate-sudoer-request)
+            fb_generate_sudoer_request "${_a}"
             ;;
-        4|submit-sudoer-request)
+        submit-sudoer-request)
             fb_submit_sudoer_request "${_a}"
             ;;
-        9|exit|quit|Exit|QUIT)
+        print-sudoers)
+            fb_print_sudoers "${_a}"
+            ;;
+        print-sudoers-install-script)
+            fb_print_sudoers_install_script "${_a}"
+            ;;
+        remove-project-sudoers)
+            fb_remove_project_sudoers "${_a}"
+            ;;
+        9|99|exit|quit|Exit|QUIT)
             ;;
         *)
             return 1
@@ -4388,19 +4436,106 @@ app_main_menu_run_pick() {
 }
 
 # =============================================================================
+# app_main_menu_run_sudoers_pick() - Run one sudoers-submenu choice
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Map a submenu number or member verb to the live handler. Back/Exit are
+# owned by the submenu loop. Returns 1 if the pick is not a member.
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+#
+# Last updated: 2026-09-03
+# =============================================================================
+app_main_menu_run_sudoers_pick() {
+    _pick="${1-}"
+    _a="${2-}"
+
+    case "${_pick}" in
+        1|generate-sudoer-request)
+            fb_generate_sudoer_request "${_a}"
+            ;;
+        2|submit-sudoer-request)
+            fb_submit_sudoer_request "${_a}"
+            ;;
+        3|print-sudoers)
+            fb_print_sudoers "${_a}"
+            ;;
+        4|print-sudoers-install-script)
+            fb_print_sudoers_install_script "${_a}"
+            ;;
+        5|remove-project-sudoers)
+            fb_remove_project_sudoers "${_a}"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+    return 0
+}
+
+# =============================================================================
+# app_main_menu_sudoers_loop() - Interactive sudoers submenu
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Show the grant/draft list. Back returns 1 (main list). Exit or a run
+# returns 0 (leave menu). Never hangs off-TTY (caller is TTY-only).
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+#
+# Last updated: 2026-09-03
+# =============================================================================
+app_main_menu_sudoers_loop() {
+    : "${APP_NAME:=folder-backup}"
+    : "${_menu_json:=0}"
+    : "${_menu_quiet:=0}"
+    _a="${1-}"
+
+    while true; do
+        JSON=0
+        QUIET=0
+        export JSON QUIET
+        app_main_menu_print_sudoers
+        if ! prompt_line "Choice"; then
+            return 0
+        fi
+        _pick="${_prompt_line}"
+        case "${_pick}" in
+            8|back|Back)
+                return 1
+                ;;
+            9|99|exit|quit|Exit|QUIT)
+                return 0
+                ;;
+        esac
+        JSON="${_menu_json}"
+        QUIET="${_menu_quiet}"
+        export JSON QUIET
+        if app_main_menu_run_sudoers_pick "${_pick}" "${_a}"; then
+            return 0
+        fi
+        out_warn "Not a menu choice. Type 1-5, 8 back, 9 to leave, or a listed command name. Next: ${APP_NAME} menu"
+    done
+}
+
+# =============================================================================
 # app_main_menu() - Default interaction: TTY numbered menu / off-TTY help
 # =============================================================================
 #
 # GENERAL PURPOSE:
 # Commands menu / main, and case-2 empty argv. On a real terminal: ignore
-# --json on menu/main, show the numbered list, run one pick. Off-TTY: help
-# (JSON help when --json). Never hang. Never install-ensure.
+# --json on menu/main, show the numbered list, run one pick (or open the
+# sudoers submenu). Off-TTY: help (JSON help when --json). Never hang.
+# Never install-ensure. sudoers is not a dispatcher token.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
 # - requirement-shell-interactive-vs-noninteractive.md
 #
-# Last updated: 2026-08-28
+# Last updated: 2026-09-03
 # =============================================================================
 app_main_menu() {
     : "${TTY:=0}"
@@ -4442,20 +4577,43 @@ app_main_menu() {
             _pick="${_prompt_line}"
         fi
         case "${_pick}" in
-            9|exit|quit|Exit|QUIT)
+            9|99|exit|quit|Exit|QUIT)
                 JSON="${_menu_json}"
                 QUIET="${_menu_quiet}"
                 export JSON QUIET
                 return 0
                 ;;
+            3|sudoers)
+                JSON="${_menu_json}"
+                QUIET="${_menu_quiet}"
+                export JSON QUIET
+                if app_main_menu_sudoers_loop "${_argv_a}"; then
+                    JSON="${_menu_json}"
+                    QUIET="${_menu_quiet}"
+                    export JSON QUIET
+                    return 0
+                fi
+                JSON=0
+                QUIET=0
+                export JSON QUIET
+                _argv_a=""
+                _argv_b=""
+                continue
+                ;;
         esac
+        JSON="${_menu_json}"
+        QUIET="${_menu_quiet}"
+        export JSON QUIET
         if app_main_menu_run_pick "${_pick}" "${_argv_a}" "${_argv_b}"; then
             JSON="${_menu_json}"
             QUIET="${_menu_quiet}"
             export JSON QUIET
             return 0
         fi
-        out_warn "Not a menu choice. Type 1-4, 9 to leave, or a command name."
+        JSON=0
+        QUIET=0
+        export JSON QUIET
+        out_warn "Not a menu choice. Type 1-3, 9 to leave, or a listed command name."
         out_info "Next: ${APP_NAME} menu"
         _argv_a=""
         _argv_b=""

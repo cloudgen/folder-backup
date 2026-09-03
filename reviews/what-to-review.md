@@ -5,7 +5,7 @@
 **Always load first:** `reviews/lessons.md`
 
 **Last plan update:** 2026-09-03  
-**Ship unit VERSION:** 1.15.0  
+**Ship unit VERSION:** 1.16.0  
 **Suite baseline:** PASS=333 FAIL=0 SKIP=2 (see `reviews/test-plan.md`)
 
 ---

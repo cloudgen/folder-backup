@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.16.0] - 2026-09-03
+
+### Changed
+
+- **Sudoers family submenu** (copied from sibling grok-cli). The numbered start list is **backup**, **restore**, family **sudoers**, then **9. Exit**. Pick **3** / `sudoers` opens grant/draft setup: `generate-sudoer-request` (JSON grant), `submit-sudoer-request` (inbound queue), `print-sudoers` (sudoers text), `print-sudoers-install-script` (admin script), `remove-project-sudoers` (remove draft). **Back 8** / **Exit 9**. Each of those five remains a live CLI verb. `folder-backup sudoers` stays unknown. Law: **requirement-shell-cli-default-interaction** **1.5.0** · CLI-interface **1.8.0** · domain **1.6.3**. Suite **TP-CLI-13** · **TP-CLI-16** · **TP-CLI-18**.
+
 ## [1.15.0] - 2026-09-03
 
 ### Changed

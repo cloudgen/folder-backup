@@ -123,12 +123,16 @@ run_test_domain_folder_backup() {
 
     # TP-FOLDER-BACKUP-22e pretty emit through real sudoer-cli keeps both verbs
     _srcli=""
-    if [ -x "${REPO_ROOT}/../sudoer-cli/src/sudoer-cli" ]; then
+    if [ -x "${REPO_ROOT}/../sudoer-cli/src/sudoer-cli" ] \
+        && sh -n "${REPO_ROOT}/../sudoer-cli/src/sudoer-cli" 2>/dev/null; then
         _srcli="${REPO_ROOT}/../sudoer-cli/src/sudoer-cli"
-    elif [ -x /usr/local/bin/sudoer-cli ]; then
+    elif [ -x /usr/local/bin/sudoer-cli ] && sh -n /usr/local/bin/sudoer-cli 2>/dev/null; then
         _srcli=/usr/local/bin/sudoer-cli
     elif command -v sudoer-cli >/dev/null 2>&1; then
-        _srcli=$(command -v sudoer-cli)
+        _cand=$(command -v sudoer-cli)
+        if sh -n "${_cand}" 2>/dev/null; then
+            _srcli="${_cand}"
+        fi
     fi
     if [ -n "${_srcli}" ] && [ -x "${_srcli}" ]; then
         _pback="${CI_HOME}/out/pretty-back.sudoers"

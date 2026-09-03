@@ -4,6 +4,7 @@ Durable failure modes. **Always re-check on product review.**
 
 | ID | Mode | Prevention | Status |
 |----|------|------------|--------|
+| L-MENU-SUDOERS-01 | Family token `sudoers` wired as a live command, or grant/draft setup verbs dropped from the dispatcher | Family row is menu-only; five setup verbs stay live CLI commands; TP-CLI-13 | open watch |
 | L-TYPE-N-01 | Empty argv becomes install-ensure (parent Type O leak) | case 2 off-TTY help + never ensure; TP-CLI-07 | open watch |
 | L-CASE2-01 | Empty argv on TTY stays help after case 2 (always-help leak) | `requirement-shell-cli-default-interaction` 1.3.0; TP-CLI-13 empty argv | open watch |
 | L-ONLINE-01 | Online verbs reintroduced (self-update / SCRIPT_URL UX) | A=cli-template already absent + TP-CLI-04/10 | open watch |
