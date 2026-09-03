@@ -91,8 +91,11 @@ ci_strip_ansi() {
 # Isolated HOME + USER_BIN + GLOBAL_BIN for install tests.
 # GLOBAL_BIN is redirected so a host /usr/local/bin install cannot pollute
 # uninstall target selection or trust-tier detection (TP-LC / print-sudoers).
-# Sets CI_HOME, CI_USER_BIN, CI_GLOBAL_BIN.
+# Sudoer submit is fenced: missing SUDOER_CLI + temp inbound + absent public
+# root so a live /var/sudoer-cli/sudoer-request is never the default dest.
+# Sets CI_HOME, CI_USER_BIN, CI_GLOBAL_BIN, CI_SUDOER_INBOUND.
 ci_isolated_env() {
+    CI_SAVED_HOME="${HOME-}"
     CI_HOME=$(mktemp -d "${TMPDIR:-/tmp}/fb-home.XXXXXX")
     CI_USER_BIN="${CI_HOME}/.local/bin"
     CI_GLOBAL_BIN="${CI_HOME}/.global-bin"
@@ -105,6 +108,19 @@ ci_isolated_env() {
     CI_SUDOERS_D="${CI_HOME}/sudoers.d"
     mkdir -p "${CI_SUDOERS_D}"
     export SUDOERS_D_DIR="${CI_SUDOERS_D}"
+    # Fence live sudoer inbound (TP-CLI-13 must not enqueue host requests).
+    # Trio layout matches sudoer-cli --queue-root so a real binary cannot
+    # fall back to /var/sudoer-cli if a test forgets SUDOER_CLI.
+    CI_SUDOER_QUEUE="${CI_HOME}/sudoer-cli-queue"
+    mkdir -p "${CI_SUDOER_QUEUE}/sudoer-request" \
+        "${CI_SUDOER_QUEUE}/sudoer-approved" \
+        "${CI_SUDOER_QUEUE}/sudoer-rejected"
+    CI_SUDOER_INBOUND="${CI_SUDOER_QUEUE}/sudoer-request"
+    export SUDOER_QUEUE_INBOUND="${CI_SUDOER_INBOUND}"
+    export SUDOER_PUBLIC_ROOT="${CI_HOME}/var-sudoer-cli-absent"
+    export SUDOER_CLI="${CI_HOME}/no-such-sudoer-cli"
+    unset SUDOER_CLI_QUEUE_ROOT 2>/dev/null || true
+    unset LPU_HOME 2>/dev/null || true
     # Local-only product: ensure no channel env is required
     unset SCRIPT_URL 2>/dev/null || true
     unset CHECKSUM 2>/dev/null || true
@@ -113,11 +129,57 @@ ci_isolated_env() {
 ci_cleanup_env() {
     if [ -n "${CI_HOME:-}" ] && [ -d "${CI_HOME}" ]; then
         rm -rf "${CI_HOME}"
-        CI_HOME=
-        CI_USER_BIN=
-        CI_GLOBAL_BIN=
     fi
-    unset GLOBAL_BIN 2>/dev/null || true
+    CI_HOME=
+    CI_USER_BIN=
+    CI_GLOBAL_BIN=
+    CI_SUDOER_INBOUND=
+    CI_SUDOERS_D=
+    unset USER_BIN GLOBAL_BIN SUDOERS_D_DIR 2>/dev/null || true
+    unset SUDOER_CLI SUDOER_QUEUE_INBOUND SUDOER_PUBLIC_ROOT 2>/dev/null || true
+    unset SUDOER_CLI_QUEUE_ROOT LPU_HOME 2>/dev/null || true
+    if [ -n "${CI_SAVED_HOME+x}" ]; then
+        HOME="${CI_SAVED_HOME}"
+        export HOME
+        unset CI_SAVED_HOME
+    fi
+}
+
+# Snapshot this user's folder-backup files in the live public inbound.
+# Public inbound is typically 3773 (drop-in, no list). Probe known names
+# with [ -e ] instead of listing the directory.
+# Prints __absent__ when /var/sudoer-cli/sudoer-request does not exist.
+ci_snapshot_live_sudoer_inbound() {
+    _dir="/var/sudoer-cli/sudoer-request"
+    _user=$(id -un 2>/dev/null || echo unknown)
+    _day=$(date +%Y%m%d)
+    if [ ! -d "${_dir}" ]; then
+        printf '%s\n' "__absent__"
+        return 0
+    fi
+    _found=""
+    for _act in add update remove; do
+        _n=1
+        while [ "${_n}" -le 99 ]; do
+            _f="${_dir}/sudoer-${_day}-folder-backup-${_user}-${_act}-${_n}.json"
+            if [ -e "${_f}" ]; then
+                _found="${_found}${_act}-${_n} "
+            fi
+            _n=$((_n + 1))
+        done
+    done
+    printf '%s' "${_found}"
+}
+
+ci_assert_no_live_sudoer_enqueue() {
+    _lab="$1"
+    _before="$2"
+    if [ "${_before}" = "__absent__" ]; then
+        t_skip "${_lab} (live inbound not present)"
+        return 0
+    fi
+    _after=$(ci_snapshot_live_sudoer_inbound)
+    assert_eq "${_lab}" "${_before}" "${_after}"
 }
 
 ci_run() {

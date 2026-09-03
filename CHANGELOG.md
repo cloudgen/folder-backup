@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.16.2] - 2026-09-03
+
+### Fixed
+
+- **Suite no longer queues live sudoer inbound.** TP-CLI-13 proved the five grant/draft verbs by actually running `submit-sudoer-request` against the host (`sudoer-cli` 1.17.1 → `/var/sudoer-cli/sudoer-request`). Isolation now defaults to a missing `SUDOER_CLI` plus a temp queue trio; submit with `SUDOER_QUEUE_INBOUND` passes `--queue-root` to sudoer-cli; the runner asserts this user’s live inbound files did not grow. Lesson **L-INBOUND-02**.
+
+## [1.16.1] - 2026-09-03
+
+### Changed
+
+- **Sudoers submenu is its own product law** (`requirement-shell-cli-sudoers-submenu` **1.0.0**). The start list still hosts family row **3** (`requirement-shell-cli-default-interaction` **1.6.0**). Menu behavior is unchanged: five grant/draft setup verbs stay live CLI commands; `folder-backup sudoers` stays unknown. Portable pack (H1 include): **`LM-CLI-SUDOERS-SUBMENU`** · **`SK-CLI-SUDOERS-SUBMENU`** · term `cli-sudoers-submenu`. Proof still **TP-CLI-13** / **TP-CLI-16** / **TP-CLI-18**.
+
 ## [1.16.0] - 2026-09-03
 
 ### Changed

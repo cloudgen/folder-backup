@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-default-interaction.md  
-**Status**: Active (Version 1.5.0)  
+**Status**: Active (Version 1.6.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-default-interaction`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-DEFAULT-INTERACTION`  
@@ -9,7 +9,7 @@
 
 This requirement is the **product Single Source of Truth** for folder-backup’s **claimed default interactive main menu** and for **empty-argv** dispatcher meaning.
 
-The product is **not** online-installable. There is **no** Active specialized zero-argument requirement. **Case 2** applies: on a real terminal, a bare `folder-backup` run opens the numbered work list; off-TTY that same bare run prints help. Named commands **`menu`** and **`main`** open the same list. Related grant/draft commands sit behind one **family** row **`sudoers`** (submenu). Each grant/draft setup remains a **live CLI verb** (`generate-sudoer-request`, `submit-sudoer-request`, `print-sudoers`, `print-sudoers-install-script`, `remove-project-sudoers`). **`sudoers` is not a live dispatcher token.**
+The product is **not** online-installable. There is **no** Active specialized zero-argument requirement. **Case 2** applies: on a real terminal, a bare `folder-backup` run opens the numbered work list; off-TTY that same bare run prints help. Named commands **`menu`** and **`main`** open the same list. Related grant/draft commands sit behind one **family** row **`sudoers`**. Submenu membership, Back/Exit, and the live-verb rule are owned by **`requirement-shell-cli-sudoers-submenu`**. **`sudoers` is not a live dispatcher token.**
 
 ### 1.1 Human-facing
 
@@ -87,9 +87,8 @@ Measure interactive capability **outside functions** (`TTY=1` only when stdin an
 6b. **Do not capture `read`:** the choice **MUST** be read in the **current shell**. Typical: `prompt_line "Choice"` then `_pick="${_prompt_line}"`. **MUST NOT** `_pick=$(prompt_line …)` / `_pick=$(prompt_ask …)` / `$()` / backticks of **any** function whose body contains `read` (do-not-capture-read / **PP-A-22**). stderr+$() is **not** a license.  
 7. Main command rows **N = 3** (two verbs + one family). Exit **MUST** be **9**. Unused integers **4–8** are omitted. Exit row is not a command explain; gray-italic is not required on `Exit`.  
 8. Exit number, `exit`, or `quit` returns 0 with no further prompt.  
-9. **`sudoers` is not a live CLI command.** Choosing **3** or typing `sudoers` at the pick prompt **MUST** open the submenu (§2.4). `folder-backup sudoers` **MUST** remain unknown.  
-10. Typing a submenu verb at the **main** pick prompt **MAY** run that handler (shortcut).  
-11. Typical handler: `app_main_menu`.
+9. **`sudoers` is not a live CLI command.** Choosing **3** or typing `sudoers` at the pick prompt **MUST** open the submenu owned by **`requirement-shell-cli-sudoers-submenu`**. `folder-backup sudoers` **MUST** remain unknown.  
+10. Typical handler: `app_main_menu`.
 
 Normative **main** order:
 
@@ -101,28 +100,9 @@ Normative **main** order:
 | 3 | family `sudoers` | `sudoers: Grant and drafts` |
 | **9** | **Exit** | leave the menu |
 
-### 2.4 Sudoers submenu
+### 2.4 Sudoers submenu (owned elsewhere)
 
-Choosing main **3** / `sudoers` **MUST** print a second numbered list of the grouped live verbs. Submenu header **MUST** use the same `folder-backup(VERSION)` nametag. Explain text **MUST** follow the same default CLI main menu style as the main list (*italic* + light gray SGR **3** + **37** on a TTY via `out_menu_choice`). **MUST NOT** hang off-TTY (submenu exists only on the interactive menu path).
-
-The five grouped verbs are the **different types of sudoer-file setup**. Each **MUST** remain a live Type 0 CLI verb (`folder-backup generate-sudoer-request`, and so on). The submenu is a picker, not a second dispatcher.
-
-| # | Command | Label |
-|---|---------|-------|
-| 1 | `generate-sudoer-request` | `generate-sudoer-request: Write a local JSON grant you can read without sudo` |
-| 2 | `submit-sudoer-request` | `submit-sudoer-request: Hand the JSON grant to the approval queue` |
-| 3 | `print-sudoers` | `print-sudoers: Write a grant file an admin can install` |
-| 4 | `print-sudoers-install-script` | `print-sudoers-install-script: Write an admin script to install or remove the grant` |
-| 5 | `remove-project-sudoers` | `remove-project-sudoers: Remove the local grant draft only` |
-| **8** | **Back** | return to the main list (not a command) |
-| **9** | **Exit** | leave the menu |
-
-Submenu command rows **N = 5**. Exit **MUST** be **9**. **Back MUST** be **8**. Unused **6** and **7** are omitted.
-
-- **8** / `back` / `Back` returns to the main list (does not run a handler).  
-- **9** / `exit` / `quit` returns 0 from `menu` (same as main Exit).  
-- A listed number or verb runs that handler, then returns 0 from `menu` (one command, then done).  
-- All five grouped verbs **MUST** appear here. **MUST NOT** put install/version/about/`help`/`menu`/`main` on this list.
+Family row **3** / `sudoers` **MUST** open the grant/draft list. Full membership, Back **8**, Exit **9**, live-verb rule, and nametag **MUST** follow **`requirement-shell-cli-sudoers-submenu`**. This file **MUST NOT** restate that table as a second SSOT.
 
 ### 2.5 Implementation Notes (this product)
 
@@ -134,14 +114,14 @@ Submenu command rows **N = 5**. Exit **MUST** be **9**. **Back MUST** be **8**. 
 | **Empty argv owner** | **this file** (TTY menu; off-TTY help) |
 | **Menu verbs** | empty argv on TTY; `menu` (preferred named); `main` alias |
 | **Handler** | `app_main_menu`; submenu printer/loop under the same `app_main_menu_*` family |
-| **Family row** | `sudoers` — menu-only; **not** dispatched |
+| **Family row** | `sudoers` — menu-only; **not** dispatched; body **`requirement-shell-cli-sudoers-submenu`** |
 | **Ship unit** | Implemented — `app_main` empty argv and `menu` / `main` call `app_main_menu` |
 | **Kept list** | `reviews/cli-routed-verb-table.md` |
 | **Look** | Default CLI main menu style — header `folder-backup(VERSION)`; TTY italic + light-gray explain; `out_menu_choice` / `util_app_ident` |
 | **Choice read** | Current-shell `prompt_line` → `_prompt_line` (not `$()`) |
-| **N** | 3 (main) · 5 (submenu) |
+| **N** | 3 (main; submenu N owned by **`requirement-shell-cli-sudoers-submenu`**) |
 | **Exit** | 9 |
-| **Back** | 8 (submenu only) |
+| **Back** | 8 (submenu only — owned by **`requirement-shell-cli-sudoers-submenu`**) |
 | **Test-purpose (this product)** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` — off the **main** list; on the sudoers submenu |
 | **Withdrawn peer** | `requirement-shell-cli-zero-arguments` |
 
@@ -198,7 +178,7 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 3. Invent menu labels instead of `command: what it does` from the kept list.  
 4. Put `help`, `install`, `uninstall`, `where-is-me`, `version`, `about`, `setup`, `menu`, `main`, or a test-purpose verb (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) on the **main** list.  
 4b. Put the five sudoers verbs on the **main** list.  
-4c. Drop a grouped sudoers verb from the submenu.  
+4c. Restate submenu membership as a second SSOT here (that table lives on **`requirement-shell-cli-sudoers-submenu`**).  
 5. Number main Exit as 4 when N=3 (Exit **MUST** be 9). Number submenu Exit as 6 (Exit **MUST** be 9; Back **MUST** be 8).  
 6. Draw the menu in non-interactive mode (including off-TTY empty argv).  
 7. Treat interactive `folder-backup menu --json` as JSON help.  
@@ -227,8 +207,8 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 | AC-7 | Command-row labels match kept-list human-readable `verb: explain`; family explain is this file’s table |
 | AC-8 | TTY header is live `folder-backup(VERSION)` with bold name and italic version; numbered `explain` is italic and light gray; number and verb unstyled; no CSI off-TTY; submenu nametag matches |
 | AC-9 | Menu choice is current-shell `prompt_line` / `_prompt_line`; **MUST NOT** `$()` a `read` helper |
-| AC-10 | Choosing main **3** / `sudoers` opens the submenu with the five grant/draft verbs, Back 8, Exit 9 |
-| AC-11 | `folder-backup sudoers` is unknown; the five grant/draft names remain live CLI verbs |
+| AC-10 | Choosing main **3** / `sudoers` opens the submenu (**`requirement-shell-cli-sudoers-submenu`**) |
+| AC-11 | `folder-backup sudoers` is unknown; the five grant/draft names remain live CLI verbs (detail on **`requirement-shell-cli-sudoers-submenu`**) |
 
 ---
 
@@ -237,7 +217,8 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 | Key | Relationship |
 |-----|--------------|
 | `requirement-shell-cli-zero-arguments` | **Withdrawn** predecessor (Type N always-help) |
-| `requirement-shell-cli-interface` | Dual mention: empty argv row + `menu` / `main` on the command table; five grant/draft verbs routed |
+| `requirement-shell-cli-interface` | Dual mention: empty argv row + `menu` / `main` on the command table |
+| `requirement-shell-cli-sudoers-submenu` | Family row **3** / `sudoers`; submenu membership and live-verb rule |
 | `requirement-shell-interactive-vs-noninteractive` | `TTY`; no hang |
 | `requirement-shell-output-requirements` | `out_*`; reuse `app_help` |
 | `requirement-shell-local-self-management` | install/uninstall/where-is-me stay on help, not this list |
@@ -270,6 +251,7 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 | 2026-08-28 | Active 1.3.0 | **Case 2**: TTY empty argv = numbered list; off-TTY empty argv = help; zero-arguments Withdrawn |
 | 2026-09-03 | Active 1.4.0 | Default CLI main menu style (header nametag + TTY gray italic explain); do-not-capture-read MUST; **TP-CLI-18** |
 | 2026-09-03 | Active 1.5.0 | Family row **sudoers** + submenu (five grant/draft setup verbs remain live CLI commands; Back 8 / Exit 9); main **N = 3**; `sudoers` not dispatched |
+| 2026-09-03 | Active 1.6.0 | Submenu **body** moved to **`requirement-shell-cli-sudoers-submenu`**; this file keeps the family row on the start list |
 
 ---
 

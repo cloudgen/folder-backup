@@ -154,7 +154,7 @@ run_test_cli() {
         t_fail "TP-CLI-12 effective_storage missing: '${_eff:-empty}'"
     fi
     case "$_eff" in
-        */cache/cache-${APP_NAME}|*/cache/cache-${APP_NAME}/*)
+        */cache/cache-${APP_NAME}|*/cache/cache-${APP_NAME}/*|*/.cache/cache-${APP_NAME}|*/.cache/cache-${APP_NAME}/*)
             t_pass "TP-CLI-12 live cache uses cache-${APP_NAME} leaf"
             ;;
         *)
@@ -241,10 +241,23 @@ run_test_cli() {
         _err=$(sh "${SCRIPT}" sudoers 2>&1 >/dev/null)
         assert_eq "TP-CLI-13 sudoers not a live command" 1 "$?"
         assert_contains "TP-CLI-13 sudoers unknown" "$_err" "Unknown command"
+        # AC-4: five names are live dispatcher tokens. Do not run handlers
+        # against the host inbound — bare submit-sudoer-request enqueues
+        # /var/sudoer-cli when sudoer-cli + production trust are present.
+        ci_isolated_env
+        _live13=$(ci_snapshot_live_sudoer_inbound)
         for _verb in generate-sudoer-request submit-sudoer-request print-sudoers print-sudoers-install-script remove-project-sudoers; do
-            _err=$(sh "${SCRIPT}" "${_verb}" 2>&1 >/dev/null) || true
+            _err=$(HOME="${CI_HOME}" \
+                GLOBAL_BIN="${CI_GLOBAL_BIN}" \
+                USER_BIN="${CI_USER_BIN}" \
+                SUDOER_CLI="${CI_HOME}/no-such-sudoer-cli" \
+                SUDOER_QUEUE_INBOUND="${CI_SUDOER_INBOUND}" \
+                SUDOER_PUBLIC_ROOT="${CI_HOME}/var-sudoer-cli-absent" \
+                sh "${SCRIPT}" "${_verb}" 2>&1 >/dev/null) || true
             assert_not_contains "TP-CLI-13 ${_verb} is a live command" "$_err" "Unknown command"
         done
+        ci_assert_no_live_sudoer_enqueue "TP-CLI-13 did not enqueue live sudoer inbound" "${_live13}"
+        ci_cleanup_env
 
         _out=$(PTY_IN="9" ci_pty_run --json menu)
         _plain=$(ci_strip_ansi "$_out")

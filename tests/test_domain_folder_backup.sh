@@ -752,6 +752,7 @@ STUB25
         if [ ! -f "${_jsub}" ]; then
             t_skip "TP-FOLDER-BACKUP-22e real submit (no well-known grant fixture)"
         else
+            _live22e=$(ci_snapshot_live_sudoer_inbound)
             _out22e=$(HOME="${CI_HOME}" \
                 SUDOER_CLI="${_srcli}" \
                 SUDOER_ADM_USER="$(id -un)" \
@@ -765,6 +766,7 @@ STUB25
             _real_body=$(cat "${_q22}/sudoer-request/"sudoer-*.json 2>/dev/null || true)
             assert_contains "TP-FOLDER-BACKUP-22e inbound backup" "${_real_body}" '"backup"'
             assert_contains "TP-FOLDER-BACKUP-22e inbound restore" "${_real_body}" '"restore"'
+            ci_assert_no_live_sudoer_enqueue "TP-FOLDER-BACKUP-22e did not enqueue live inbound" "${_live22e}"
         fi
     fi
 

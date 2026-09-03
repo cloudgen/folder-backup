@@ -5,7 +5,7 @@
 **Always load first:** `reviews/lessons.md`
 
 **Last plan update:** 2026-09-03  
-**Ship unit VERSION:** 1.16.0  
+**Ship unit VERSION:** 1.16.2  
 **Suite baseline:** PASS=333 FAIL=0 SKIP=2 (see `reviews/test-plan.md`)
 
 ---
@@ -127,7 +127,7 @@ Reviewer **MUST** do the checks (suite green on emit-only TPs is **not** this ga
 | **JR-1** | Emit dual lists **both** verbs | `print-sudoers` text + `.json` have `backup` and `restore` | Only one verb, or purpose lists both while `commands` has one |
 | **JR-2** | Pretty JSON is a fixture | Grant used for convert/submit is indented / `}, {` (not only compact `},{`) | Only minified encoder output was reviewed |
 | **JR-3** | Sibling **convert** | `sudoer-cli json-to-sudoers --file <pretty-dual>` has **two** Cmnd lines (`… backup` and `… restore`) | Last-`args` only (typical: restore-only) |
-| **JR-4** | Sibling **submit** (real binary, test `--queue-root` / env inbound) | Queued inbound `commands[].args` still contains both verbs | Inbound is compact restore-only; purpose unchanged |
+| **JR-4** | Sibling **submit** (real binary, test `--queue-root` / env inbound) | Queued inbound `commands[].args` still contains both verbs; live `/var/sudoer-cli` unchanged | Inbound is compact restore-only; purpose unchanged; **or suite files appear on the host queue** |
 | **JR-5** | Readable inbound verify | Product submit fail-closed if inbound is readable and a verb is missing | `[OK] submitted` with a collapsed body |
 | **JR-6** | Suite | **TP-FOLDER-BACKUP-22e** and **22f** **have** and ran this review; **24/24d** when generate is in scope; **25*** when fail-closed copy is in scope | Only 22/22b/22c/20 file-count; stub `cp` treated as fidelity |
 | **JR-7** | Checklist | **S15** Pass or N/A with reason; **S14 is not S15** | S14 Pass cited as inbound proof |

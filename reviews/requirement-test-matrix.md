@@ -1,7 +1,7 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-09-03 (1.16.0)  
-**Product VERSION:** 1.16.0  
+**Updated:** 2026-09-03 (1.16.2)  
+**Product VERSION:** 1.16.2  
 **Suite:** `tests/run.sh` (PASS=333 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
@@ -16,7 +16,8 @@
 | requirement-folder-archive-backup-retention-daily | backup | TP-FOLDER-BACKUP-18, 18b, **18c** | Max **5** per basename per day; lowest-`N` same-day prune; failed backup does not prune |
 | requirement-shell-cli-interface | shell | TP-CLI-* | Commands, flags, dispatch (incl. new sudoers verbs); **menu/main** TP-CLI-13..16; test-purpose grant-emit apart |
 | requirement-shell-cli-zero-arguments | shell | TP-CLI-07 | **Withdrawn** — off-TTY help still covered with default-interaction |
-| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18** | Case 2 TTY empty argv = menu; off-TTY help; `menu`/`main`; family **sudoers** submenu; grant/draft setup verbs live; default CLI main menu style; version/about/self-managed/test-purpose omitted from **main** |
+| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18** | Case 2 TTY empty argv = menu; off-TTY help; `menu`/`main`; family **sudoers** row; submenu body on sudoers-submenu REQ; default CLI main menu style; version/about/self-managed/test-purpose omitted from **main** |
+| requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | Family **sudoers** + five live grant/draft setup verbs; `sudoers` not dispatched; Back 8 / Exit 9; submenu nametag |
 | requirement-shell-local-self-management | shell | TP-LC-* (incl. **09/10** mode) | install/uninstall/where-is-me; **0755** multi-user; global preferred for elev |
 | requirement-shell-output-requirements | shell | TP-CLI-03,05,08,09, **18** | JSON / quiet / errors; identity token + numbered-row ink |
 | requirement-operator-readable-error | shell | TP-FOLDER-BACKUP-**25**, **25b**, **25c** | Operator-facing `[ERROR]` wording (what happened / next step / no jargon-only) |

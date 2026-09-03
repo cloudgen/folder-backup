@@ -52,9 +52,13 @@ if [ ! -x "${SCRIPT}" ]; then
     chmod +x "${SCRIPT}" 2>/dev/null || true
 fi
 
+_live_inbound_snap=$(ci_snapshot_live_sudoer_inbound)
+
 run_test_cli
 run_test_local_lifecycle
 run_test_domain_folder_backup
+
+ci_assert_no_live_sudoer_enqueue "suite did not enqueue live sudoer inbound" "${_live_inbound_snap}"
 
 printf '\n== summary ==\n'
 printf 'PASS=%s FAIL=%s SKIP=%s\n' "${PASS}" "${FAIL}" "${SKIP}"

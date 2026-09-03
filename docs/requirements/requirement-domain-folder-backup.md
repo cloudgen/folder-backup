@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-domain-folder-backup.md  
-**Status**: Active (Version 1.6.3)  
+**Status**: Active (Version 1.6.5)  
 **Area**: domain  
 **Key**: `requirement-domain-folder-backup`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -30,7 +30,7 @@ This file remains the sole Active **`requirement-domain-*`** (four pillars).
 | `generate-sudoer-request` | optional dest path; `--update` / `--add`; `--allow-test-local` | `fb_*` | Type 0 **independent** generate: write JSON grant to a dest **readable without sudo** (tests/review); compact; both verbs; no `/etc`; no inbound | workflow: **`requirement-three-layer-privilege-model`** §2.3.2a · §2.3.3d · JSON body: **`requirement-sudoer-json-file`** |
 | `submit-sudoer-request` | optional sudoers file; `--purpose`; `--update` / `--add`; `--allow-test-local` | `fb_*` | Type 0 submitter: detect sudoer-cli + sudoer-adm + **public inbound**; **default action=update** if this user’s `/etc/sudoers.d/{{APP_NAME}}-<user>` exists, else add; sibling allocates JSON (no `/etc` write; no inbound `mkdir`) | workflow: **`requirement-three-layer-privilege-model`** §2.3.3c · JSON body: **`requirement-sudoer-json-file`** |
 
-**Purpose (this product):** `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` are **test-purpose**. `backup`, `restore`, `remove-project-sudoers`, and `submit-sudoer-request` are **operational**. Test-purpose verbs stay on `help` under a heading **apart** from operational work and **MUST NOT** appear on the numbered **main** menu. All five grant/draft setup verbs **MUST** remain live CLI verbs and **MUST** appear on the sudoers submenu (`requirement-shell-cli-default-interaction`). **`sudoers` is not a command.**
+**Purpose (this product):** `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` are **test-purpose**. `backup`, `restore`, `remove-project-sudoers`, and `submit-sudoer-request` are **operational**. Test-purpose verbs stay on `help` under a heading **apart** from operational work and **MUST NOT** appear on the numbered **main** menu. All five grant/draft setup verbs **MUST** remain live CLI verbs and **MUST** appear on the sudoers submenu (`requirement-shell-cli-sudoers-submenu`). **`sudoers` is not a command.**
 
 **Routing:** Dispatcher in `app_main` (CLI interface) **MUST** route these verbs; unknown operands fail closed.
 
@@ -182,7 +182,8 @@ folder-backup submit-sudoer-request
 | `requirement-three-layer-privilege-model` | Elevation + sudoers workflow |
 | `requirement-sudoer-json-file` | JSON sudoer file body (`{{PRJ_NAME}}` only) |
 | `requirement-shell-cli-interface` | Routes domain verbs; help purpose split |
-| `requirement-shell-cli-default-interaction` | Main menu omits test-purpose grant-emit verbs; sudoers submenu lists all five grant/draft setup verbs |
+| `requirement-shell-cli-default-interaction` | Main menu omits test-purpose grant-emit verbs |
+| `requirement-shell-cli-sudoers-submenu` | Five grant/draft setup verbs on the sudoers submenu; remain live CLI commands |
 | `requirement-bootstrap-chain` | Domain extend from cli-template |
 | `docs/requirements/index.md` | Registry |
 
@@ -223,6 +224,8 @@ folder-backup submit-sudoer-request
 | 2026-08-17 | Active 1.6.1 | Generate is independent; dest readable for tests/review (three-layer §2.3.2a) |
 | 2026-08-23 | Active 1.6.2 | Grant-emit verbs classified test-purpose; help lists them apart; AC-8 |
 | 2026-09-03 | Active 1.6.3 | Grant/draft setup verbs stay live CLI commands on the sudoers submenu; not main-menu rows |
+| 2026-09-03 | Active 1.6.4 | Submenu SSOT **`requirement-shell-cli-sudoers-submenu`** |
+| 2026-09-03 | Active 1.6.5 | Dual mention: submenu membership cites **`requirement-shell-cli-sudoers-submenu`** (start list stays default-interaction) |
 
 ---
 

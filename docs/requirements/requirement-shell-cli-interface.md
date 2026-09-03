@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.8.0)  
+**Status**: Active (Version 1.8.1)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -194,6 +194,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 |-----|--------------|
 | `requirement-shell-cli-zero-arguments` | **Withdrawn** — do not treat as live empty-argv owner |
 | `requirement-shell-cli-default-interaction` | Case 2 empty argv + claimed `menu`/`main` numbered list |
+| `requirement-shell-cli-sudoers-submenu` | Family **sudoers** submenu; five setup verbs live; `sudoers` not dispatched |
 | `requirement-shell-local-self-management` | install/uninstall/where-is-me |
 | `requirement-shell-output-requirements` | `out_*` catalog |
 | `requirement-domain-folder-backup` | Domain four pillars |
@@ -227,6 +228,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | 2026-08-23 | Active 1.6.0 | `menu` / `main` routed (`app_main_menu`); empty argv stays help |
 | 2026-08-28 | Active 1.7.0 | Case 2: TTY empty argv = numbered list; off-TTY help; zero-arguments Withdrawn |
 | 2026-09-03 | Active 1.8.0 | Grant/draft setup verbs stay live CLI commands; numbered **main** list uses family **sudoers** (submenu); `sudoers` not dispatched; AC-10 |
+| 2026-09-03 | Active 1.8.1 | Submenu SSOT **`requirement-shell-cli-sudoers-submenu`** |
 
 ---
 

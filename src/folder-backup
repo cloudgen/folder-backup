@@ -17,6 +17,7 @@
 # - requirement-sudoer-json-file.md  (JSON sudoer file: PRJ_NAME only)
 # - requirement-shell-cli-interface.md
 # - requirement-shell-cli-default-interaction.md  (case 2: TTY empty argv + menu/main numbered list)
+# - requirement-shell-cli-sudoers-submenu.md      (family sudoers + five live grant/draft setup verbs)
 # - requirement-shell-local-self-management.md
 # - requirement-shell-cli-storage.md
 # - requirement-shell-idempotency.md
@@ -31,7 +32,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.16.0"
+# VERSION: hard-assign VERSION="1.16.2"
 #
 # =============================================================================
 
@@ -48,8 +49,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.16.0"
-: "${VERSION:=1.16.0}"
+VERSION="1.16.2"
+: "${VERSION:=1.16.2}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -3464,12 +3465,16 @@ fb_submit_sudoer_request() {
 
     # Point sudoer-cli at the public queue root (parent of real inbound).
     # Do not export a legacy sudoer-approving parent as the public trio root.
+    # When inbound is an env override, also pass --queue-root so a real
+    # sudoer-cli cannot fall back to /var/sudoer-cli.
+    _queue_root_flag=""
     if _qr=$(fb_sudoer_queue_root_from_inbound "${_inbound}"); then
         SUDOER_CLI_QUEUE_ROOT="${_qr}"
         export SUDOER_CLI_QUEUE_ROOT
         if [ -n "${SUDOER_QUEUE_INBOUND}" ] && [ "${_inbound}" = "${SUDOER_QUEUE_INBOUND}" ]; then
             LPU_HOME="${_qr}"
             export LPU_HOME
+            _queue_root_flag="${_qr}"
         fi
     fi
 
@@ -3481,11 +3486,17 @@ fb_submit_sudoer_request() {
     _errf=$(util_mktemp sudoer-err)
     _out=""
     _rc=0
+    _sr_json=""
     if [ "${JSON}" -eq 1 ]; then
-        _out=$("${_cli}" --json "${_verb}" --file "${_tmp}" --purpose "${_purpose}" --service "${APP_NAME}" 2>"${_errf}")
+        _sr_json="--json"
+    fi
+    if [ -n "${_queue_root_flag}" ]; then
+        # shellcheck disable=SC2086
+        _out=$("${_cli}" ${_sr_json} --queue-root "${_queue_root_flag}" "${_verb}" --file "${_tmp}" --purpose "${_purpose}" --service "${APP_NAME}" 2>"${_errf}")
         _rc=$?
     else
-        _out=$("${_cli}" "${_verb}" --file "${_tmp}" --purpose "${_purpose}" --service "${APP_NAME}" 2>"${_errf}")
+        # shellcheck disable=SC2086
+        _out=$("${_cli}" ${_sr_json} "${_verb}" --file "${_tmp}" --purpose "${_purpose}" --service "${APP_NAME}" 2>"${_errf}")
         _rc=$?
     fi
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -4347,7 +4358,8 @@ app_main_menu_print() {
 # The five verbs remain live CLI commands; this list is a picker only.
 #
 # ALIGNMENT:
-# - requirement-shell-cli-default-interaction.md
+# - requirement-shell-cli-sudoers-submenu.md
+# - requirement-shell-cli-default-interaction.md (family row on the start list)
 #
 # Last updated: 2026-09-03
 # =============================================================================
@@ -4444,7 +4456,7 @@ app_main_menu_run_pick() {
 # owned by the submenu loop. Returns 1 if the pick is not a member.
 #
 # ALIGNMENT:
-# - requirement-shell-cli-default-interaction.md
+# - requirement-shell-cli-sudoers-submenu.md
 #
 # Last updated: 2026-09-03
 # =============================================================================
@@ -4484,7 +4496,7 @@ app_main_menu_run_sudoers_pick() {
 # returns 0 (leave menu). Never hangs off-TTY (caller is TTY-only).
 #
 # ALIGNMENT:
-# - requirement-shell-cli-default-interaction.md
+# - requirement-shell-cli-sudoers-submenu.md
 #
 # Last updated: 2026-09-03
 # =============================================================================
@@ -4533,6 +4545,7 @@ app_main_menu_sudoers_loop() {
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
+# - requirement-shell-cli-sudoers-submenu.md
 # - requirement-shell-interactive-vs-noninteractive.md
 #
 # Last updated: 2026-09-03

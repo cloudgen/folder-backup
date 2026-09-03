@@ -25,6 +25,7 @@ Exit **0** when all assertions pass; **1** on failure; **2** if ship unit missin
 - Temp `HOME` + `USER_BIN` for install tests  
 - **No** public network  
 - **No** write to `/etc/sudoers.d` (suite never installs sudoers)  
+- **No** enqueue into live `/var/sudoer-cli/sudoer-request` (isolated `SUDOER_CLI` + temp queue trio; runner snapshot)  
 - Deposit **fail-closed** forced with a PATH-local fake `sudo` (stays valid when host sudoers is installed)  
 - Deposit **success** when root **or** allowlisted `sudo -n mkdir -p /var/backup/folder-backup` works (Type 1 escalate); otherwise SKIP 07/08
 
