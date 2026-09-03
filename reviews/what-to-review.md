@@ -4,9 +4,9 @@
 **Class:** software-development · domain SSOT present · **local-only** install channel (online package intentionally absent).  
 **Always load first:** `reviews/lessons.md`
 
-**Last plan update:** 2026-08-30  
-**Ship unit VERSION:** 1.14.0  
-**Suite baseline:** PASS=323 FAIL=0 SKIP=2 (see `reviews/test-plan.md`)
+**Last plan update:** 2026-09-03  
+**Ship unit VERSION:** 1.15.0  
+**Suite baseline:** PASS=333 FAIL=0 SKIP=2 (see `reviews/test-plan.md`)
 
 ---
 

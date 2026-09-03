@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.15.0] - 2026-09-03
+
+### Changed
+
+- **Numbered work list uses the default CLI main menu style.** On a real terminal the header is **folder-backup**(*live version*) (bold name, italic version). Each command description after the colon is italic and light gray. Scripts and pipes stay plain (no color codes). Law: **requirement-shell-cli-default-interaction** **1.4.0** · **requirement-shell-output-requirements** **1.1.0**. Suite **TP-CLI-18** (portable look family **TP-CLI-17**; this product already used 17 for the help heading split).
+
 ## [1.14.0] - 2026-08-30
 
 ### Changed

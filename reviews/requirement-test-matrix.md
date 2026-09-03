@@ -1,8 +1,8 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-08-30 (1.14.0)  
-**Product VERSION:** 1.14.0  
-**Suite:** `tests/run.sh` (PASS=323 FAIL=0 SKIP=2)
+**Updated:** 2026-09-03 (1.15.0)  
+**Product VERSION:** 1.15.0  
+**Suite:** `tests/run.sh` (PASS=333 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
@@ -16,9 +16,9 @@
 | requirement-folder-archive-backup-retention-daily | backup | TP-FOLDER-BACKUP-18, 18b, **18c** | Max **5** per basename per day; lowest-`N` same-day prune; failed backup does not prune |
 | requirement-shell-cli-interface | shell | TP-CLI-* | Commands, flags, dispatch (incl. new sudoers verbs); **menu/main** TP-CLI-13..16; test-purpose grant-emit apart |
 | requirement-shell-cli-zero-arguments | shell | TP-CLI-07 | **Withdrawn** — off-TTY help still covered with default-interaction |
-| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16** | Case 2 TTY empty argv = menu; off-TTY help; `menu`/`main`; colon labels; version/about/self-managed/test-purpose omitted |
+| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18** | Case 2 TTY empty argv = menu; off-TTY help; `menu`/`main`; colon labels; default CLI main menu style; version/about/self-managed/test-purpose omitted |
 | requirement-shell-local-self-management | shell | TP-LC-* (incl. **09/10** mode) | install/uninstall/where-is-me; **0755** multi-user; global preferred for elev |
-| requirement-shell-output-requirements | shell | TP-CLI-03,05,08,09 | JSON / quiet / errors |
+| requirement-shell-output-requirements | shell | TP-CLI-03,05,08,09, **18** | JSON / quiet / errors; identity token + numbered-row ink |
 | requirement-operator-readable-error | shell | TP-FOLDER-BACKUP-**25**, **25b**, **25c** | Operator-facing `[ERROR]` wording (what happened / next step / no jargon-only) |
 | requirement-shell-modular-function-design | shell | (indirect) | `fb_print_sudoers*`, `fb_remove_project_sudoers`, deposit/restore |
 | requirement-shell-idempotency | shell | TP-LC-03,07 · TP-FOLDER-BACKUP-06,08 | Re-install; next-N |

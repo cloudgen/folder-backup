@@ -1,6 +1,6 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.14.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.15.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
@@ -74,11 +74,11 @@ After install, on a terminal:
 
 ```text
 $ folder-backup
-[INFO] folder-backup — numbered list of live work commands
-1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup
-2. restore: Put an archive back onto the hard-disk projects tree
-3. remove-project-sudoers: Remove the local grant draft only
-4. submit-sudoer-request: Hand the JSON grant to the approval queue
+[INFO] **folder-backup**(*1.15.0*) — numbered list of live work commands
+1. backup: *Pack a named folder into a dated gzip archive under /var/backup/folder-backup*
+2. restore: *Put an archive back onto the hard-disk projects tree*
+3. remove-project-sudoers: *Remove the local grant draft only*
+4. submit-sudoer-request: *Hand the JSON grant to the approval queue*
 9. Exit
 Choice: 9
 ```
@@ -166,6 +166,7 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
+2026-09-03 — version **1.15.0** (numbered list look: **folder-backup**(*version*) header; italic gray descriptions; TP-CLI-18).
 2026-08-30 — version **1.14.0** (storage = cache folder + persistence `${HOME}/.local/folder-backup/`; TP-CLI-06/12).
 2026-08-30 — version **1.13.0** (about Cache folder preferred `/dev/shm/cache/cache-folder-backup`; TP-CLI-06/12).
 2026-08-28 — version **1.12.0** (TTY empty argv opens the numbered work list; off-TTY still help; TP-CLI-07/13).

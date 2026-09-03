@@ -2,7 +2,7 @@
 
 **Product:** folder-backup (POSIX `/bin/sh` local self-managed CLI — folder tar.gz backup with narrow sudo deposit)  
 **Workspace state:** Specialized product law (left genesis); **software-development** class; bootstrap **cli-template → folder-backup** (domain extend; online install **intentionally absent** on A and B).  
-**Updated:** 2026-08-30
+**Updated:** 2026-09-03
 
 | ID / key | Title | Area | Status | Path | Updated |
 |----------|-------|------|--------|------|---------|
@@ -16,9 +16,9 @@
 | requirement-folder-archive-backup-retention-daily | **Daily retention**: max **5** archives per basename per calendar day; prune oldest same-day `N` | backup | Active (1.0.0) | `requirement-folder-archive-backup-retention-daily.md` | 2026-08-12 |
 | requirement-shell-cli-interface | Shell CLI interface (commands, flags, dispatch, modes); submit `--add`/`--update`; **generate-sudoer-request**; **`menu`/`main` routed**; **case 2 TTY empty argv = menu**; test-purpose grant-emit listed apart | shell | Active (1.7.0) | `requirement-shell-cli-interface.md` | 2026-08-28 |
 | requirement-shell-cli-zero-arguments | **Withdrawn** — Type N always-help superseded by case 2 default-interaction | shell | Withdrawn (1.1.0) | `requirement-shell-cli-zero-arguments.md` | 2026-08-28 |
-| requirement-shell-cli-default-interaction | Claimed TTY numbered list on **empty argv** (case 2) and `menu`/`main`; four work rows; test-purpose grant-emit omitted; **implemented** | shell | Active (1.3.0) | `requirement-shell-cli-default-interaction.md` | 2026-08-28 |
+| requirement-shell-cli-default-interaction | Claimed TTY numbered list on **empty argv** (case 2) and `menu`/`main`; four work rows; default CLI main menu style; test-purpose grant-emit omitted; **implemented** | shell | Active (1.4.0) | `requirement-shell-cli-default-interaction.md` | 2026-09-03 |
 | requirement-shell-local-self-management | Local install / uninstall / where-is-me; **mode 0755** multi-user | shell | Active (1.2.1) | `requirement-shell-local-self-management.md` | 2026-08-28 |
-| requirement-shell-output-requirements | Central `out_*` output SSOT | shell | Active | `requirement-shell-output-requirements.md` | 2026-08-03 |
+| requirement-shell-output-requirements | Central `out_*` output SSOT; identity token + numbered-row ink | shell | Active (1.1.0) | `requirement-shell-output-requirements.md` | 2026-09-03 |
 | requirement-operator-readable-error | Operator-facing error **wording** (human-intro style: what happened / next step) | shell | Active (1.0.0) | `requirement-operator-readable-error.md` | 2026-08-17 |
 | requirement-shell-modular-function-design | Single-file modular prefixes (`out_`/`inst_`/`app_`/`fb_`) | shell | Active | `requirement-shell-modular-function-design.md` | 2026-08-03 |
 | requirement-shell-idempotency | Re-run safety; archive next-N no overwrite | shell | Active | `requirement-shell-idempotency.md` | 2026-08-03 |

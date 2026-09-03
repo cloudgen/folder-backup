@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.14.0  
-**Last plan update:** 2026-08-30  
-**Last suite run:** `./tests/run.sh` (1.14.0: PASS=323 FAIL=0 SKIP=2 — cache folder + persistence `${HOME}/.local/folder-backup/`)
+**Product VERSION:** 1.15.0  
+**Last plan update:** 2026-09-03  
+**Last suite run:** `./tests/run.sh` (1.15.0: PASS=333 FAIL=0 SKIP=2 — default CLI main menu style **TP-CLI-18**)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -19,6 +19,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | version / help / about human + JSON | have | TP-CLI-02..06 |
 | Off-TTY empty argv = help (not install) | have | TP-CLI-07 |
 | TTY empty argv + `menu`/`main` list / off-TTY help | have | TP-CLI-13..16 |
+| TTY main-menu look (nametag + gray italic explain) | have | TP-CLI-18 |
 | Unknown + quiet + set -u HOME | have | TP-CLI-08..11 |
 | Cache folder + persistence `${HOME}/.local/folder-backup/` | have | TP-CLI-06 · TP-CLI-12 |
 | No online verbs / no SCRIPT_URL UX | have | TP-CLI-04, TP-CLI-10 |
@@ -65,6 +66,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-15 | non-interactive `menu` is help; `--json` JSON help; flags-only `--json` JSON help (not the list) | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
 | TP-CLI-16 | numbered list omits help/install/uninstall/where-is-me/version/about/test-purpose/menu | test_cli | **shell-cli-default-interaction** AC-6 | **have** |
 | TP-CLI-17 | help lists test-purpose grant-emit verbs under a heading apart from operational | test_cli | **shell-cli-interface** AC-9 | **todo** |
+| TP-CLI-18 | default CLI main menu style: header `APP_NAME(VERSION)` bold/italic; numbered explain italic + light gray; no CSI off-TTY (portable **TP-CLI-17** alias) | test_cli | **shell-cli-default-interaction** AC-8 · **shell-output-requirements** AC-5 | **have** |
 
 ### TP-LC (local lifecycle)
 
