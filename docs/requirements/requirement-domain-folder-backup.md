@@ -147,7 +147,7 @@ folder-backup submit-sudoer-request
 | **Submit verb** | `submit-sudoer-request` → `fb_submit_sudoer_request` |
 | **Generate verb** | `generate-sudoer-request` → `fb_generate_sudoer_request` |
 | **Public inbound (sibling)** | `/var/sudoer-cli/sudoer-request` (3773) |
-| **Worked queued basename** | `sudoer-20260815-folder-backup-leolio-add-1.json` |
+| **Worked queued basename** | `sudoer-20260815-folder-backup-{{USERNAME}}-add-1.json` |
 | **Bootstrap** | Specialized from **cli-template** Type 0 architecture; online install already absent on A |
 
 ### 2.6 Why This Requirement Exists (CIAO)

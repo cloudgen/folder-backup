@@ -274,12 +274,12 @@ Draft often at `${HOME}/.config/folder-backup/sudoers.fragment-<user>`; installe
 `print-sudoers` **MUST** emit this shape (backup/restore with trailing `*`; JSON argv lines **SHOULD**).
 
 ```sudoers
-# Purpose: Allow leolio to run folder-backup backup and restore as root.
+# Purpose: Allow {{USERNAME}} to run folder-backup backup and restore as root.
 # Trailing * = one extra operand (source folder / restore token). Verb-only does not match.
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup *
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore *
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json backup *
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json restore *
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup *
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore *
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json backup *
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json restore *
 ```
 
 **What this example intentionally omits:** `NOPASSWD: ALL`, shell Cmnds, package managers, `mkdir`/`cp`/`install`/`chmod`/`tar`/`rm`, frozen `/var/backup/…` or `*.tar.gz` **paths**, elevation of `${USER_BIN}/folder-backup`.
@@ -287,8 +287,8 @@ leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json restore *
 **Withdrawn (forbidden) emit** — verb-only; `sudo -n folder-backup backup /some/dir` does **not** match:
 
 ```sudoers
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore
 ```
 
 **Test-local header (when tier is test_local — not production):**
@@ -378,8 +378,8 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | **Public queue root** | `/var/sudoer-cli` (sibling default) |
 | **Legacy inbound names** | `…/sudoer-approving` — last-fallback only |
 | **Queued basename (sibling allocator)** | `sudoer-{{YYYYMMDD}}-folder-backup-{{user}}-add-{{n}}.json` (or `update`) |
-| **Worked sample basename** | `sudoer-20260815-folder-backup-leolio-add-1.json` |
-| **Worked dest after approve** | `/etc/sudoers.d/folder-backup-leolio` |
+| **Worked sample basename** | `sudoer-20260815-folder-backup-{{USERNAME}}-add-1.json` |
+| **Worked dest after approve** | `/etc/sudoers.d/folder-backup-{{USERNAME}}` |
 | **Term** | `project-sudoers-file` · `sudoers-fragment` |
 | **Whitelist meaning** | **Sudoers command allowlist** (narrow lines) — not server-maintenance ops registry |
 | **Applied host record** | `docs/whitelists/external-sudoers/records/WS-20260803-001-folder-backup.md` |
@@ -393,8 +393,8 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 
 **JSON body SSOT:** `requirement-sudoer-json-file` — grant is **`folder-backup` only** (`backup` / `restore`). **MUST NOT** encode `mkdir` / `cp` / `tar` / `rm` / `install` / `chmod` (or deposit/stage/archive-name operands) in the queued JSON. Complete add/update samples live on that peer.
 
-**Worked add basename:** `sudoer-20260815-folder-backup-leolio-add-1.json`  
-**Worked update basename:** `sudoer-20260815-folder-backup-leolio-update-1.json`
+**Worked add basename:** `sudoer-20260815-folder-backup-{{USERNAME}}-add-1.json`  
+**Worked update basename:** `sudoer-20260815-folder-backup-{{USERNAME}}-update-1.json`
 
 §2.3.4a remains the **legacy text-fragment** example (OS-tool deposit). That shape is **not** a valid dual of the JSON sudoer file. When emit is updated, the text dual **MUST** match `requirement-sudoer-json-file` §2.6 (`/usr/local/bin/folder-backup backup` and `restore` only).
 
@@ -403,10 +403,10 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 ```sh
 #!/bin/sh
 # folder-backup — admin sudoers install / uninstall
-# RUN: sudo sh /dev/shm/folder-backup-leolio-sudoers-admin.sh install|uninstall|replace|status
+# RUN: sudo sh /dev/shm/folder-backup-{{USERNAME}}-sudoers-admin.sh install|uninstall|replace|status
 set -u
-PROJECT_SUDOERS_FILE="${HOME}/.config/folder-backup/sudoers.fragment-leolio"
-INSTALLED_SUDOERS="/etc/sudoers.d/folder-backup-leolio"
+PROJECT_SUDOERS_FILE="${HOME}/.config/folder-backup/sudoers.fragment-{{USERNAME}}"
+INSTALLED_SUDOERS="/etc/sudoers.d/folder-backup-{{USERNAME}}"
 die() { printf '%s\n' "ERROR: $*" >&2; exit 1; }
 require_root() { [ "$(id -u)" -eq 0 ] || die "Must run as root"; }
 cmd_install() {

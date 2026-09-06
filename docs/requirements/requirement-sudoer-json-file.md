@@ -28,8 +28,8 @@ Queued **basename** allocation remains sibling-owned. This requirement owns **co
 | Box | Meaning | Example |
 |-----|---------|---------|
 | You / this login | The username in the JSON | live emit uses `id -un` |
-| The grant | Product binary + verb + `*` | `args: ["backup", "*"]` |
-| Not this file | How to install the fragment | `requirement-three-layer-privilege-model` |
+| Admin / already root | Installs the matching fragment | `visudo -c` then mode `0440` |
+| Not this file | How to emit and submit the fragment | `requirement-three-layer-privilege-model` |
 
 | Includes | Excludes |
 |----------|----------|
@@ -80,7 +80,7 @@ Queued **basename** allocation remains sibling-owned. This requirement owns **co
 | Wildcards to “keep it matching” | `*` and `*.tar.gz` on shared deposit | User can `cp`/`rm`/`tar` as root **without** running `{{PRJ_NAME}}` |
 | Runtime must stay lockstep with the grant | Second lock after elev | Each product change needs a new sudoers review; agents add “just one more” Cmnd |
 
-Elevating **`{{PRJ_NAME}}`** once is the smaller, stronger F6: after the operator (or passwordless ticket) has approved that command, the ship unit performs mkdir/copy/tar/rm **internally**. Those live tools are **not** a second sudoers catalog.
+Elevating **`{{PRJ_NAME}}`** once is the smaller, stronger grant: after an admin has installed that command, the program performs mkdir/copy/tar/rm **internally**. Those live tools are **not** a second sudoers catalog.
 
 ### 2.3 Arguments — product verbs, no path or filename hardcode
 
@@ -117,20 +117,20 @@ This product **MUST NOT** invent the dest basename. Sibling grammar (informative
 sudoer-{{YYYYMMDD}}-{{PRJ_NAME}}-{{username}}-{{action}}-{{n}}.json
 ```
 
-**Worked sample basename (add):** `sudoer-20260815-folder-backup-leolio-add-1.json`  
-**Worked sample basename (update):** `sudoer-20260815-folder-backup-leolio-update-1.json`
+**Worked sample basename (add):** `sudoer-20260815-folder-backup-{{USERNAME}}-add-1.json`  
+**Worked sample basename (update):** `sudoer-20260815-folder-backup-{{USERNAME}}-update-1.json`
 
 ### 2.6 Complete sample bodies (maximum grant; add vs update)
 
-**Maximum** JSON for this product: both elev verbs **and** `--json` twins (`sudoers(5)` exact argv). Compact and pretty are the same grant. Type 0 emit **MUST NOT** add dest-stamped `submit_by`.
+**Maximum** JSON for this product: both elev verbs **and** `--json` twins (`sudoers(5)` exact argv). Compact and pretty are the same grant. Your-own-login emit **MUST NOT** add dest-stamped `submit_by`.
 
 Normative **add** JSON (this project’s filled values — see §2.8):
 
 ```json
 {
   "schema_version": 1,
-  "purpose": "Allow leolio to run folder-backup backup and restore as root.",
-  "username": "leolio",
+  "purpose": "Allow {{USERNAME}} to run folder-backup backup and restore as root.",
+  "username": "{{USERNAME}}",
   "service": "folder-backup",
   "action": "add",
   "commands": [
@@ -147,11 +147,11 @@ Normative **update** JSON: same `commands`; `"action": "update"` only.
 Equivalent **text dual** of the same grant (not a second allowlist of OS tools):
 
 ```text
-# Purpose: Allow leolio to run folder-backup backup and restore as root.
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup *
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore *
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json backup *
-leolio ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json restore *
+# Purpose: Allow {{USERNAME}} to run folder-backup backup and restore as root.
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup backup *
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup restore *
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json backup *
+{{USERNAME}} ALL=(root) NOPASSWD: /usr/local/bin/folder-backup --json restore *
 ```
 
 JSON without the `--json` objects is **not** the dual of this text. `"*"` is a quoted string (not a cwd listing).
@@ -200,13 +200,13 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 | **Generate verb** | `generate-sudoer-request` → `fb_generate_sudoer_request` (independent compact dual; dest readable without sudo) |
 | **Generate dest (default)** | `${HOME}/.config/folder-backup/sudoer-request-<user>.json` (path operand for suite/review) |
 | **Service field** | `folder-backup` |
-| **Worked user in samples** | `leolio` (illustrative login; live emit uses `id -un`) |
+| **Worked user in samples** | `{{USERNAME}}` (placeholder; live emit uses `id -un`) |
 | **Privilege / workflow peer** | `requirement-three-layer-privilege-model` |
 | **Ship unit emit** | Text dual **1.11.0** has `--json` lines. Compact JSON **Gap vs 1.4.0** until `fb_sudoers_json_text` / `_compact` include the `--json` objects. Host `/etc` is admin-installed (not Type 0). |
 
 ### 2.9 Why This Requirement Exists (Direct CIAO Alignment)
 
-- **CIAO Principle 10 – Least privilege**: F6 is one managed binary and two verbs — not a catalog of root `cp`/`mkdir`/`rm`.  
+- **CIAO Principle 10 – Least privilege**: The grant is one managed binary and two verbs — not a catalog of root `cp`/`mkdir`/`rm`.  
 - **CIAO Principle 1 – Caution**: Extra sudoers lines are extra ways to be wrong; complexity is treated as a vulnerability.  
 - **CIAO Principle 2 – Intentional**: The JSON file means “this user may run `{{PRJ_NAME}} backup <folder>` and `restore <token>` as root” (`args` verb plus `*`), nothing else.  
 - **CIAO Principle 9 – Type 0 / 1 / 2**: JSON is the Type 1 **grant**. Live mkdir/copy/tar after elev are not a second grant.  
