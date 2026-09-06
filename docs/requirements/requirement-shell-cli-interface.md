@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.8.1)  
+**Status**: Active (Version 1.8.2)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -8,7 +8,32 @@
 
 This requirement is the **project Single Source of Truth** for the **POSIX shell CLI interface** of folder-backup: command surface, privilege typing, global flags, dispatcher behavior, help/about contracts, and mode rules.
 
-It defines a **Type 0–centric local self-managed shell CLI** plus **domain backup** commands and a **narrow elevated deposit** path. Full domain semantics live in `requirement-domain-folder-backup.md`. Full elevation/sudoers rules live in `requirement-three-layer-privilege-model.md`.
+It defines a **normal-login** local self-managed shell CLI plus **domain backup** commands and a **narrow elevated deposit** path. Full domain semantics live in `requirement-domain-folder-backup.md`. Full elevation/sudoers rules live in `requirement-three-layer-privilege-model.md`.
+
+### 1.1 Human-facing
+
+**In one sentence:** Type `folder-backup help` to see every live command; work commands and grant-emit testers sit under separate headings; unknown words fail closed.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Type a listed verb | `folder-backup backup /path/to/project` |
+| Scripts / CI | `--json` / `--quiet`; empty argv is help off-TTY | `folder-backup --json version` |
+| Not this file | Numbered list membership | `requirement-shell-cli-default-interaction` |
+
+| Includes | Excludes |
+|----------|----------|
+| Dispatcher tokens, flags, help catalog | Online `self-update` / `self-uninstall` |
+| Work vs grant-emit headings | `sudoers` as a typed command |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `folder-backup help` | command | listed verbs |
+| `src/folder-backup` | ship unit | `app_main` |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| See testers apart from work | Help heading **Grant and draft setup** lists print/generate. | `folder-backup help` |
+| Type an unknown word | Fail closed. | `folder-backup no-such-command` |
 
 ---
 
@@ -63,7 +88,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 | **Diagnostics** | `version`, `about`, `help` |
 | **Test-purpose** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
 
-Ship unit `app_help` still lists grant-emit verbs under the Domain heading with operational work — honest **Gap** until those three sit under a test-purpose heading (AC-9). Tokens are already listed.
+Ship unit `app_help` lists operational work under **Work commands:** and grant-emit testers under **Grant and draft setup (tests and review):** (AC-9). Tokens are listed.
 
 In JSON mode, help **MUST NOT** dump long human text; return a short structured success/note object.
 
@@ -142,6 +167,20 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 ---
 
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** the dispatcher still lists backup/restore; those verbs **MUST** fail closed on that class rather than wrapping `sudo`. Detect lives with privilege/sudo law.
+
+| MUST | MUST NOT |
+|------|----------|
+| Keep your own login only | Enable in-tool `sudo` because a verb is listed |
+| Help remains available | Recommend `sudo curl \| sh` |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
+
+**Implementation Notes:** ship unit has **no detect helper yet** (Gap).
+
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - **Caution:** Fail loud on bad input; never silent wrong privilege context.  
@@ -183,7 +222,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | AC-6 | `submit-sudoer-request` is Type 0, routed, listed in help; does not write `/etc` or create inbound |
 | AC-7 | `generate-sudoer-request` is Type 0, routed, listed in help; independent of submit; dest is invoking-user readable; does not write `/etc` or inbound |
 | AC-8 | `menu` and `main` are routed and listed in help; interactive empty argv opens the same list (`requirement-shell-cli-default-interaction`) |
-| AC-9 | Help lists test-purpose `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` **apart** from operational verbs; those three are **not** **main**-menu rows (they live on the sudoers submenu). **Gap** until `app_help` splits headings |
+| AC-9 | Help lists test-purpose `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` **apart** from operational verbs; those three are **not** **main**-menu rows (they live on the sudoers submenu). **have** (`app_help` splits **Work commands** vs **Grant and draft setup**) |
 | AC-10 | Five grant/draft setup verbs remain routed live CLI commands; `sudoers` is **not** a dispatcher token |
 
 ---
@@ -209,7 +248,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 |----------------|-------|--------|
 | **TP-CLI-01..12** | `tests/test_cli.sh` | have |
 | **TP-CLI-13..16** | same | **have** — `menu`/`main` (`requirement-shell-cli-default-interaction`) |
-| **TP-CLI-17** | same | **todo** — help lists test-purpose grant-emit verbs apart (AC-9) |
+| **TP-CLI-17** | same | **have** — help lists test-purpose grant-emit verbs apart (AC-9) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -229,9 +268,10 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | 2026-08-28 | Active 1.7.0 | Case 2: TTY empty argv = numbered list; off-TTY help; zero-arguments Withdrawn |
 | 2026-09-03 | Active 1.8.0 | Grant/draft setup verbs stay live CLI commands; numbered **main** list uses family **sudoers** (submenu); `sudoers` not dispatched; AC-10 |
 | 2026-09-03 | Active 1.8.1 | Submenu SSOT **`requirement-shell-cli-sudoers-submenu`** |
+| 2026-09-06 | Active 1.8.2 | §1.1 Human-facing; help **Work commands** vs **Grant and draft setup** (AC-9 / TP-CLI-17 have); Under command line section |
 
 ---
 
-**Last Updated**: 2026-09-03  
+**Last Updated**: 2026-09-06  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

@@ -1,27 +1,38 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.16.2-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.16.3-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
 
-**folder-backup** packs a folder you name into a dated gzip archive, stores it under `/var/backup/folder-backup/`, checks the file count and size, and can put that folder back onto the hard-disk projects tree. A normal login can install the program locally, write a grant file you can read, and submit it. Copying the archive into `/var/backup` needs an admin-installed narrow grant first. There is no online `curl|sh` install.
+**folder-backup** packs a folder you name into a dated gzip archive under `/var/backup/folder-backup/`, checks the file count and size, and can put that folder back onto the hard-disk projects tree.
 
 | You (your own login) | Admin / already root | Not this |
 |----------------------|----------------------|----------|
-| Install to `~/.local/bin`, generate and submit a grant, run `backup` / `restore` once the grant exists | Install into `/usr/local/bin` and install the sudoers fragment | No download-and-run install channel; a normal login does not write `/etc` |
+| Install to `~/.local/bin`, write a grant you can read, submit it, then run backup/restore after an admin has installed the grant | Install into `/usr/local/bin` and install the sudoers fragment | No download-and-run install; a normal login does not write `/etc` |
+
+| Includes | Excludes |
+|----------|----------|
+| Local install, numbered work list, backup/restore, grant draft | Online `curl\|sh` install |
+| Admin-installed narrow grant for `/var/backup` | A normal login writing `/etc` |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Install for yourself | No root. Puts the program on your PATH under `.local/bin`. | `sh src/folder-backup install` |
+| Open the work list | On a real terminal, a bare run shows backup, restore, grant/drafts, then Exit. | `folder-backup` |
+| Write a grant you can read | JSON under your config folder. An admin still installs it. | `folder-backup generate-sudoer-request` |
+| Pack a folder after the grant exists | Copies the archive into `/var/backup/folder-backup/`. | `folder-backup backup /path/to/project` |
 
 ## Features
 
-- **Local self-management**: `install`, `uninstall`, `where-is-me`, `version`, `about`, `help`; on a real terminal a bare `folder-backup` (or `menu` / `main`) shows the numbered work list
-- **Backup**: `backup <folder>` → stage tar.gz → elevated deposit → verify → **retention prune** (max **5**/day, **30** total per project basename)
-- **Retention**: `MAX_DAILY_BACKUPS` / `MAX_TOTAL_BACKUPS` (defaults 5 / 30); oldest first; never cross-basename
-- **Restore**: `restore <archive|prefix> [dest]` — default dest is hard-disk `${PROJECTS_ROOT}/<project>`
-- **Restore dest whitelist**: allow `/etc/{{username}}` (invoking user); always refuse `/etc/passwd` and other non-whitelisted system paths
-- **Narrow sudoers**: `print-sudoers` emits deposit / verify-list / restore-stage allowlist (admin installs to `/etc/sudoers.d/`)
-- **Sudoer approval submit**: `generate-sudoer-request` writes a local JSON grant you can review; then `submit-sudoer-request` lets sudoer-cli allocate a JSON request into `/var/sudoer-cli/sudoer-request` (does not write `/etc`, does not `mkdir` inbound)
-- **Fail-closed**: missing source, unauthorized deposit, verify mismatch, non-empty restore without `--force`
-- **CIAO / CIAO-Lite** defensive design (Protection Zones, `out_*` output SSOT)
+- **Install for yourself**: copy this program into `~/.local/bin` (`install`); remove it (`uninstall`); ask where it lives (`where-is-me`)
+- **Numbered work list**: on a real terminal, a bare `folder-backup` (or `menu` / `main`) shows backup, restore, grant/drafts, then Exit
+- **Backup a folder**: pack it to a dated gzip under `/var/backup/folder-backup/`, check counts, then keep at most **5** same-day and **30** total copies per project name
+- **Restore**: put an archive back onto the hard-disk projects tree (or a path you name)
+- **Restore dest guard**: allow `/etc/<your-login>`; refuse `/etc/passwd` and other system paths
+- **Grant you can read**: write JSON (`generate-sudoer-request`); hand it to the approval queue (`submit-sudoer-request`) without writing `/etc`
+- **Admin grant install**: print a sudoers draft and an admin script; an admin copies it to `/etc/sudoers.d/`
+- **Fail closed**: missing source, unauthorized deposit, verify mismatch, non-empty restore without `--force`
 
 ## Quick Installation
 
@@ -42,7 +53,7 @@ folder-backup version
 ```sh
 sudo sh src/folder-backup install
 # or: folder-backup install --global   # needs write access to /usr/local/bin
-# Managed binary mode is always 0755 so every user can run the shell ship unit.
+# Managed binary mode is always 0755 so every user can run the installed program.
 # If an older install left 0711 (rwx--x--x), re-run: sudo sh src/folder-backup install
 ```
 
@@ -70,11 +81,14 @@ sudo sh /dev/shm/folder-backup-<user>-sudoers-admin.sh status
 
 This product is **local-only** for its install *channel* (no default `SCRIPT_URL` online install). Global vs local here means install *location*, not an online channel.
 
+**Source repository:** [cloudgen/folder-backup](https://github.com/cloudgen/folder-backup)  
+Config identity: `REPO_USER=cloudgen`, `REPO_NAME=folder-backup` (override with env if needed; does not enable online install while `SCRIPT_URL` is empty).
+
 After install, on a terminal:
 
 ```text
 $ folder-backup
-[INFO] **folder-backup**(*1.16.2*) — numbered list of live work commands
+[INFO] **folder-backup**(*1.16.3*) — numbered list of live work commands
 1. backup: *Pack a named folder into a dated gzip archive under /var/backup/folder-backup*
 2. restore: *Put an archive back onto the hard-disk projects tree*
 3. sudoers: *Grant and drafts*
@@ -82,10 +96,7 @@ $ folder-backup
 Choice: 9
 ```
 
-Choose a number, or type the command name. `3` opens grant/draft setup (JSON grant, inbound submit, sudoers text, admin install script, remove draft — each is also a typed command). `8` goes back from that list. `9` exits. `folder-backup sudoers` is not a command. In a script or pipe, `folder-backup` with no arguments prints help instead.
-
-**Source repository:** [cloudgen/folder-backup](https://github.com/cloudgen/folder-backup)  
-Config identity: `REPO_USER=cloudgen`, `REPO_NAME=folder-backup` (override with env if needed; does not enable online install while `SCRIPT_URL` is empty).
+Choose a number, or type the command name. `3` opens grant/draft setup (JSON grant, inbound submit, sudoers text, admin install script, remove draft — each is also a typed command). On that list, **`8. Back`** returns to the start list. `9` exits. `folder-backup sudoers` is not a command. In a script or pipe, `folder-backup` with no arguments prints help instead.
 
 ## Usage
 
@@ -153,7 +164,7 @@ folder-backup restore genesis-template-20260803-3.tar.gz /tmp/genesis-restore
 - [folder-backup](https://github.com/cloudgen/folder-backup) — this product
 - [CIAO Defensive Programming](https://github.com/cloudgen/ciao)
 - [CIAO-Lite](https://github.com/cloudgen/ciao-lite)
-- [cli-template](https://github.com/cloudgen/cli-template) — bootstrap parent architecture (Type 0 local-only template)
+- [cli-template](https://github.com/cloudgen/cli-template) — parent CLI you install for yourself (no download-and-run channel)
 
 ## Contributing
 
@@ -165,6 +176,7 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
+2026-09-06 — version **1.16.3** (help lists grant-emit testers apart; README people-and-folders voice; requirement human-facing + coverage).
 2026-09-03 — version **1.16.2** (suite no longer queues live sudoer inbound; TP-CLI-13 / L-INBOUND-02).
 2026-09-03 — version **1.16.1** (dedicated sudoers-submenu requirement; five grant/draft setup verbs stay live CLI commands; TP-CLI-13/16/18).
 2026-09-03 — version **1.15.0** (numbered list look: **folder-backup**(*version*) header; italic gray descriptions; TP-CLI-18).

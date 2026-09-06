@@ -116,6 +116,17 @@ folder-backup remove-project-sudoers
 
 ---
 
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** grant/draft setup verbs stay Type 0 drafts; the submenu **MUST NOT** install `/etc`.
+
+| MUST | MUST NOT |
+|------|----------|
+| Print / generate JSON as this login | Wrap `sudo` from a menu pick |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
+
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - **Caution:** Family token unknown; no hang off-TTY.  

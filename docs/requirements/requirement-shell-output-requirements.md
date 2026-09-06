@@ -136,6 +136,15 @@ Proof when the numbered menu is claimed: **TP-CLI-18** (product alias of portabl
 
 ---
 
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** printers only — **MUST NOT** add `sudo` from `out_*`. Privilege freeze lives on CLI / privilege files.
+
+| MUST | MUST NOT |
+|------|----------|
+| `out_*` as this login | Wrap `sudo` to “fix” a message |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - **Caution:** Never hide fatal errors under quiet.  

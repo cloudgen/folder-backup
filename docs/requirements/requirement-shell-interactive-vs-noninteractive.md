@@ -8,6 +8,31 @@
 
 This requirement is the **project Single Source of Truth** for how folder-backup behaves in **interactive** (human + TTY) versus **non-interactive** (automation, CI/CD, pipes, `--json` / often `--quiet`) environments.
 
+### 1.1 Human-facing
+
+**In one sentence:** On a real terminal the program may ask one question; in a pipe or with `--json` it must never hang waiting for you to type.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Confirm uninstall unless `--force` | `folder-backup uninstall` |
+| Scripts / CI | No prompt; fail closed without `--force` | `folder-backup --json uninstall` |
+| Not this file | Numbered work-list membership | `requirement-shell-cli-default-interaction` |
+
+| Includes | Excludes |
+|----------|----------|
+| Measure TTY once outside helpers; helpers read `TTY` | Live `[ -t` inside `prompt_*` |
+| Non-interactive never hangs | Capturing `prompt_ask` with `$()` |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `src/folder-backup` | ship unit | `TTY` + `prompt_*` |
+| `folder-backup --json uninstall` | command | fail closed without `--force` |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Uninstall from a script | Must pass `--force` or it exits 1. | `folder-backup uninstall --force` |
+| Uninstall at a prompt | It asks first. | `folder-backup uninstall` |
+
 ---
 
 ## 2. Core Rules / Requirements (Mandatory)
@@ -113,6 +138,17 @@ prompt_ask() {
 - **Principle 14 – Traceability**: Errors visible under quiet/json contracts
 
 ---
+
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** TTY confirms stay your-own-login; **MUST NOT** use a TTY as a reason to wrap `sudo`.
+
+| MUST | MUST NOT |
+|------|----------|
+| Measure TTY outside helpers | Password-sudo ladder on this class |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 

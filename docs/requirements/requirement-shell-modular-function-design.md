@@ -12,6 +12,29 @@ This requirement is the **project Single Source of Truth** for **modular functio
 
 Ship unit remains a **single executable** at `src/folder-backup`.
 
+### 1.1 Human-facing
+
+**In one sentence:** The installed program is one file; helpers inside it use prefixes (`out_`, `inst_`, `app_`, `fb_`) so agents do not invent a second shipped script.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Install and run one program | `src/folder-backup` |
+| The other role | Domain helpers stay `fb_*`; lifecycle stays `inst_*` / `app_*` | `fb_backup` |
+| Not this file | Which commands exist | `requirement-shell-cli-interface` |
+
+| Includes | Excludes |
+|----------|----------|
+| One shipped file; prefix table | Splitting install into many shipped files |
+| CIAO headers on public helpers | Bare function names (`backup`, `help`) |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `src/folder-backup` | ship unit | prefixes + headers |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Read the program | Backup work is `fb_*`. Printers are `out_*`. | open `src/folder-backup` |
+
 ---
 
 ## 2. Core Rules / Requirements (Mandatory)
@@ -79,6 +102,17 @@ Critical sections (output SSOT, install place/remove, storage resolve, domain ar
 - **Principle 20 – Protect against AI & human modification**: Visible zones.
 
 ---
+
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** prefixes stay; helpers **MUST NOT** grow a `sudo` wrap as the way to “make deposit work” on that class.
+
+| MUST | MUST NOT |
+|------|----------|
+| One shipped file; `fb_*` / `out_*` | Scatter raw `sudo` in new helpers |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 

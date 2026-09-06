@@ -22,6 +22,32 @@ It is **not** a domain four-pillar file. Domain surface (CLI verbs, help/about) 
 
 After successful deposit + verify, product **MUST** enforce those peers (daily prune then total prune).
 
+### 1.1 Human-facing
+
+**In one sentence:** Type `folder-backup backup <folder>` to pack that folder into a dated gzip under `/var/backup/folder-backup/`, then `folder-backup restore <name>` to put it back on the hard-disk projects tree.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Name the folder to pack; name the archive to restore | `folder-backup backup /path/to/project` |
+| Admin / already root | The deposit into `/var/backup` after a narrow grant exists | `folder-backup backup /path/to/project` (grant already installed) |
+| Not this file | Which CLI verbs exist; how the sudoers draft is emitted | `requirement-domain-folder-backup` |
+
+| Includes | Excludes |
+|----------|----------|
+| Create, name, deposit, verify, restore, dest whitelist | Cloud upload; a backup daemon |
+| Default restore dest = hard-disk projects tree | Restoring into `/etc/passwd` |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `src/folder-backup` | ship unit | live backup/restore |
+| `/var/backup/folder-backup/` | deposit tree | kept archives |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Pack a folder | Stage, copy into `/var/backup`, check counts. | `folder-backup backup /path/to/project` |
+| Put it back | Default dest is the hard-disk projects tree. | `folder-backup restore project-name` |
+| Restore into `/etc/passwd` | Refused. | (fails closed) |
+
 ---
 
 ## 2. Core Rules / Requirements (Mandatory)
@@ -321,6 +347,19 @@ Errors **MUST** use structured error emission with stable codes when feasible (e
 - **Principle 11 – Temps**: Stage under storage resolve; cleanup traps.
 
 ---
+
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** archive create in user staging may run; deposit into `/var/backup` **MUST** fail closed — no `sudo mkdir` / `sudo cp`.
+
+| MUST | MUST NOT |
+|------|----------|
+| Type 0 tar in a user-writable stage | Wrap `sudo` for deposit on this class |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
+
+**Implementation Notes:** ship unit has **no detect helper yet** (Gap).
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 

@@ -10,6 +10,30 @@ This requirement is the **project Single Source of Truth** for **idempotency (re
 
 **Informal formula:** for ensure-style operation *f* and system state *x*, **f(f(x)) ≈ f(x)** for the **desired outcome** (logs and timestamps may differ).
 
+### 1.1 Human-facing
+
+**In one sentence:** Running `install` or `backup` a second time must not smash a good install or overwrite today’s archive slot — it skips or numbers the next file.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Re-run install or backup | `folder-backup install` |
+| The other role | Scripts must get success when the desired state already holds | CI re-run |
+| Not this file | Confirm prompts | `requirement-shell-interactive-vs-noninteractive` |
+
+| Includes | Excludes |
+|----------|----------|
+| Re-install no-op unless `--force` | Failing because “already installed” |
+| Same-day archive `N+1` | Overwriting `NAME-YYYYMMDD-1.tar.gz` |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `src/folder-backup` | ship unit | install + next-N |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Install twice | Second run succeeds without clobber unless you pass `--force`. | `folder-backup install` |
+| Backup twice the same day | Second archive is `…-2.tar.gz`. | `folder-backup backup /path/to/project` |
+
 ---
 
 ## 2. Core Rules / Requirements (Mandatory)
@@ -65,6 +89,17 @@ Archive names use `${SOURCE_FOLDER_NAME}-YYYYMMDD-N.tar.gz`. For the same calend
 - **Principle 12 – Backup**: New archives do not clobber prior ones.
 
 ---
+
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** re-run safety still applies to user-bin install and user-writable dests; it **MUST NOT** invent `sudo` to “heal” a host deposit.
+
+| MUST | MUST NOT |
+|------|----------|
+| Idempotent user-bin install | Wrap `sudo` to force a `/var/backup` write |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 

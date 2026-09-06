@@ -10,6 +10,31 @@ This requirement is the **project Single Source of Truth** for **local self-mana
 
 **Install mode:** **local-only**. Online channel install, remote version-check, self-update, and self-uninstall are **out of scope** (intentionally absent).
 
+### 1.1 Human-facing
+
+**In one sentence:** Copy this program onto your PATH with `folder-backup install`; remove it with `uninstall`; ask where it lives with `where-is-me` — no download-and-run channel.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Install to `~/.local/bin` | `sh src/folder-backup install` |
+| Admin | Install to `/usr/local/bin` before a durable sudoers grant | `sudo sh src/folder-backup install` |
+| Not this file | Backup/restore verbs | `requirement-domain-folder-backup` |
+
+| Includes | Excludes |
+|----------|----------|
+| `install` / `uninstall` / `where-is-me`; mode **0755** | `self-update` / `self-uninstall` / `curl\|sh` |
+| Local `version` / `about` / `help` | Remote version-check |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `src/folder-backup` | ship unit | install source |
+| `~/.local/bin/folder-backup` | user bin | day-to-day |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Install for yourself | No root. Mode is `0755` so others can run it. | `sh src/folder-backup install` |
+| Remove it | Confirm, or `--force` in a script. | `folder-backup uninstall --force` |
+
 ---
 
 ## 2. Core Rules (Mandatory)
@@ -110,6 +135,20 @@ This product ships as a **POSIX shell script** (interpreted). Execution by any n
 - **Principle 16 – Interactive**: Uninstall confirm contract.
 
 ---
+
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** `install` / `uninstall` / `where-is-me` stay your-own-login copies into user bin — **MUST NOT** wrap `sudo` or write `/etc` on that class.
+
+| MUST | MUST NOT |
+|------|----------|
+| Local install as this login | Global install via `sudo` on this class |
+| Help / version / about | Recommend `sudo curl \| sh` |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
+
+**Implementation Notes:** ship unit has **no detect helper yet** (Gap). User-bin install already needs no sudo.
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 

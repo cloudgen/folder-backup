@@ -16,6 +16,9 @@ run_test_cli() {
     require_cmd grep
     require_cmd tar
 
+    # Isolate HOME/cache so about/version do not mkdir on the live login.
+    ci_isolated_env
+
     # TP-CLI-01 syntax
     sh -n "${SCRIPT}"
     assert_eq "TP-CLI-01 sh -n ship unit" 0 "$?"
@@ -63,10 +66,29 @@ run_test_cli() {
     assert_not_contains "TP-CLI-04 no SCRIPT_URL channel" "$_out" "SCRIPT_URL"
     assert_not_contains "TP-CLI-04 no CHECKSUM" "$_out" "CHECKSUM"
 
-    # TP-CLI-05 help json
+    # TP-CLI-17 help lists test-purpose grant-emit under a heading apart
+    assert_contains "TP-CLI-17 work heading" "$_out" "Work commands:"
+    assert_contains "TP-CLI-17 grant heading" "$_out" "Grant and draft setup (tests and review):"
+    _work=$(printf '%s' "$_out" | sed -n '/Work commands:/,/Grant and draft setup/p')
+    _grant=$(printf '%s' "$_out" | sed -n '/Grant and draft setup (tests and review):/,/Global Options:/p')
+    assert_contains "TP-CLI-17 work has backup" "$_work" "backup"
+    assert_contains "TP-CLI-17 work has restore" "$_work" "restore"
+    assert_contains "TP-CLI-17 work has remove-project-sudoers" "$_work" "remove-project-sudoers"
+    assert_contains "TP-CLI-17 work has submit-sudoer-request" "$_work" "submit-sudoer-request"
+    assert_not_contains "TP-CLI-17 work omits print-sudoers row" "$_work" "print-sudoers ["
+    assert_not_contains "TP-CLI-17 work omits generate-sudoer-request row" "$_work" "generate-sudoer-request ["
+    assert_contains "TP-CLI-17 grant has print-sudoers" "$_grant" "print-sudoers"
+    assert_contains "TP-CLI-17 grant has print-sudoers-install-script" "$_grant" "print-sudoers-install-script"
+    assert_contains "TP-CLI-17 grant has generate-sudoer-request" "$_grant" "generate-sudoer-request"
+    assert_not_contains "TP-CLI-17 grant omits backup operand" "$_grant" "backup <folder>"
+
+    # TP-CLI-05 help json (short structured note — not a long human dump)
     _out=$(sh "${SCRIPT}" --json help 2>/dev/null)
     assert_eq "TP-CLI-05 help --json exit 0" 0 "$?"
     assert_contains "TP-CLI-05 help json success" "$_out" '"type":"success"'
+    assert_contains "TP-CLI-05 help json command" "$_out" '"command":"help"'
+    assert_contains "TP-CLI-05 help json note" "$_out" '"note"'
+    assert_not_contains "TP-CLI-05 help json not human Usage" "$_out" "Usage:"
 
     # TP-CLI-06 about json domain + cache folders, no channel
     _out=$(sh "${SCRIPT}" --json about 2>/dev/null)
@@ -135,6 +157,10 @@ run_test_cli() {
 
     _err=$(sh "${SCRIPT}" version-check 2>&1 >/dev/null)
     assert_eq "TP-CLI-10 version-check exit 1" 1 "$?"
+
+    _err=$(sh "${SCRIPT}" self-uninstall 2>&1 >/dev/null)
+    assert_eq "TP-CLI-10 self-uninstall exit 1" 1 "$?"
+    assert_contains "TP-CLI-10 self-uninstall unknown" "$_err" "Unknown command"
 
     # TP-CLI-11 set -u HOME unset still works for version
     _out=$(env -u HOME sh "${SCRIPT}" version 2>/dev/null)
@@ -224,6 +250,10 @@ run_test_cli() {
         assert_contains "TP-CLI-13 TTY menu restore row" "$_plain" "2. restore: Put an archive back onto the hard-disk projects tree"
         assert_contains "TP-CLI-13 TTY menu family sudoers" "$_plain" "3. sudoers: Grant and drafts"
         assert_contains "TP-CLI-13 TTY menu Exit 9" "$_plain" "9. Exit"
+        _out=$(PTY_IN="9" ci_pty_run main)
+        _plain=$(ci_strip_ansi "$_out")
+        assert_contains "TP-CLI-13 TTY main backup row" "$_plain" "1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
+        assert_contains "TP-CLI-13 TTY main Exit 9" "$_plain" "9. Exit"
         _out=$(PTY_IN="$(printf '%s\n' '1' '/tmp/does-not-exist-fb-menu')" ci_pty_run menu)
         assert_contains "TP-CLI-13 TTY pick 1 uses typed folder" "$_out" "Source is not a directory: /tmp/does-not-exist-fb-menu"
         assert_not_contains "TP-CLI-13 TTY pick 1 path not polluted by prompt" "$_out" "Source is not a directory: Folder to pack:"

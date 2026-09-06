@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.16.2  
-**Last plan update:** 2026-09-03  
-**Last suite run:** `./tests/run.sh` (1.16.2 inbound-leak fence: PASS=356 FAIL=0 SKIP=2)
+**Product VERSION:** 1.16.3  
+**Last plan update:** 2026-09-06  
+**Last suite run:** `./tests/run.sh` (1.16.3: PASS=375 FAIL=0 SKIP=2)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -65,7 +65,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-14 | interactive `menu --json` still prints the list | test_cli | **shell-cli-default-interaction** AC-4 | **have** |
 | TP-CLI-15 | non-interactive `menu` is help; `--json` JSON help; flags-only `--json` JSON help (not the list) | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
 | TP-CLI-16 | numbered **main** list omits help/install/uninstall/where-is-me/version/about/test-purpose/menu and the five sudoers verbs | test_cli | **shell-cli-default-interaction** AC-6 · **shell-cli-sudoers-submenu** AC-5 | **have** |
-| TP-CLI-17 | help lists test-purpose grant-emit verbs under a heading apart from operational | test_cli | **shell-cli-interface** AC-9 | **todo** |
+| TP-CLI-17 | help lists test-purpose grant-emit verbs under a heading apart from operational | test_cli | **shell-cli-interface** AC-9 | **have** |
 | TP-CLI-18 | default CLI main menu style: header `APP_NAME(VERSION)` bold/italic; numbered explain italic + light gray; no CSI off-TTY; submenu nametag (portable **TP-CLI-17** alias) | test_cli | **shell-cli-default-interaction** AC-8 · **shell-cli-sudoers-submenu** AC-6 · **shell-output-requirements** AC-5 | **have** |
 
 ### TP-LC (local lifecycle)
@@ -90,6 +90,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-FOLDER-BACKUP-01 | print-sudoers with allow; TEST MODE banner; no Type 0 `/etc` write; tar -tzf | test_domain | three-layer §2.3.1a/§2.3.3 · domain | **have** |
 | TP-FOLDER-BACKUP-01b | refuse print-sudoers without `--allow-test-local` when not production | test_domain | three-layer trust tier **S13** | **have** |
 | TP-FOLDER-BACKUP-01c | print-sudoers text dual includes project **restore** verb | test_domain | three-layer · folder-archive-backup | **have** |
+| TP-FOLDER-BACKUP-01d | print-sudoers must not grant `rm -f` | test_domain | sudoer-json-file AC-4 | **have** (suite-only until this row) |
 | TP-FOLDER-BACKUP-02 | print-sudoers to path; narrow; per-user stage; test mode in file | test_domain | three-layer privilege | **have** |
 | TP-FOLDER-BACKUP-03 | backup missing operand | test_domain | **folder-archive-backup** | **have** |
 | TP-FOLDER-BACKUP-04 | backup missing dir | test_domain | **folder-archive-backup** | **have** |

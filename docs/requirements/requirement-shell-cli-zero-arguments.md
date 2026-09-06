@@ -74,6 +74,15 @@ This file remains on disk so agents do **not** recreate an Active Type N always-
 
 ---
 
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** this file is withdrawn; empty argv **MUST NOT** become install-ensure or a `sudo` wrap. Live empty-argv law is `requirement-shell-cli-default-interaction`.
+
+| MUST | MUST NOT |
+|------|----------|
+| Stay withdrawn | Recreate always-help as a reason to skip the numbered list |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - **Caution**: Do not revive always-help as a second empty-argv owner.  

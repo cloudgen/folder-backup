@@ -437,6 +437,20 @@ esac
 
 ---
 
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. You may still print a grant draft as yourself. **This requirement:** deposit `sudo` and `/etc` install stay unused on that class — fail closed instead of wrapping `sudo`.
+
+| MUST | MUST NOT |
+|------|----------|
+| Keep your own login only | In-tool `sudo`; wrap `apt`/`dnf`; write `/etc`; create a dedicated system user |
+| Fail closed if a host deposit would need admin privilege | Recommend `sudo curl \| sh` |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
+
+**Implementation Notes:** ship unit has **no detect helper yet** (Gap). Linux with a root login remains the primary host.
+
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - **Caution:** Narrow allowlist; admin review gate; fail closed.  

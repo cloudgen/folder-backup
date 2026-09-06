@@ -16,6 +16,29 @@ This requirement is the **product Single Source of Truth** for the **maximum tot
 
 It does **not** own create/name/deposit/verify/restore (those stay in `requirement-folder-archive-backup`). Daily per-day cap is **`requirement-folder-archive-backup-retention-daily`**.
 
+### 1.1 Human-facing
+
+**In one sentence:** After a successful backup, this program keeps at most **30** archives per project name and deletes the oldest extras.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Run backup; prune happens after a successful deposit | `folder-backup backup /path/to/project` |
+| The other role | Failed backup must not delete prior archives | A deposit that never landed |
+| Not this file | Same-day cap of 5 | `requirement-folder-archive-backup-retention-daily` |
+
+| Includes | Excludes |
+|----------|----------|
+| Max **30** per basename; oldest first | Deleting another project’s archives |
+| Prune only after success | Prune on a failed backup |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `/var/backup/folder-backup/` | deposit tree | count `NAME-*.tar.gz` |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Pack the same project many times | Oldest extras go away after a successful run. | `folder-backup backup /path/to/project` |
+
 ---
 
 ## 2. Core Rules / Requirements (Mandatory)

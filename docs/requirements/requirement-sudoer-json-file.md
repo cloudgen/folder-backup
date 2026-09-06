@@ -214,6 +214,17 @@ Sibling (or this product) **MAY** decode then re-encode the grant when convertin
 
 ---
 
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** generating the JSON grant stays your-own-login; the file **MUST NOT** become a reason to wrap `sudo` or write `/etc` on that class.
+
+| MUST | MUST NOT |
+|------|----------|
+| Write JSON under a user-readable dest | In-tool `sudo` to place the grant |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
+
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - **Caution:** Refuse OS-tool JSON even if an older fragment or review used it.  

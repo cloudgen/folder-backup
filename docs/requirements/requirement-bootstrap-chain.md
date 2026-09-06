@@ -6,9 +6,34 @@
 
 ## 1. Purpose
 
-Declare the **bootstrap chain** for this product: ordered lineage, direction, architecture inheritance, and the **domain extend** of folder-archive backup onto the Type 0 parent.
+Declare the **bootstrap chain** for this product: ordered lineage, direction, architecture inheritance, and the **domain extend** of folder-archive backup onto the parent CLI you install for yourself.
 
 **Direction is sacred:** ancestor → descendant only. Never reverse-copy this product onto the bootstrap parent.
+
+### 1.1 Human-facing
+
+**In one sentence:** folder-backup grew from the sibling **cli-template** CLI; copy architecture **from** that parent **to** this product, never the reverse.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Work in this tree (`src/folder-backup`) | `sh src/folder-backup version` |
+| The parent | Sibling `cli-template` — install-for-yourself CLI, no download-and-run channel | Keep that tree as the origin |
+| Not this file | Backup/restore verbs, sudoers grant body | `requirement-domain-folder-backup` |
+
+| Includes | Excludes |
+|----------|----------|
+| Ancestor → descendant only | Copying this product onto cli-template “to share fixes” |
+| Local-only install inherited from the parent | Reintroducing online `curl\|sh` because a sibling has it |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `src/folder-backup` | this product | live ship unit |
+| `docs/requirements/index.md` | registry | lineage row |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Change this product | Edits stay here. Do not overwrite the parent CLI. | work under this workspace root |
+| Check install mode | Both products are local-only. | `folder-backup help` — no `SCRIPT_URL` |
 
 ---
 

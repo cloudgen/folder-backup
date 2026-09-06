@@ -10,6 +10,31 @@ Define **project folder structure** and path ownership for the folder-backup CLI
 
 **Critical distinction:** CLI tool own paths vs target folders being archived vs host durable backup deposit.
 
+### 1.1 Human-facing
+
+**In one sentence:** The program you install lives at `src/folder-backup`; archives you keep live under `/var/backup/folder-backup/`; those are different folders from the project you pack.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Install to `~/.local/bin`; pack a named project folder | `sh src/folder-backup install` |
+| Admin | Global binary under `/usr/local/bin`; deposit tree under `/var/backup` | `sudo sh src/folder-backup install` |
+| Not this file | How backup names and retention work | `requirement-folder-archive-backup` |
+
+| Includes | Excludes |
+|----------|----------|
+| `src/` ship unit; user vs global bin | Online companion digest as a required install file |
+| Deposit root `/var/backup/folder-backup/` | Treating the project being packed as this program’s home |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `src/folder-backup` | program file | install source |
+| `/var/backup/folder-backup/` | deposit tree | kept archives |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Install for yourself | Copy into `~/.local/bin`. | `sh src/folder-backup install` |
+| Name the deposit tree | Host archives, not your checkout. | `folder-backup about` |
+
 ---
 
 ## 2. Core Rules (Mandatory)

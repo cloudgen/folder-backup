@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.16.3] - 2026-09-06
+
+### Changed
+
+- **Help lists grant-emit testers apart from work commands.** Human help now has **Work commands:** (`backup` / `restore` / `remove-project-sudoers` / `submit-sudoer-request`) then **Grant and draft setup (tests and review):** (`print-sudoers` / `print-sudoers-install-script` / `generate-sudoer-request`). Closes AC-9 / **TP-CLI-17**. Lifecycle heading is people-facing (no Type-N lead).
+- **Product README** Description uses one sentence, three boxes, includes/excludes, and a practice table of what you type. Features are outcomes, not a verb catalog. Related Projects no longer leads with Type 0.
+- **Requirements:** every registered `requirement-*.md` has **§1.1 Human-facing**; related shell files have a section **Under command line for normal user only**. New **`requirement-shell-script-coding`** (specialize-in home) and **`requirement-shell-sudo-command`** (studied allow table; wrap still Gap). Compact JSON `--json` twins remain Gap (**TP-FOLDER-BACKUP-27**).
+
+### Fixed
+
+- CLI suite isolates HOME before `about`/`version` so those paths do not mkdir on the live login. **TP-CLI-10** also rejects `self-uninstall`. **TP-CLI-13** covers TTY `main`.
+
 ## [1.16.2] - 2026-09-03
 
 ### Fixed

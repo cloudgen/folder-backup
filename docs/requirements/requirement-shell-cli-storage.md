@@ -184,6 +184,17 @@ Cache preferred/fallback about lines are the **policy** cache paths (helpers). P
 
 ---
 
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** cache and persistence stay under this login’s folders — **MUST NOT** create `/var/backup` via `sudo` from storage helpers.
+
+| MUST | MUST NOT |
+|------|----------|
+| User cache / `${HOME}/.local/folder-backup/` | Host deposit as a storage-resolver job |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
+
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - Volatile first, user cache last for **scratch**.  

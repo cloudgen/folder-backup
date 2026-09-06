@@ -160,6 +160,19 @@ On a real terminal the first three **MUST** show the list. `folder-backup menu -
 
 ---
 
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** the numbered list may still show backup/restore; picking them **MUST** fail closed on that class rather than wrapping `sudo`.
+
+| MUST | MUST NOT |
+|------|----------|
+| Numbered list as this login | Hang; install-ensure on empty argv |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
+
+**Implementation Notes:** ship unit has **no detect helper yet** (Gap).
+
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - **Caution:** Do not hang off-TTY; do not steal empty argv for install.  

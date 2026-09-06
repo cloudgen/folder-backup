@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-class-software-dev.md  
-**Status**: Active (Version 1.1.1 – residual empty-argv pointer to case 2)  
+**Status**: Active (Version 1.1.2 – coding-style + sudo-command residual pointers)  
 **Area**: class  
 **Key**: `requirement-class-software-dev`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -12,11 +12,11 @@ This file is **class law + residual SSOT**, not a second copy of Type 0 lifecycl
 
 ### 1.1 Human-facing
 
-This file says the workspace is a **shippable program** (folder-backup) and records leftover stack facts that no other requirement already owns.
+This file says the workspace is a **shippable program** (folder-backup) — **project nature** software-development — and records leftover stack facts that no other requirement already owns.
 
 | You | Another role | Not this |
 |-----|--------------|----------|
-| Read this file to learn the project class and leftover stack (language, tools, “no dest approver”) | Peer requirements own backup ops, install, sudoers grant body, and CLI verbs | A dest approval machine, a second class file, or online-install law |
+| Read this file to learn the project nature and leftover stack (language, tools, “no dest approver”) | Peer requirements own backup ops, install, sudoers grant body, and CLI verbs | A dest approval machine, a second class file, or online-install law |
 
 **Includes:** class membership, residual stack, honest “none” for dest approver and dest fences.  
 **Excludes:** inventing an approver account; inventing dest fence rows; duplicating peer backup/install tables.
@@ -122,6 +122,8 @@ This file says the workspace is a **shippable program** (folder-backup) and reco
 | Idempotency / re-run safety | `requirement-shell-idempotency` | Do not duplicate |
 | Interactive vs non-interactive | `requirement-shell-interactive-vs-noninteractive` | Do not duplicate |
 | Modular prefixes / single-file layout | `requirement-shell-modular-function-design` | Do not duplicate |
+| Coding-style related REQ | `requirement-shell-script-coding` | Specialize-in home; **MUST NOT** skip |
+| In-tool sudo wrap + allow table | `requirement-shell-sudo-command` | Studied dest/argv; wrap Gap |
 | Privilege layers + sudoers **files** (emit/install/fail-closed) | `requirement-three-layer-privilege-model` | Type 0 + narrow Type 1 deposit; §2.3 sudoers workflow SSOT |
 | JSON sudoer file (grant body) | `requirement-sudoer-json-file` | `{{PRJ_NAME}}` only; no `cp`/`mkdir`/OS-tool commands |
 | Folder archive **backup operations** | `requirement-folder-archive-backup` | Create / name / deposit / verify (not domain) |
@@ -196,6 +198,8 @@ This file says the workspace is a **shippable program** (folder-backup) and reco
 | `requirement-shell-cli-storage` | Scratch/cache resolve |
 | `requirement-shell-idempotency` | Re-run safety |
 | `requirement-shell-interactive-vs-noninteractive` | Mode policy |
+| `requirement-shell-script-coding` | Coding-style specialize-in home |
+| `requirement-shell-sudo-command` | In-tool sudo wrap + studied allow table |
 | `requirement-shell-modular-function-design` | Prefixes / single-file modularity |
 | `requirement-three-layer-privilege-model` | Privilege + working with sudoers fragment files |
 | `requirement-sudoer-json-file` | JSON sudoer file body (`{{PRJ_NAME}}` only) |
@@ -214,9 +218,10 @@ This file says the workspace is a **shippable program** (folder-backup) and reco
 | 2026-08-15 | Active | Residual: JSON sudoer file → `requirement-sudoer-json-file` |
 | 2026-08-19 | Active (1.1.0) | Residual: **considered — no dest approver and no approval subject**; **considered — no dest fence conditions**. §1.1 Human-facing. Version SSOT note 1.9.0. |
 | 2026-08-28 | Active (1.1.1) | Residual pointer: empty argv → default-interaction case 2 (zero-arguments Withdrawn) |
+| 2026-09-06 | Active (1.1.2) | Residual pointers: `requirement-shell-script-coding` · `requirement-shell-sudo-command`. §1.1 says **project nature**. |
 
 ---
 
-**Last Updated**: 2026-08-28  
+**Last Updated**: 2026-09-06  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

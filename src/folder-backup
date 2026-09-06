@@ -32,7 +32,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.16.2"
+# VERSION: hard-assign VERSION="1.16.3"
 #
 # =============================================================================
 
@@ -49,8 +49,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.16.2"
-: "${VERSION:=1.16.2}"
+VERSION="1.16.3"
+: "${VERSION:=1.16.3}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -4637,7 +4637,7 @@ app_main_menu() {
 # app_help() - Usage (local Type 0 + domain)
 # =============================================================================
 #
-# Last updated: 2026-08-28
+# Last updated: 2026-09-06
 # =============================================================================
 app_help() {
     : "${SHORT_DESCRIPTION:=${APP_DESC:-Local folder archive backup/restore with narrow sudo deposit}}"
@@ -4663,7 +4663,7 @@ app_help() {
     out_info "Usage:"
     out_plain "  ${APP_NAME} [command] [options]"
     out_empty_line
-    out_info "Lifecycle (Type 0 — local self-managed):"
+    out_info "Install and self-care (your own login):"
     out_plain "  install              Install ${APP_NAME} (root→global, user→~/.local/bin)"
     out_plain "  install --global     Force global path (${GLOBAL_BIN}; needs write/root)"
     out_plain "  uninstall            Remove managed binary (confirm or --force); not sudoers"
@@ -4674,31 +4674,32 @@ app_help() {
     out_plain "  menu                 Numbered list of live work commands (same list as a TTY empty run; off-TTY is help)"
     out_plain "  main                 Same as menu"
     out_empty_line
-    out_info "Domain (Type 0 archive + Type 1 deposit/restore-stage):"
+    out_info "Work commands:"
     out_plain "  backup <folder>      tar.gz folder → ${BACKUP_ROOT}/${BACKUP_NOTATION}/NAME-YYYYMMDD-N.tar.gz"
     out_plain "  restore <archive|prefix> [dest]  Extract archive (default dest: hard-disk SSOT)"
+    out_plain "  remove-project-sudoers [path]"
+    out_plain "                       Remove project-sudoers-file draft only (not host elev;"
+    out_plain "                       lists drafts and lets you choose when multiple;"
+    out_plain "                       confirm or --force; probes /etc/sudoers.d/ and warns if active)"
+    out_plain "  submit-sudoer-request [file]"
+    out_plain "                       Detect sudoer-cli + sudoer-adm; sibling writes"
+    out_plain "                       JSON into /var/sudoer-cli/sudoer-request"
+    out_plain "                       action=update if this user's /etc/sudoers.d/${APP_NAME}-<user>"
+    out_plain "                       (or legacy ${APP_NAME}) exists; else add"
+    out_plain "                       (does not write /etc; does not mkdir inbound)"
+    out_plain "                       Prefer: generate-sudoer-request, review, then submit file"
+    out_empty_line
+    out_info "Grant and draft setup (tests and review):"
     out_plain "  print-sudoers [path] Emit project-sudoers-file (draft) for admin"
     out_plain "                       (test_local/unmanaged needs --allow-test-local);"
     out_plain "                       default: ~/.config/${APP_NAME}/sudoers.fragment-<user>"
     out_plain "  print-sudoers-install-script [path]"
     out_plain "                       Write admin script (/dev/shm or temp) to install|uninstall|replace"
     out_plain "                       per-user fragment /etc/sudoers.d/${APP_NAME}-<user> (run with sudo)"
-    out_plain "  remove-project-sudoers [path]"
-    out_plain "                       Remove project-sudoers-file draft only (not host elev;"
-    out_plain "                       lists drafts and lets you choose when multiple;"
-    out_plain "                       confirm or --force; probes /etc/sudoers.d/ and warns if active)"
     out_plain "  generate-sudoer-request [path]"
-    out_plain "                       Type 0 independent generate: write a JSON sudoer file"
-    out_plain "                       (compact, both verbs) to a dest tests/review can read."
-    out_plain "                       Does not write /etc or inbound."
+    out_plain "                       Write a JSON sudoer file (compact, both verbs) to a dest"
+    out_plain "                       you can read without sudo. Does not write /etc or inbound."
     out_plain "                       default: ~/.config/${APP_NAME}/sudoer-request-<user>.json"
-    out_plain "  submit-sudoer-request [file]"
-    out_plain "                       Type 0: detect sudoer-cli + sudoer-adm; sibling writes"
-    out_plain "                       JSON into /var/sudoer-cli/sudoer-request"
-    out_plain "                       action=update if this user's /etc/sudoers.d/${APP_NAME}-<user>"
-    out_plain "                       (or legacy ${APP_NAME}) exists; else add"
-    out_plain "                       (does not write /etc; does not mkdir inbound)"
-    out_plain "                       Prefer: generate-sudoer-request, review, then submit file"
     out_empty_line
     out_info "Global Options:"
     out_plain "  --quiet, -q          Suppress info/success (errors still shown)"

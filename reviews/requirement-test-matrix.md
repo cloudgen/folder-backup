@@ -1,8 +1,8 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-09-03 (1.16.2)  
-**Product VERSION:** 1.16.2  
-**Suite:** `tests/run.sh` (PASS=333 FAIL=0 SKIP=2)
+**Updated:** 2026-09-06 (1.16.3)  
+**Product VERSION:** 1.16.3  
+**Suite:** `tests/run.sh` (PASS=375 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
@@ -14,7 +14,9 @@
 | requirement-folder-archive-backup | backup | TP-FOLDER-BACKUP-03..08, 10..13, **16** | Source/name/deposit/verify/next-N/**restore** + dest whitelist W-ETC-USER (ops SSOT) |
 | requirement-folder-archive-backup-retention-total | backup | TP-FOLDER-BACKUP-17, 17b, **17c** | Max **30** per basename; oldest-first prune; failed backup does not prune |
 | requirement-folder-archive-backup-retention-daily | backup | TP-FOLDER-BACKUP-18, 18b, **18c** | Max **5** per basename per day; lowest-`N` same-day prune; failed backup does not prune |
-| requirement-shell-cli-interface | shell | TP-CLI-* | Commands, flags, dispatch (incl. new sudoers verbs); **menu/main** TP-CLI-13..16; test-purpose grant-emit apart |
+| requirement-shell-cli-interface | shell | TP-CLI-* | Commands, flags, dispatch (incl. new sudoers verbs); **menu/main** TP-CLI-13..16; test-purpose grant-emit apart (**TP-CLI-17 have**) |
+| requirement-shell-script-coding | shell | (indirect) | Specialize-in home; own-or-point |
+| requirement-shell-sudo-command | shell | TP-FOLDER-BACKUP-01, 01c, 26; **27 todo** | Studied allow table; wrap Gap |
 | requirement-shell-cli-zero-arguments | shell | TP-CLI-07 | **Withdrawn** — off-TTY help still covered with default-interaction |
 | requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18** | Case 2 TTY empty argv = menu; off-TTY help; `menu`/`main`; family **sudoers** row; submenu body on sudoers-submenu REQ; default CLI main menu style; version/about/self-managed/test-purpose omitted from **main** |
 | requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | Family **sudoers** + five live grant/draft setup verbs; `sudoers` not dispatched; Back 8 / Exit 9; submenu nametag |

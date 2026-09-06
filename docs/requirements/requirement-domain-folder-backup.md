@@ -14,6 +14,31 @@ This requirement is the **domain surface Single Source of Truth** for folder-bac
 
 This file remains the sole Active **`requirement-domain-*`** (four pillars).
 
+### 1.1 Human-facing
+
+**In one sentence:** Domain commands are backup, restore, and the grant/draft verbs; this file lists them and what help/about must show — the packing rules live on the backup file.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Type a domain verb | `folder-backup backup /path/to/project` |
+| The other role | Help lists work commands apart from grant-emit testers | `folder-backup help` |
+| Not this file | How tar/deposit/verify work | `requirement-folder-archive-backup` |
+
+| Includes | Excludes |
+|----------|----------|
+| Verb catalog, help rows, about fields | A second copy of backup ops |
+| Test-purpose grant-emit listed apart | `sudoers` as a typed command |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `folder-backup help` | command | listed domain rows |
+| `folder-backup about` | command | domain diagnostics |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| See work vs testers | Help has **Work commands** then **Grant and draft setup**. | `folder-backup help` |
+| Pack a folder | Ops stay on the backup requirement. | `folder-backup backup /path/to/project` |
+
 ---
 
 ## 2. Core Rules / Requirements (Mandatory)
@@ -52,7 +77,7 @@ Domain **MUST NOT** restate full operational backup rules in a second competing 
 
 ### 2.3 Pillar C — Specialized project help items
 
-`help` **MUST** show domain rows (in addition to Type 0 lifecycle). **Operational** rows and **test-purpose** rows **MUST** be listed **apart** (separate heading). Ship unit `app_help` still mixes grant-emit verbs under Domain — honest **Gap** until headings split (`requirement-shell-cli-interface` AC-9).
+`help` **MUST** show domain rows (in addition to lifecycle). **Operational** rows and **test-purpose** rows **MUST** be listed **apart** (separate heading). Ship unit `app_help` lists work under **Work commands:** and grant-emit testers under **Grant and draft setup (tests and review):** (`requirement-shell-cli-interface` AC-9).
 
 **Operational:**
 
@@ -132,6 +157,19 @@ folder-backup submit-sudoer-request
 - **Principle 9 – Three Types of Commands**: Domain labels Type 0 verbs that invoke Type 1 sub-steps under peer REQs.
 
 ---
+
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** domain verbs stay listed; backup/restore **MUST** fail closed on that class rather than wrapping `sudo` to deposit.
+
+| MUST | MUST NOT |
+|------|----------|
+| Help / generate JSON as this login | In-tool `sudo` for domain start/stop |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
+
+Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
+
+**Implementation Notes:** ship unit has **no detect helper yet** (Gap).
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 

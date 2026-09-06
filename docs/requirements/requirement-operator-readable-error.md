@@ -11,6 +11,30 @@ This requirement is the **product Single Source of Truth** for **operator-facing
 
 Every blocking `[ERROR]` **MUST** be understandable to a person at the prompt: **what happened**, **what it means**, and **what to do next** — the same concreteness as a human-intro page. Channel ownership stays on `requirement-shell-output-requirements`. Fail-fast vs degrade stays on that peer’s `out_die` contract plus product fail-closed rules. This file owns **copy**.
 
+### 1.1 Human-facing
+
+**In one sentence:** When this program stops with `[ERROR]`, the line names what went wrong and the next `folder-backup` command — not an internal jargon token.
+
+| Box | Meaning | Example |
+|-----|---------|---------|
+| You / this login | Read the error and type the next command | `folder-backup generate-sudoer-request` |
+| The other role | Scripts parse the same sentence in JSON `message` | `folder-backup --json …` |
+| Not this file | Which printer function emits the line | `requirement-shell-output-requirements` |
+
+| Includes | Excludes |
+|----------|----------|
+| What happened + next step | A fatal that is only `sibling re-encode` |
+| JSON `message` matching the human sentence | Dropping a fail-closed check to sound nicer |
+
+| Surface | What you open | What for |
+|---------|---------------|----------|
+| `src/folder-backup` | ship unit | live `out_die` text |
+| `folder-backup generate-sudoer-request /etc/x` | command | worked `/etc` refuse |
+
+| You do… | What it means | What you type |
+|---------|---------------|---------------|
+| Hit a blocked submit | The line names incompleteness and the generate command. | read `[ERROR]`; then `folder-backup generate-sudoer-request` |
+
 ---
 
 ## 2. Core Rules / Requirements (Mandatory)
@@ -57,7 +81,7 @@ JSON `message` **MUST** be that same sentence.
 | **Ship unit** | `src/folder-backup` |
 | **Printer** | `out_die` / `out_error` |
 | **Worked inbound miss** | `Queued sudo request is incomplete: it allows restore but not backup. Do not approve <id>. … generate-sudoer-request` |
-| **Worked generate `/etc`** | `generate-sudoer-request refuses to write under /etc (Type 0). Use a path under $HOME or /dev/shm.` |
+| **Worked generate `/etc`** | `generate-sudoer-request refuses to write under /etc (your own login). Use a path under your home or /dev/shm.` |
 | **Banned as whole message** | `sibling re-encode?` · `inbound grant lost … verb` |
 | **Class** | software-development — this wording law is required |
 
@@ -69,6 +93,15 @@ JSON `message` **MUST** be that same sentence.
 - **Stay-honest**: Do not pretend `[OK]` or purpose text completed the grant.
 
 ---
+
+## Under command line for normal user only
+
+When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** error copy only — **MUST NOT** tell the operator to `sudo curl | sh` or wrap `sudo` as the next step on that class.
+
+| MUST | MUST NOT |
+|------|----------|
+| Next step is a `folder-backup` command or “ask an admin” | Recommend `sudo curl \| sh` |
+| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
