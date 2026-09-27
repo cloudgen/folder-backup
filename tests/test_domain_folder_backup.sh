@@ -389,6 +389,26 @@ run_test_domain_folder_backup() {
     assert_file_exists "TP-FOLDER-BACKUP-15b legacy draft remains" "${CI_HOME}/.config/folder-backup/sudoers.fragment"
     assert_file_exists "TP-FOLDER-BACKUP-15b other draft remains" "${CI_HOME}/.config/folder-backup/sudoers.fragment-otheruser"
 
+    # TP-FOLDER-BACKUP-15c TTY multi-draft picker reads the number in this shell
+    if command -v python3 >/dev/null 2>&1; then
+        rm -f "${CI_HOME}/.config/folder-backup/sudoers.fragment" \
+            "${CI_HOME}/.config/folder-backup/sudoers.fragment-otheruser" \
+            "${_draft_default}"
+        mkdir -p "${CI_HOME}/.config/folder-backup"
+        printf '# legacy\n' > "${CI_HOME}/.config/folder-backup/sudoers.fragment"
+        printf '# aaa\n' > "${CI_HOME}/.config/folder-backup/sudoers.fragment-aaa"
+        printf '# zzz\n' > "${CI_HOME}/.config/folder-backup/sudoers.fragment-zzz"
+        _out=$(HOME="${CI_HOME}" LC_ALL=C PTY_IN="2" ci_pty_run remove-project-sudoers --force)
+        assert_contains "TP-FOLDER-BACKUP-15c shows the question" "$_out" "Choose draft number to remove"
+        assert_not_contains "TP-FOLDER-BACKUP-15c choice is not glued to the prompt" "$_out" "Invalid choice"
+        assert_contains "TP-FOLDER-BACKUP-15c removed the second draft" "$_out" "sudoers.fragment-aaa"
+        assert_file_missing "TP-FOLDER-BACKUP-15c second draft gone" "${CI_HOME}/.config/folder-backup/sudoers.fragment-aaa"
+        assert_file_exists "TP-FOLDER-BACKUP-15c legacy remains" "${CI_HOME}/.config/folder-backup/sudoers.fragment"
+        assert_file_exists "TP-FOLDER-BACKUP-15c third draft remains" "${CI_HOME}/.config/folder-backup/sudoers.fragment-zzz"
+    else
+        t_skip "TP-FOLDER-BACKUP-15c TTY multi-draft picker (no python3 for PTY)"
+    fi
+
     # TP-FOLDER-BACKUP-16 restore dest whitelist (W-ETC-USER / hard deny /etc/passwd)
     _broot16="${CI_HOME}/backup-root16"
     _dep16="${_broot16}/folder-backup"

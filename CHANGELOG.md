@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.16.5] - 2026-09-27
+
+### Changed
+
+- **Scratch is one folder per login and per process.** On Linux the preferred folder is `/dev/shm/cache/cache-folder-backup-<login>-<pid>`, then `/tmp/cache/cache-folder-backup-<login>-<pid>`, then `${HOME}/.cache/cache-folder-backup-<pid>`. Git Bash prefers `/tmp/cache/...` then `${HOME}/AppData/Local/Temp/cache-folder-backup-<pid>` (no second fallback). Mac prefers `/tmp/cache/...`, then `${HOME}/Library/Caches/cache-folder-backup-<pid>`, then `${HOME}/cache/cache-folder-backup-<pid>`. A skipped folder is silent. An error is only when every folder on this host fails. Files inside the folder stay `mktemp` names. Durable data stays `${HOME}/.local/folder-backup` (no login suffix, no process id). Human `about` prints **Cache folder used**, **Cache folder (preferred)**, **Cache folder (1st fallback)**, **Cache folder (2nd fallback)** when that host has one, and **Persistence storage**. JSON uses `cache_used`, `cache_preferred`, `cache_fallback`, `cache_fallback_2`, and `persistence_storage`. Law: **requirement-shell-cli-storage** **1.4.0**. Suite **TP-CLI-06** · **TP-CLI-12** (PASS=410 FAIL=0 SKIP=2).
+
+## [1.16.4] - 2026-09-23
+
+### Fixed
+
+- **Cache leaf is private to this login.** `util_resolve_storage` keeps `/dev/shm/cache/cache-folder-backup` (then `/tmp/cache/…`, then the home cache) only when this login owns a real directory and `chmod 0700` sticks. Another login’s writable leaf, a symlink, or a group/world-open directory falls through. Human `about` prints **Cache folder (live)** next to preferred and fallback. Law: **requirement-shell-cli-storage** **1.3.0**. Suite **TP-CLI-06** · **TP-CLI-12**.
+- **Draft picker no longer captures `read`.** Multi-draft `remove-project-sudoers` calls `prompt_ask` in the current shell and reads `PROMPT_ASK_VALUE`. The question is no longer glued onto the number (`Choose draft number to remove: 2`). Law: **requirement-shell-interactive-vs-noninteractive** **1.1.0**. Suite **TP-FOLDER-BACKUP-15c** · **TP-CLI-20**.
+
 ## [1.16.3] - 2026-09-06
 
 ### Changed

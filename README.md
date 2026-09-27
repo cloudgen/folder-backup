@@ -1,6 +1,6 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.16.3-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.16.5-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
@@ -33,6 +33,7 @@
 - **Grant you can read**: write JSON (`generate-sudoer-request`); hand it to the approval queue (`submit-sudoer-request`) without writing `/etc`
 - **Admin grant install**: print a sudoers draft and an admin script; an admin copies it to `/etc/sudoers.d/`
 - **Fail closed**: missing source, unauthorized deposit, verify mismatch, non-empty restore without `--force`
+- **Scratch stays with this login and this run**: temporary files live in a private folder named for you and this process. `about` prints the folder in use, the preferred folder, and the fallbacks. A folder that cannot be used is skipped quietly. Notes that must survive a reboot stay in `~/.local/folder-backup`
 
 ## Quick Installation
 
@@ -88,7 +89,7 @@ After install, on a terminal:
 
 ```text
 $ folder-backup
-[INFO] **folder-backup**(*1.16.3*) — numbered list of live work commands
+[INFO] **folder-backup**(*1.16.5*) — numbered list of live work commands
 1. backup: *Pack a named folder into a dated gzip archive under /var/backup/folder-backup*
 2. restore: *Put an archive back onto the hard-disk projects tree*
 3. sudoers: *Grant and drafts*
@@ -176,6 +177,8 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
+2026-09-27 — version **1.16.5** (scratch folder is per login and per process; `about` prints used, preferred, 1st fallback, and 2nd fallback; a skipped folder is silent).
+2026-09-23 — version **1.16.4** (private cache leaf mode 0700; live cache line in about; multi-draft remove reads the choice in this shell).
 2026-09-06 — version **1.16.3** (help lists grant-emit testers apart; README people-and-folders voice; requirement human-facing + coverage).
 2026-09-03 — version **1.16.2** (suite no longer queues live sudoer inbound; TP-CLI-13 / L-INBOUND-02).
 2026-09-03 — version **1.16.1** (dedicated sudoers-submenu requirement; five grant/draft setup verbs stay live CLI commands; TP-CLI-13/16/18).

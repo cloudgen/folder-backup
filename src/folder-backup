@@ -32,7 +32,7 @@
 # Single-file ship unit under src/; local install to ~/.local/bin.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.16.3"
+# VERSION: hard-assign VERSION="1.16.5"
 #
 # =============================================================================
 
@@ -49,8 +49,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.16.3"
-: "${VERSION:=1.16.3}"
+VERSION="1.16.5"
+: "${VERSION:=1.16.5}"
 # Repository identity SSOT (git host owner/repo for project-repository alignment).
 # Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
 : "${REPO_USER:=cloudgen}"
@@ -356,7 +356,7 @@ out_menu_choice() {
 #
 # CRITICAL RULE:
 # This is the ONLY allowed way to produce non-newline product prompt text.
-# Return values from prompt_ask use class-B printf (data return), not this helper.
+# prompt_ask stores the answer in PROMPT_ASK_VALUE. Do not $(prompt_ask).
 # All product output must respect --quiet and --json (never shown in those modes).
 #
 # INTENTIONAL DESIGN:
@@ -895,39 +895,163 @@ util_backup() {
 }
 
 # =============================================================================
-# util_preferred_cache_dir() - Policy preferred cache leaf (class B)
+# Cache folder path helpers (class B stdout)
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Returns the preferred RAM cache folder. Not a ram-drive project tree.
-# About human/JSON "Cache folder (preferred)" uses this path.
+# One host chain. Volatile leaves are cache-${APP_NAME}-${login}-$$.
+# Home leaves are cache-${APP_NAME}-$$ (no login segment).
+# Linux: /dev/shm/cache, then /tmp/cache, then ${HOME}/.cache.
+# Git Bash: /tmp/cache, then ${HOME}/AppData/Local/Temp. No 2nd fallback.
+# Mac: /tmp/cache, then ${HOME}/Library/Caches, then ${HOME}/cache.
+# A missed tier is silent. Login is id -un as one path segment.
+#
+# CRITICAL WARNING - RAM-DRIVE COLLISION:
+# /dev/shm/${APP_NAME} and /dev/shm/${APP_NAME}-${USERNAME} look like project
+# trees. Cache lives under /dev/shm/cache/ or /tmp/cache/.
 #
 # ALIGNMENT: requirement-shell-cli-storage.md
+# Test-purpose: FOLDER_BACKUP_CACHE_HOST=linux|gitbash|mac
+#               FOLDER_BACKUP_CACHE_SKIP=preferred skips tier 1 with no message
 #
-# Last updated: 2026-08-30
+# Last updated: 2026-09-27
 # =============================================================================
-util_preferred_cache_dir() {
-    : "${APP_NAME:=folder-backup}"
-    printf '%s' "/dev/shm/cache/cache-${APP_NAME}"
+util_cache_host_kind() {
+    case "${FOLDER_BACKUP_CACHE_HOST:-}" in
+        linux|gitbash|mac)
+            printf '%s' "${FOLDER_BACKUP_CACHE_HOST}"
+            return 0
+            ;;
+    esac
+    if [ -n "${MSYSTEM:-}" ]; then
+        printf '%s' "gitbash"
+        return 0
+    fi
+    case "$(uname -s 2>/dev/null)" in
+        MINGW*|MSYS*) printf '%s' "gitbash" ;;
+        Darwin) printf '%s' "mac" ;;
+        *) printf '%s' "linux" ;;
+    esac
 }
 
-# =============================================================================
-# util_fallback_cache_dir() - Policy fallback cache leaf (class B)
-# =============================================================================
-#
-# GENERAL PURPOSE:
-# Returns the user XDG cache folder used when RAM/tmp cache leaves are unusable.
-# About human/JSON "Cache folder (fallback)" uses this path.
-#
-# ALIGNMENT: requirement-shell-cli-storage.md
-#
-# Last updated: 2026-08-30
-# =============================================================================
+util_cache_login() {
+    _clogin="${USERNAME:-unknown}"
+    case "${_clogin}" in
+        *[!A-Za-z0-9._-]*)
+            _clogin=$(printf '%s' "${_clogin}" | tr -c 'A-Za-z0-9._-' '_')
+            ;;
+    esac
+    [ -n "${_clogin}" ] || _clogin="unknown"
+    printf '%s' "${_clogin}"
+    unset _clogin
+}
+
+util_cache_volatile_leaf() {
+    : "${APP_NAME:=folder-backup}"
+    printf '%s' "cache-${APP_NAME}-$(util_cache_login)-$$"
+}
+
+util_cache_home_leaf() {
+    : "${APP_NAME:=folder-backup}"
+    printf '%s' "cache-${APP_NAME}-$$"
+}
+
+util_preferred_cache_dir() {
+    : "${APP_NAME:=folder-backup}"
+    : "${HOME:=/tmp}"
+    case "$(util_cache_host_kind)" in
+        gitbash|mac)
+            printf '%s' "/tmp/cache/$(util_cache_volatile_leaf)"
+            ;;
+        *)
+            printf '%s' "/dev/shm/cache/$(util_cache_volatile_leaf)"
+            ;;
+    esac
+}
+
 util_fallback_cache_dir() {
     : "${APP_NAME:=folder-backup}"
     : "${HOME:=/tmp}"
-    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
-    printf '%s' "${XDG_CACHE_HOME}/cache-${APP_NAME}"
+    case "$(util_cache_host_kind)" in
+        gitbash)
+            printf '%s' "${HOME}/AppData/Local/Temp/$(util_cache_home_leaf)"
+            ;;
+        mac)
+            printf '%s' "${HOME}/Library/Caches/$(util_cache_home_leaf)"
+            ;;
+        *)
+            printf '%s' "/tmp/cache/$(util_cache_volatile_leaf)"
+            ;;
+    esac
+}
+
+util_fallback2_cache_dir() {
+    : "${APP_NAME:=folder-backup}"
+    : "${HOME:=/tmp}"
+    case "$(util_cache_host_kind)" in
+        gitbash)
+            printf '%s' ""
+            ;;
+        mac)
+            printf '%s' "${HOME}/cache/$(util_cache_home_leaf)"
+            ;;
+        *)
+            printf '%s' "${HOME}/.cache/$(util_cache_home_leaf)"
+            ;;
+    esac
+}
+
+# Create one cache tier. Silent on failure (caller tries the next tier).
+# Leaf must be this login's real directory at mode 0700 (L-STOR-01).
+util_cache_try_dir() {
+    _cdir="${1:-}"
+    [ -n "${_cdir}" ] || return 1
+    if [ -L "${_cdir}" ] || [ -h "${_cdir}" ]; then
+        unset _cdir
+        return 1
+    fi
+    if [ -e "${_cdir}" ] && [ ! -d "${_cdir}" ]; then
+        unset _cdir
+        return 1
+    fi
+    _cparent=$(dirname "${_cdir}")
+    case "${_cparent}" in
+        /dev/shm/cache|/tmp/cache)
+            mkdir -m 1777 -p "${_cparent}" 2>/dev/null || mkdir -p "${_cparent}" 2>/dev/null || {
+                unset _cdir _cparent
+                return 1
+            }
+            ;;
+        *)
+            mkdir -p "${_cparent}" 2>/dev/null || {
+                unset _cdir _cparent
+                return 1
+            }
+            ;;
+    esac
+    mkdir -m 0700 -p "${_cdir}" 2>/dev/null || mkdir -p "${_cdir}" 2>/dev/null || {
+        unset _cdir _cparent
+        return 1
+    }
+    if [ -L "${_cdir}" ] || [ -h "${_cdir}" ] || [ ! -d "${_cdir}" ] || [ ! -O "${_cdir}" ]; then
+        unset _cdir _cparent
+        return 1
+    fi
+    if ! chmod 0700 "${_cdir}" 2>/dev/null; then
+        unset _cdir _cparent
+        return 1
+    fi
+    if [ ! -w "${_cdir}" ] || [ ! -O "${_cdir}" ]; then
+        unset _cdir _cparent
+        return 1
+    fi
+    _perm=$(command ls -ld "${_cdir}" 2>/dev/null | cut -c1-10)
+    if [ "${_perm}" != "drwx------" ]; then
+        unset _cdir _cparent _perm
+        return 1
+    fi
+    unset _cdir _cparent _perm
+    return 0
 }
 
 # =============================================================================
@@ -935,20 +1059,14 @@ util_fallback_cache_dir() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Returns the best available volatile cache directory for scratch/staging.
-# Prefers /dev/shm/cache/cache-${APP_NAME} → /tmp/cache/cache-${APP_NAME}
-# → ${XDG_CACHE_HOME}/cache-${APP_NAME}. Create chosen leaf before echo.
-#
-# CIAO PRINCIPLES APPLIED:
-# - Caution: Multi-user hosts; sticky /dev/shm/cache so sibling cache-<app>
-#   leaves can be created; if the preferred leaf is not writable, fall through.
-# - Intentional: One resolver SSOT. Cache leaves are cache-${APP_NAME}, not
-#   ram-drive-shaped /dev/shm/${APP_NAME} or /dev/shm/${APP_NAME}-${USERNAME}.
-# - Anti-fragile: Missing /dev/shm still works via /tmp then XDG.
-#
-# CRITICAL WARNING - RAM-DRIVE COLLISION:
-# /dev/shm/${APP_NAME} and /dev/shm/${APP_NAME}-${USERNAME} look like project
-# trees on the RAM disk. Cache MUST live under /dev/shm/cache/cache-${APP_NAME}.
+# Returns the best available cache directory for scratch files.
+# Linux: shm leaf, then /tmp leaf, then ${HOME}/.cache leaf.
+# Git Bash: /tmp leaf, then AppData Local Temp leaf.
+# Mac: /tmp leaf, then Library/Caches leaf, then ${HOME}/cache leaf.
+# Volatile leaves are cache-${APP_NAME}-${login}-$$. Home leaves omit login.
+# A missed tier is silent (no warning, no error). Error only if every tier fails.
+# The leaf must be owned by this login at mode 0700.
+# MUST NOT restore /dev/shm/${APP_NAME} or /dev/shm/${APP_NAME}-${USERNAME}.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # Designed to be reusable in other projects.
@@ -960,55 +1078,44 @@ util_fallback_cache_dir() {
 #
 # Lessons Learned (CIAO Reflection):
 # 2026-07-13: STORAGE_DIR was bare/unset on third fallback (INC-20260713-001 P1).
-# 2026-07-14: Third fallback uses XDG_CACHE_HOME / HOME/.cache under set -u.
-# 2026-07-16: Create chosen tier root before echo (fail-closed) for all tiers;
-#             wire from app_main (EFFECTIVE_STORAGE_DIR + TMPDIR). SM-STOR-01.
-# 2026-08-30: Preferred /dev/shm/cache/cache-${APP_NAME}; about labels are
-#             Cache folder (preferred)/(fallback), not Storage (effective)/(fallback).
+# 2026-07-16: Create chosen tier root before echo (fail-closed) for all tiers.
+# 2026-08-30: Preferred cache moved under /dev/shm/cache/.
+# 2026-09-23: Leaf must be this login's mode 0700 directory (L-STOR-01).
+# 2026-09-27: Leaf is cache-${APP_NAME}-${login}-$$ so logins do not share
+#             one directory. Tier misses stay silent.
 #
-# Last updated: 2026-08-30
+# Last reviewed: 2026-09-27
 # SSOT: requirement-shell-cli-storage.md
 # =============================================================================
 util_resolve_storage() {
+    : "${USERNAME:=unknown}"
     : "${APP_NAME:=folder-backup}"
     : "${HOME:=/tmp}"
-    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
-    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/cache-${APP_NAME}}"
 
     _storage_candidate=""
-    if [ -d "/dev/shm" ] && [ -w "/dev/shm" ]; then
-        if ! mkdir -m 1777 -p /dev/shm/cache 2>/dev/null; then
-            mkdir -p /dev/shm/cache 2>/dev/null || true
-        fi
-        _pref="/dev/shm/cache/cache-${APP_NAME}"
-        if mkdir -p "${_pref}" 2>/dev/null; then
-            if [ -w "${_pref}" ]; then
-                _storage_candidate="${_pref}"
-            fi
-        fi
-    fi
-    if [ -z "${_storage_candidate}" ] && [ -w "/tmp" ]; then
-        if ! mkdir -m 1777 -p /tmp/cache 2>/dev/null; then
-            mkdir -p /tmp/cache 2>/dev/null || true
-        fi
-        _tmpc="/tmp/cache/cache-${APP_NAME}"
-        if mkdir -p "${_tmpc}" 2>/dev/null; then
-            if [ -w "${_tmpc}" ]; then
-                _storage_candidate="${_tmpc}"
-            fi
+    if [ "${FOLDER_BACKUP_CACHE_SKIP:-}" != "preferred" ]; then
+        _pref=$(util_preferred_cache_dir)
+        if util_cache_try_dir "${_pref}"; then
+            _storage_candidate="${_pref}"
         fi
     fi
     if [ -z "${_storage_candidate}" ]; then
-        _storage_candidate="${STORAGE_DIR}"
-        if ! mkdir -p "${_storage_candidate}" 2>/dev/null; then
-            out_die "Cannot create cache folder ${_storage_candidate}"
-        fi
-        if [ ! -w "${_storage_candidate}" ]; then
-            out_die "Cannot create cache folder ${_storage_candidate}"
+        _fb1=$(util_fallback_cache_dir)
+        if util_cache_try_dir "${_fb1}"; then
+            _storage_candidate="${_fb1}"
         fi
     fi
+    if [ -z "${_storage_candidate}" ]; then
+        _fb2=$(util_fallback2_cache_dir)
+        if [ -n "${_fb2}" ] && util_cache_try_dir "${_fb2}"; then
+            _storage_candidate="${_fb2}"
+        fi
+    fi
+    if [ -z "${_storage_candidate}" ]; then
+        out_die "Cannot create cache folder"
+    fi
     echo "${_storage_candidate}"
-    unset _storage_candidate _pref _tmpc
+    unset _storage_candidate _pref _fb1 _fb2
     return 0
 }
 
@@ -1108,59 +1215,60 @@ util_mktemp() {
 # Past AI assistants have repeatedly broken this by using raw printf/echo + read,
 # which violates the single output system, quiet/json handling, and TTY detection.
 #
-# PRINTF EXCEPTION (class B – function return-via-stdout only):
-# printf '%s' "${default|answer}" returns the chosen value for $(prompt_ask …)
-# capture. It is NOT the prompt UI. User-visible prompt text MUST stay on
-# out_info / out_msg_n. Do not replace those with raw printf + read.
-# See requirement-shell-output-requirements.md §2.1.1.
+# WARNING — do-not-capture-read (PP-A-22):
+# Call in the current shell. The answer is PROMPT_ASK_VALUE.
+# MUST NOT _x=$(prompt_ask …). Stdout is the prompt, not the return.
+# See requirement-shell-interactive-vs-noninteractive.md
+# and requirement-shell-script-coding.md.
 #
-# Last reviewed: 2026-07-12
+# Last updated: 2026-09-23
 # =============================================================================
 
 prompt_ask() {
     # --- Safe Variable Defaults ---
     : "${JSON:=0}"
     : "${QUIET:=0}"
+    : "${TTY:=0}"
 
     # set -u safe: missing args become empty defaults (INC-20260713-001 class)
-    local message="${1-}"
-    local default="${2-}"
-    local current="${3-}"
+    _pa_message="${1-}"
+    _pa_default="${2-}"
+    _pa_current="${3-}"
+    PROMPT_ASK_VALUE="${_pa_default}"
 
-    # Never prompt in non-interactive modes
+    # Never prompt in non-interactive modes. Default stays in PROMPT_ASK_VALUE.
     if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ]; then
-        printf '%s' "${default}"
+        unset _pa_message _pa_default _pa_current
         return 0
     fi
 
     # Consume TTY SSOT (measured outside functions). Do not re-test [ -t.
     if [ "${TTY:-0}" -ne 1 ]; then
         if [ "${INTERACTIVE:-0}" -ne 1 ]; then
-            printf '%s' "${default}"
+            unset _pa_message _pa_default _pa_current
             return 0
         fi
     fi
 
     # Show current value if present
-    if [ -n "${current}" ]; then
-        out_info "Current: ${current}"
+    if [ -n "${_pa_current}" ]; then
+        out_info "Current: ${_pa_current}"
     fi
 
     # Show default
-    if [ -n "${default}" ]; then
-        out_info "Default: ${default}"
+    if [ -n "${_pa_default}" ]; then
+        out_info "Default: ${_pa_default}"
     fi
 
-    out_msg_n "${message}: "
+    out_msg_n "${_pa_message}: "
 
-    local answer=""
-    read -r answer || true
-
-    if [ -z "${answer}" ]; then
-        printf '%s' "${default}"
-    else
-        printf '%s' "${answer}"
+    _pa_answer=""
+    read -r _pa_answer || true
+    if [ -n "${_pa_answer}" ]; then
+        PROMPT_ASK_VALUE="${_pa_answer}"
     fi
+    unset _pa_message _pa_default _pa_current _pa_answer
+    return 0
 }
 
 # =============================================================================
@@ -1168,8 +1276,8 @@ prompt_ask() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Ask one field on a real terminal. Do not use $(prompt_ask): out_msg_n writes
-# stdout and would pollute the captured path. Consumes TTY / JSON / QUIET.
+# Ask one field on a real terminal. Answer is _prompt_line in this shell.
+# Do not use $(prompt_line) or $(prompt_ask). Consumes TTY / JSON / QUIET.
 #
 # ALIGNMENT:
 # - requirement-shell-interactive-vs-noninteractive.md
@@ -2193,7 +2301,7 @@ fb_backup() {
     fi
 
     # Stage at one path segment under the resolved cache root
-    # (e.g. /dev/shm/cache/cache-folder-backup/NAME.tar.gz).
+    # (e.g. /dev/shm/cache/cache-${APP_NAME}-${login}-$$/NAME.tar.gz).
     _stage_file="${EFFECTIVE_STORAGE_DIR}/${_archive_name}"
     _parent=$(dirname -- "${_source_abs}")
     _leaf=$(basename -- "${_source_abs}")
@@ -3954,7 +4062,7 @@ EOF
 # - term project-sudoers-file
 # - requirement-three-layer-privilege-model.md §2.3.3b
 #
-# Last reviewed: 2026-08-09
+# Last updated: 2026-09-23
 # =============================================================================
 fb_remove_project_sudoers() {
     : "${APP_NAME:=folder-backup}"
@@ -4013,7 +4121,8 @@ EOF
                 out_die "remove-project-sudoers: multiple drafts present; specify path argument (non-interactive)."
             fi
 
-            _choice=$(prompt_ask "Choose draft number to remove" "0")
+            prompt_ask "Choose draft number to remove" "0"
+            _choice="${PROMPT_ASK_VALUE}"
             case "${_choice}" in
                 ''|0|[Cc][Aa][Nn][Cc][Ee][Ll]*)
                     out_info "Remove cancelled"
@@ -4126,7 +4235,7 @@ app_version() {
 # - requirement-domain-folder-backup.md (about domain fields)
 # - requirement-shell-cli-storage.md
 #
-# Last updated: 2026-08-30
+# Last updated: 2026-09-27
 # =============================================================================
 app_about() {
     : "${JSON:=0}"
@@ -4143,7 +4252,6 @@ app_about() {
     : "${RESTORE_HOST_DEFAULT:=hard-disk}"
     : "${PROJECTS_ROOT:=}"
     : "${RAM_ROOT:=/dev/shm}"
-    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
     : "${BACKUP_ROOT:=/var/backup}"
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${MAX_DAILY_BACKUPS:=5}"
@@ -4152,9 +4260,10 @@ app_about() {
     if [ -z "${EFFECTIVE_STORAGE_DIR:-}" ]; then
         EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
     fi
-    : "${STORAGE_DIR:=$(util_fallback_cache_dir)}"
-    _cache_pref=$(util_preferred_cache_dir)
-    _cache_fb=$(util_fallback_cache_dir)
+    _cache_preferred=$(util_preferred_cache_dir)
+    _cache_fallback=$(util_fallback_cache_dir)
+    _cache_fallback_2=$(util_fallback2_cache_dir)
+    STORAGE_DIR="${_cache_fallback}"
     if [ -z "${PERSISTENT_STORAGE_DIR:-}" ]; then
         PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)
     fi
@@ -4227,11 +4336,13 @@ app_about() {
             "shell" "${_shell}" \
             "interactive" "${_interactive}" \
             "user" "${_user}" \
-            "cache_preferred" "${_cache_pref}" \
-            "cache_fallback" "${_cache_fb}" \
+            "cache_used" "${EFFECTIVE_STORAGE_DIR}" \
+            "cache_preferred" "${_cache_preferred}" \
+            "cache_fallback" "${_cache_fallback}" \
+            "cache_fallback_2" "${_cache_fallback_2}" \
+            "persistence_storage" "${PERSISTENT_STORAGE_DIR}" \
             "effective_storage" "${EFFECTIVE_STORAGE_DIR}" \
             "storage_dir" "${STORAGE_DIR}" \
-            "persistent_storage" "${PERSISTENT_STORAGE_DIR}" \
             "backup_root" "${BACKUP_ROOT}" \
             "backup_notation" "${BACKUP_NOTATION}" \
             "deposit_dir" "${BACKUP_ROOT}/${BACKUP_NOTATION}" \
@@ -4288,8 +4399,12 @@ app_about() {
         out_info "TTY / Interactive: no"
     fi
     out_empty_line
-    out_info "Cache folder (preferred): ${_cache_pref}"
-    out_info "Cache folder (fallback):  ${_cache_fb}"
+    out_info "Cache folder used: ${EFFECTIVE_STORAGE_DIR}"
+    out_info "Cache folder (preferred): ${_cache_preferred}"
+    out_info "Cache folder (1st fallback): ${_cache_fallback}"
+    if [ -n "${_cache_fallback_2}" ]; then
+        out_info "Cache folder (2nd fallback): ${_cache_fallback_2}"
+    fi
     out_info "Persistence storage:      ${PERSISTENT_STORAGE_DIR}"
     out_empty_line
     out_info "Backup root:       ${BACKUP_ROOT}"
@@ -4782,11 +4897,10 @@ app_main() {
     : "${SUBMIT_ACTION_EXPLICIT:=0}"
     : "${USERNAME:=unknown}"
     : "${HOME:=/tmp}"
-    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
     : "${APP_NAME:=folder-backup}"
-    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/cache-${APP_NAME}}"
 
     EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
+    STORAGE_DIR=$(util_fallback_cache_dir)
     PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)
     export EFFECTIVE_STORAGE_DIR STORAGE_DIR PERSISTENT_STORAGE_DIR
     export TMPDIR="${EFFECTIVE_STORAGE_DIR}"

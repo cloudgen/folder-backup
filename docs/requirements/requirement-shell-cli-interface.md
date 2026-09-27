@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.8.2)  
+**Status**: Active (Version 1.8.3)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -116,7 +116,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `uninstall` | Type 0 | `inst_local_uninstall` | Remove managed binary; confirm unless `--force` |
 | `where-is-me` | Type 0 | `app_where_is_me` | Running + install paths + installed flag |
 | `version` | Type 0 | `app_version` | Local `VERSION` only; no network |
-| `about` | Type 0 | `app_about` | Diagnostics: install presence, paths, user, shell, TTY, **Cache folder (preferred)/(fallback)**, **Persistence storage** `${HOME}/.local/folder-backup`, backup defaults; **no** channel one-liner |
+| `about` | Type 0 | `app_about` | Diagnostics: install presence, paths, user, shell, TTY, **Cache folder used**, **Cache folder (preferred)**, **Cache folder (1st fallback)**, **Cache folder (2nd fallback)** when this host has one, **Persistence storage** `${HOME}/.local/folder-backup`, backup defaults; **no** channel one-liner |
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
 | `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | **Operational.** Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
 | `restore` | Type 0 (+ Type 1 stage fetch) | `fb_restore` (domain) | **Operational.** Put an archive back onto the hard-disk projects tree |
@@ -269,9 +269,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-03 | Active 1.8.0 | Grant/draft setup verbs stay live CLI commands; numbered **main** list uses family **sudoers** (submenu); `sudoers` not dispatched; AC-10 |
 | 2026-09-03 | Active 1.8.1 | Submenu SSOT **`requirement-shell-cli-sudoers-submenu`** |
 | 2026-09-06 | Active 1.8.2 | §1.1 Human-facing; help **Work commands** vs **Grant and draft setup** (AC-9 / TP-CLI-17 have); Under command line section |
+| 2026-09-27 | Active 1.8.3 | About cache lines: used, preferred, 1st fallback, 2nd fallback when this host has one (`requirement-shell-cli-storage` 1.4.0) |
 
 ---
 
-**Last Updated**: 2026-09-06  
+**Last Updated**: 2026-09-27  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
