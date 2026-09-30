@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.9.1)  
+**Status**: Active (Version 1.10.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -17,12 +17,12 @@ It defines a **normal-login** local self-managed shell CLI plus **domain backup*
 | Box | Meaning | Example |
 |-----|---------|---------|
 | You / this login | Type a listed verb | `folder-backup backup /path/to/project` |
-| Scripts / CI | `--json` / `--quiet`; empty argv is help off-TTY | `folder-backup --json version` |
+| Scripts / CI | `--json` / `--quiet` on a named verb; a pipe with no command places this program | `folder-backup --json version` |
 | Not this file | Numbered board membership | `requirement-shell-cli-default-interaction` |
 
 | Includes | Excludes |
 |----------|----------|
-| Dispatcher tokens, flags, help catalog, channel verbs | Empty argv as a download |
+| Dispatcher tokens, flags, help catalog, channel verbs | Treating local `install` as the pipe |
 | Work vs grant-emit headings | `sudoers` as a typed command |
 
 | Surface | What you open | What for |
@@ -65,7 +65,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 
 1. **Single entry:** `app_main` **MUST** parse global flags and route commands.  
 2. **Unknown command:** **MUST** fail loudly with pointer to `help` (via output SSOT).  
-3. **Empty argv:** **case 2** — TTY numbered list; off-TTY help (`requirement-shell-cli-default-interaction.md`). **MUST NOT** install-ensure.  
+3. **Zero-cli-verb:** interactive → numbered boards (`requirement-shell-cli-default-interaction.md`); non-interactive → `inst_self_install` (`requirement-shell-cli-zero-arguments.md`). **MUST NOT** call `inst_local_install` on that line.  
 4. **No raw user I/O:** User-facing messages **MUST** go through `out_*`.  
 5. Script end **MUST** call `app_main "$@"` (no basename gate that blocks dispatch).
 
@@ -103,7 +103,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | **Version SSOT** | ship unit `VERSION=` in `src/folder-backup` (do not pin a stale number here) |
 | **Install paths** | Global: `GLOBAL_BIN` default `/usr/local/bin`; User: `USER_BIN` default `${HOME}/.local/bin` |
 | **Primary install story** | User bin: `~/.local/bin/folder-backup` |
-| **Online channel env** | **Product UX.** Help lists `SCRIPT_URL`. `install` does not download. Empty argv does not download. |
+| **Online channel env** | **Product UX.** Help lists `SCRIPT_URL`. `install` does not download. A terminal with no command does not download. A pipe with no command does, via `inst_self_install`. |
 | **Type 2 commands** | None |
 | **Dedicated system user** | Not required |
 
@@ -111,7 +111,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 | Command | Type | Handler family | Required behavior |
 |---------|------|----------------|-------------------|
-| *(no args — empty argv)* | Type 0 | `app_main` → `app_cmd_menu` | **Case 2:** TTY numbered boards; off-TTY help — not install |
+| *(no command — zero-cli-verb)* | Type 0 | interactive `app_cmd_menu`; else `inst_self_install` | Terminal, not quiet, not json: numbered boards. Otherwise CLI self-install. Not local `install`. |
 | `install` | Type 0 | `inst_local_install` | Copy running ship unit to privilege-correct bin; mode **0755**; idempotent unless `--force`. **Not** `inst_self_install`. |
 | `uninstall` | Type 0 | `inst_local_uninstall` | Remove managed binary; confirm unless `--force` |
 | `where-is-me` | Type 0 | `app_where_is_me` | Running + install paths + installed flag |
@@ -147,14 +147,14 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 #### Dispatcher acceptance criteria
 
 1. Unknown token after flag parse → `out_die` with pointer to `folder-backup help`.  
-2. Zero-arg → TTY numbered boards; off-TTY help (not install, not backup).  
+2. Zero-cli-verb → interactive numbered boards; non-interactive `inst_self_install` (not local `install`, not help, not backup).  
 3. Command routing table in `app_main` **must** include every **Implemented** row above.  
 4. Help text **must** stay aligned with that table. Test-purpose verbs **MUST** appear under a heading **apart** from operational verbs.  
 5. Domain catalog detail (operands, archive naming, error codes) is owned by `requirement-domain-folder-backup.md` — this file owns the **listed verbs** and routing.
 
 #### Explicitly out of scope
 
-- Empty argv as download-and-run or as `inst_self_install`
+- Calling `inst_local_install` from a zero-cli-verb line
 - Type 1 host bootstrap beyond **narrow deposit** and **sudoers fragment generation**  
 - Creating the sibling inbound (`sudo sudoer-cli setup` is not this CLI)  
 - Type 2 app runtime under a dedicated system user  
@@ -200,14 +200,14 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
-1. Drop the channel verbs, or point empty argv at install-ensure, without a registry update.  
+1. Drop the channel verbs, or point a zero-cli-verb line at `inst_local_install`, without a registry update.  
 2. Alias `install` to `self-install`.  
 3. List commands in help that are not routed (or route commands not listed).  
 4. Bypass `out_*` for product user messages.  
 5. Run the entire CLI as root by default instead of narrow deposit elevation.  
 6. Put full domain archive semantics only here and omit the domain SSOT.  
 7. Add a second submit verb (`submit-sudoer`) without routing + help, or invent inbound `mkdir` as this CLI’s job.  
-8. Restore Type N always-help on empty argv while case 2 is Active, or drop `menu`/`main` routing.  
+8. Route a non-interactive zero-cli-verb to help, or drop `menu`/`main` routing.  
 9. Mix test-purpose verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on any numbered board (they stay typed commands and help rows; numbers **171**, **173**, and **174** stay reserved).  
 10. Wire `sudoers` as a live dispatcher token, or drop a grant/draft setup verb from the dispatcher.
 
@@ -221,8 +221,8 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 |----|-----------|
 | AC-1 | All **Implemented** commands in the table are routed and listed in help |
 | AC-2 | Global flags wire QUIET/JSON/DEBUG/FORCE as specified |
-| AC-3 | Empty argv is TTY numbered boards / off-TTY help (case 2); never install-ensure |
-| AC-4 | Channel verbs are routed and listed in help; they are self-board rows **84**–**87** (and `self-management` opens that board), not front rows; empty argv is still case 2 |
+| AC-3 | Interactive zero-cli-verb is the numbered boards; non-interactive zero-cli-verb is `inst_self_install`; never local `install` |
+| AC-4 | Channel verbs are routed and listed in help; they are self-board rows **84**–**87** (and `self-management` opens that board), not front rows |
 | AC-5 | Domain verbs point to domain requirement for deep semantics |
 | AC-6 | `submit-sudoer-request` is Type 0, routed, listed in help; does not write `/etc` or create inbound |
 | AC-7 | `generate-sudoer-request` is Type 0, routed, listed in help; independent of submit; dest is invoking-user readable; does not write `/etc` or inbound |
@@ -236,7 +236,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 | Key | Relationship |
 |-----|--------------|
-| `requirement-shell-cli-zero-arguments` | **Withdrawn** — do not treat as live empty-argv owner |
+| `requirement-shell-cli-zero-arguments` | **Active** — non-interactive zero-cli-verb is `inst_self_install` |
 | `requirement-shell-cli-default-interaction` | Case 2 empty argv + claimed `menu`/`main` numbered boards |
 | `requirement-shell-cli-sudoers-submenu` | Client **17** sudoers board; **172**/**175** printed; test-purpose reserved; `sudoers` not dispatched |
 | `requirement-shell-local-self-management` | install/uninstall/where-is-me |
@@ -277,6 +277,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-27 | Active 1.8.3 | About cache lines: used, preferred, 1st fallback, 2nd fallback when this host has one (`requirement-shell-cli-storage` 1.4.0) |
 | 2026-09-30 | Active 1.9.0 | Channel verbs from selfmanaged are routed. `install` stays the local copy. Main menu unchanged. |
 | 2026-09-30 | Active 1.9.1 | Handlers `app_cmd_menu` / `app_cmd_menu_self`. Self board **81**–**87**. Test-purpose verbs off every numbered board. Sudoers rows **172** and **175**. |
+| 2026-09-30 | Active 1.10.0 | Non-interactive zero-cli-verb is `inst_self_install`. Interactive zero-cli-verb stays the boards. Local `install` stays `inst_local_install`. |
 
 ---
 

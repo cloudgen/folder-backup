@@ -1,94 +1,84 @@
 **file**: docs/requirements/requirement-shell-cli-zero-arguments.md  
-**Status**: Withdrawn (Version 1.1.1 — superseded)  
+**Status**: Active (Version 1.2.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-zero-arguments`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
 
 ## 1. Purpose
 
-This file is **withdrawn**. It no longer owns empty-argv dispatcher behavior.
+This file owns a **zero-cli-verb** line: no command after switches. A switch is not a command.
 
-From 2026-08-03 through 2026-08-28 this file declared **Type N**: a bare `folder-backup` run always printed **help** (local-only; never install-ensure). That always-help rule is **superseded**. Empty argv is now owned by `requirement-shell-cli-default-interaction` (**case 2**): on a real terminal a bare run opens the numbered boards; in a script or pipe it still prints help.
+On a real terminal, with quiet and json off, that line opens the numbered boards (`requirement-shell-cli-default-interaction`). A pipe (`curl … | sh`), or `--quiet` / `--json` with no command, or the same line with no terminal, **places this program** (`inst_self_install`). It must not print help. It must not run local `install`.
 
-This file remains on disk so agents do **not** recreate an Active Type N always-help owner that would steal the numbered boards back off empty argv (**case 3**).
+Sibling shape: `sshd-cli` uses the same split (terminal → menu, non-interactive → CLI self-install). This product’s place target is folder-backup, not an OpenSSH payload.
 
 ### 1.1 Human-facing
 
-**In one sentence:** This page is retired. Typing only `folder-backup` at a real terminal now opens the numbered boards; a pipe or script still gets help.
+**In one sentence:** On a terminal, `folder-backup` with no command opens the numbered boards; a pipe, or `--quiet` / `--json` with no command, places this program (or says it is already installed).
 
 | Box | Meaning | Example |
 |-----|---------|---------|
-| You / this login | Bare run at a prompt is the numbered boards | `folder-backup` then `1` |
-| The other role | Scripts must not hang | `folder-backup </dev/null` → help |
-| Not this file | Numbered-board membership and TTY rules | `requirement-shell-cli-default-interaction` |
+| You / this login | A terminal with no command, or a pipe with nobody to answer | `folder-backup` on a TTY · `curl -fsSL …/src/folder-backup \| sh` |
+| The other role | Named verbs stay named | `folder-backup help` · `folder-backup install` · `folder-backup menu` |
+| Not this file | Board membership; local copy mode 0755 | `requirement-shell-cli-default-interaction` · `requirement-shell-local-self-management` |
 
 | Includes | Excludes |
 |----------|----------|
-| Historical Type N always-help (retired) | Live empty-argv meaning |
-| Fence: empty argv **MUST NOT** install-ensure | Binding empty argv to help on a real terminal |
-| Registry row **Withdrawn** | Recreating this key as Active case-3 owner |
-
-| Surface | What you open | What for |
-|---------|---------------|----------|
-| `docs/requirements/index.md` | registry | Status **Withdrawn** |
-| `requirement-shell-cli-default-interaction` | live law | Bare run / `menu` / `main` |
-| `folder-backup help` | command | Full catalog still listed |
+| Zero-cli-verb: bare name, pipe, and switches with no verb (`--debug`, `--force`, `--quiet`, `--json`) | A line that still has a verb (`folder-backup --json version`, `folder-backup help`, `folder-backup menu`) |
+| Interactive → numbered boards; non-interactive → `inst_self_install` | Help as the pipe default; aliasing `install` to `self-install` |
 
 | You do… | What it means | What you type |
 |---------|---------------|---------------|
-| Open the numbered boards | No command word. Real terminal. | `folder-backup` |
-| See the full catalog | Help is still a named command. | `folder-backup help` |
-| Run in CI | No prompt. Help, not the boards. | `folder-backup </dev/null` |
+| First place from the internet | The pipe has no human. The tool places itself. A normal login lands in `~/.local/bin` (mode `0700`). Root lands in `/usr/local/bin` (mode `0755`). | `curl -fsSL https://raw.githubusercontent.com/cloudgen/folder-backup/main/src/folder-backup \| sh` |
+| Run it on a terminal with no command | Numbered boards. A switch such as `--debug` is still no command. It must not place and must not dump help. | `folder-backup` or `folder-backup --debug` |
+| Quiet or JSON with no command | No menu and no help. The tool places the program, or says it is already installed. | `folder-backup --quiet` · `folder-backup --json` |
+
+**Zero-cli-verb** means no command after switches. It is not `$# -eq 0` before flag parse. **Local `install`** copies the running file at mode `0755` and is a different verb.
 
 ---
 
 ## 2. Core Rules (Mandatory)
 
-### 2.1 Withdrawal
+### 2.1 Definitions
 
-1. Status **MUST** stay **Withdrawn** while `requirement-shell-cli-default-interaction` is Active **case 2**.  
-2. This key **MUST NOT** be treated as a live zero-argument owner. Live empty-argv law is `requirement-shell-cli-default-interaction`.  
-3. Agents **MUST NOT** reactivate Type N always-help as empty-argv meaning without an explicit user order to leave **case 2**.
+| Term | Definition for folder-backup |
+|------|-------------------------------|
+| **Zero-cli-verb** | No routed verb after global switches are parsed. Switches are allowed. `folder-backup`, `folder-backup --debug`, `folder-backup --quiet`, and `folder-backup --json` are this shape. `folder-backup --json version` is not. |
+| **Interactive zero-cli-verb** | Zero-cli-verb and `TTY=1` and `JSON=0` and `QUIET=0`. Route to `app_cmd_menu`. |
+| **Non-interactive zero-cli-verb** | Zero-cli-verb and (no TTY, or `JSON=1`, or `QUIET=1`). Call `inst_self_install`. |
+| **CLI self-install** | `inst_self_install`: copy when `$0` is this file; download when `$0` is the shell. Local dest mode **0700**. Global dest mode **0755**. Already installed and force off → success no-op. |
+| **Local install** | Verb `install` → `inst_local_install`, mode **0755**. Not this file’s route. |
 
-### 2.2 Residual fence (still true)
+### 2.2 Split
 
-1. Channel verbs are explicit. Empty argv **MUST NOT** become install-ensure (historical Type O).  
-2. Explicit `folder-backup install` remains the local copy. `self-install` is the channel place. Neither runs on empty argv.  
-3. Script entry **MUST** always call `app_main "$@"` (no basename product-name gate).
+1. An **interactive** zero-cli-verb **MUST** call `app_cmd_menu`. It **MUST NOT** call `inst_self_install`, `inst_local_install`, or `app_help`. `--debug` and `--force` do not change this route.  
+2. A **non-interactive** zero-cli-verb **MUST** call `inst_self_install` and return its status. It **MUST NOT** open the boards, **MUST NOT** call `app_help`, and **MUST NOT** call `inst_local_install`. This includes `--quiet` and `--json` with no verb, including on a terminal.  
+3. `folder-backup help` is the usage path. `folder-backup menu` and `folder-backup main` are named menu verbs. Those lines are not zero-cli-verb. Off-TTY, those named verbs stay help (`requirement-shell-cli-default-interaction`).  
+4. Bootstrap **MUST** call `app_main "$@"`. No basename gate.  
+5. A second non-interactive zero-cli-verb **MUST** succeed without `--force` when the managed binary is already present. The human line **MUST** say already installed. JSON **MUST** be a success object, not help JSON.  
+6. When no managed binary is present, non-interactive zero-cli-verb **MUST** place one or fail closed. A missing network on a **copy** (`$0` is the script) **MUST** still place. A download failure **MUST** be non-zero.  
+7. `COMMAND` **MUST** start empty. An inherited or default `help` **MUST NOT** turn a zero-cli-verb line into help.
 
-### 2.3 Implementation Notes (this project)
+### 2.3 Detect
 
-| Item | Value |
-|------|--------|
-| **Product** | `folder-backup` |
-| **Status** | **Withdrawn** |
-| **Successor** | `requirement-shell-cli-default-interaction` (case 2) |
-| **Retired meaning** | Type N: empty argv always help |
-| **Kept fence** | Empty argv is never install-ensure |
+| Case | Condition | Non-interactive, force off |
+|------|-----------|----------------------------|
+| **Not installed** | `inst_is_installed` false | Place into the privilege-correct path |
+| **Installed** | Managed binary present | Exit 0. Human: already installed. JSON: success. No help. No menu. No second download. |
 
-### 2.4 Why This Requirement Exists (CIAO)
-
-- **Principle 2 – Intentional**: Withdrawal is explicit so case 2 can own a bare run.  
-- **Principle 1 – Caution**: Type O surprise-install stays forbidden.  
-- **Principle 16 – Interactive**: Off-TTY still must not hang.
+| Invoker | Target |
+|---------|--------|
+| root (`id -u` 0) | `${GLOBAL_BIN}/folder-backup` (default `/usr/local/bin/folder-backup`), mode **0755** |
+| non-root | `${USER_BIN}/folder-backup` (default `${HOME}/.local/bin/folder-backup`), mode **0700** |
 
 ---
 
-## Under command line for normal user only
-
-When this program runs on Termux, Git Bash, Windows Command Prompt, or the same class, **admin privilege** and **dedicated system user privilege** stay unused. **This requirement:** this file is withdrawn; empty argv **MUST NOT** become install-ensure or a `sudo` wrap. Live empty-argv law is `requirement-shell-cli-default-interaction`.
-
-| MUST | MUST NOT |
-|------|----------|
-| Stay withdrawn | Recreate always-help as a reason to skip the numbered list |
-| Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
-
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
-- **Caution**: Do not revive always-help as a second empty-argv owner.  
-- **Intentional**: Withdrawn, not deleted, so the basename is not re-invented as case 3.  
-- **Anti-fragile**: Help and install remain named commands.  
-- **Over-protect**: Type O empty-argv install-ensure stays absent.
+- **Caution:** A pipe must not hang and must not pretend to succeed without placing.  
+- **Intentional:** One split. Terminal boards. Non-interactive place. Local `install` stays its own verb.  
+- **Anti-fragile:** Copy from the file you already have when `$0` is that file, even if `SCRIPT_URL` is dead.  
+- **Over-protect:** Do not treat `--json` with no verb as JSON help.
 
 ---
 
@@ -96,12 +86,14 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
-1. Reactivate this file as an Active Type N always-help owner while case 2 is claimed.  
-2. Change empty argv to install-ensure. Channel verbs do not license that.  
-3. Delete this file solely to hide the withdrawal (registry row **MUST** stay **Withdrawn**).  
-4. Treat this basename as live dispatcher law.
+1. Route a non-interactive zero-cli-verb line to `app_help`.  
+2. Route an interactive zero-cli-verb line to `inst_self_install` or `inst_local_install`.  
+3. Alias `install` to `inst_self_install`.  
+4. Withdraw this file while the pipe one-liner is the install path.  
+5. Default `COMMAND` to `help` so a line with only switches becomes help.  
+6. Hang a menu under `curl | sh`.
 
-**Violating this rule is a critical dispatcher / case-split regression.**
+**Violating this rule is a critical empty-argv regression.**
 
 ---
 
@@ -109,9 +101,11 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 
 | ID | Criterion |
 |----|-----------|
-| AC-1 | Registry status is **Withdrawn** |
-| AC-2 | Live empty-argv behavior is defined on `requirement-shell-cli-default-interaction` |
-| AC-3 | Empty argv does not install-ensure (TP-CLI-07 off-TTY still not install) |
+| AC-1 | Off-TTY empty argv places the CLI (copy when `$0` is the script), exit 0, not help, not the boards |
+| AC-2 | A second off-TTY empty argv says already installed and exits 0 |
+| AC-3 | Interactive empty argv and interactive `--debug` with no verb open the boards and do not place |
+| AC-4 | `--quiet`, `--json`, and off-TTY `--debug` with no verb place the CLI. `--json version` stays version |
+| AC-5 | Local dest mode after a non-root place is **0700**. `install` remains mode **0755** and is not this route |
 
 ---
 
@@ -119,10 +113,11 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 
 | Key | Relationship |
 |-----|--------------|
-| `requirement-shell-cli-default-interaction` | **Successor** — case 2 empty argv |
-| `requirement-shell-cli-interface` | Dispatcher table; flags-only still help |
-| `requirement-shell-local-self-management` | Explicit `install` |
-| `requirement-bootstrap-chain` | Type O empty argv remains absent |
+| `requirement-shell-cli-default-interaction` | Interactive zero-cli-verb boards; named `menu` / `main` |
+| `requirement-shell-cli-interface` | Command table; `self-install` copy/download and dest modes |
+| `requirement-shell-local-self-management` | Local `install` is not this route |
+| `requirement-bootstrap-chain` | Channel kept; this split is the empty-argv extend |
+| `requirement-shell-interactive-vs-noninteractive` | TTY vs pipe; no hang |
 | `docs/requirements/index.md` | Registry |
 
 ---
@@ -131,7 +126,9 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 
 | TP family / ID | Suite | Status |
 |----------------|-------|--------|
-| **TP-CLI-07** | `tests/test_cli.sh` | have — off-TTY empty argv is help, not install (now owned with default-interaction) |
+| **TP-CLI-07** | `tests/test_cli.sh` | **have** — off-TTY empty argv copies, mode 0700, second run already installed |
+| **TP-CLI-13** | same | **have** — interactive empty argv is the front board |
+| **TP-CLI-23** | same | **have** — `--quiet` / `--json` / off-TTY `--debug` place; TTY `--debug` is the front and does not place; `--debug version` stays version |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -140,9 +137,10 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 
 | Date | Status | Note |
 |------|--------|------|
-| 2026-08-03 | Active 1.0.0 | Type N for local-only folder-backup |
-| 2026-08-28 | **Withdrawn** 1.1.0 | Superseded by default-interaction **case 2** (TTY empty argv = numbered list) |
-| 2026-09-30 | **Withdrawn** 1.1.1 | Residual fence: channel verbs exist; empty argv still must not install-ensure. This key stays Withdrawn. |
+| 2026-08-03 | Active | Type N: empty argv always help |
+| 2026-08-28 | **Withdrawn** 1.1.0 | Superseded by default-interaction case 2 (TTY boards; off-TTY help) |
+| 2026-09-30 | **Withdrawn** 1.1.1 | Residual fence: empty argv must not install-ensure |
+| 2026-09-30 | **Active** 1.2.0 | User order: match sibling sshd-cli. Interactive zero-cli-verb is the boards. Non-interactive zero-cli-verb is `inst_self_install`, not help. Local `install` stays a different verb. |
 
 ---
 

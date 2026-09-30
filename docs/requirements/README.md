@@ -2,17 +2,17 @@
 
 Authoritative specialized product law for **folder-backup** lives here.
 
-**Current state (2026-09-30):** Specialized **software-development** product. Left genesis. Bootstrap parent is sibling **selfmanaged**. Channel verbs stay (`self-install`, `version-check`, `self-update`, `self-uninstall`). Empty argv stays the numbered boards. Domain extend: folder archive backup. Registry is populated — see `index.md`.
+**Current state (2026-09-30):** Specialized **software-development** product. Left genesis. Bootstrap parent is sibling **selfmanaged**. Channel verbs stay (`self-install`, `version-check`, `self-update`, `self-uninstall`). A terminal with no command is the numbered boards. A pipe with no command is `self-install`. Domain extend: folder archive backup. Registry is populated — see `index.md`.
 
 ## Product identity (summary)
 
 | Field | Value |
 |-------|--------|
 | Product / `APP_NAME` | `folder-backup` |
-| Version SSOT | `1.18.0` (ship unit hard-assign) |
+| Version SSOT | `1.19.0` (ship unit hard-assign) |
 | Ship unit | `src/folder-backup` |
 | Default install | `~/.local/bin/folder-backup` |
-| Install mode | **Dual and explicit.** `install` copies this file (mode `0755`). `self-install` is the channel place. Empty argv is neither. |
+| Install mode | **Dual.** `install` copies this file (mode `0755`). A pipe with no command, and `self-install`, place the CLI (local `0700`, global `0755`). A terminal with no command is the boards. |
 | Backup ops | `requirement-folder-archive-backup` — create / name / deposit / verify / restore |
 | Retention total | `requirement-folder-archive-backup-retention-total` — max **30** per basename |
 | Retention daily | `requirement-folder-archive-backup-retention-daily` — max **5** per basename per day |

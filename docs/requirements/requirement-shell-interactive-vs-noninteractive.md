@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-interactive-vs-noninteractive.md  
-**Status**: Active (Version 1.1.1)  
+**Status**: Active (Version 1.1.2)  
 **Area**: shell  
 **Key**: `requirement-shell-interactive-vs-noninteractive`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -130,7 +130,7 @@ prompt_ask() {
 | Item | Value |
 |------|--------|
 | **Product** | `folder-backup` |
-| **Empty argv off-TTY** | Help, not install-ensure. Channel place is the explicit verb `self-install`. |
+| **Zero-cli-verb off-TTY** | CLI self-install (`inst_self_install`). Not help. Not local `install`. |
 | **Prompt helper** | `prompt_yes_no` for uninstall (exit status). Value prompts use `prompt_ask` then `PROMPT_ASK_VALUE` (current shell) |
 
 ### 2.5 Why This Requirement Exists (CIAO)
@@ -205,6 +205,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-08-03 | Active | Interactive vs non-interactive for folder-backup |
 | 2026-09-23 | Active 1.1.0 | `prompt_ask` returns `PROMPT_ASK_VALUE`; `$()` capture forbidden |
 | 2026-09-30 | Active 1.1.1 | Off-TTY empty argv stays help. `self-install` is explicit. |
+| 2026-09-30 | Active 1.1.2 | Off-TTY zero-cli-verb is `inst_self_install`. Named `menu` off-TTY stays help. |
 
 ---
 

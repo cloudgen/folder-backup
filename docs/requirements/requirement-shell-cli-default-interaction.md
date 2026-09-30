@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-default-interaction.md  
-**Status**: Active (Version 1.7.0)  
+**Status**: Active (Version 1.8.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-default-interaction`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-DEFAULT-INTERACTION`  
@@ -7,13 +7,13 @@
 
 ## 1. Purpose
 
-This requirement is the **product Single Source of Truth** for folder-backup’s **claimed default interactive main menu** and for **empty-argv** dispatcher meaning.
+This requirement is the **product Single Source of Truth** for folder-backup’s **claimed default interactive main menu**.
 
-Channel verbs exist and are explicit (`self-install`, `version-check`, `self-update`, `self-uninstall`, `self-management`). They do not own empty argv. There is **no** Active specialized zero-argument requirement. **Case 2** applies by owner order: on a real terminal, a bare `folder-backup` run opens the numbered boards; off-TTY that same bare run prints help. Named commands **`menu`** and **`main`** open the same boards. The sudoers **board body** (which rows, which numbers stay reserved) is owned by **`requirement-shell-cli-sudoers-submenu`**. **`sudoers` is not a live dispatcher token.**
+Channel verbs exist (`self-install`, `version-check`, `self-update`, `self-uninstall`, `self-management`). **Case 2** applies to the **interactive** zero-cli-verb: on a real terminal, with quiet and json off, a bare `folder-backup` run opens the numbered boards. A **non-interactive** zero-cli-verb (no TTY, or `--quiet` / `--json` with no command) is CLI self-install, owned by **`requirement-shell-cli-zero-arguments`**. This file does not replace that path. Named commands **`menu`** and **`main`** open the same boards. Off a terminal those named commands are help. The sudoers **board body** is owned by **`requirement-shell-cli-sudoers-submenu`**. **`sudoers` is not a live dispatcher token.**
 
 ### 1.1 Human-facing
 
-**In one sentence:** At a real terminal, type `folder-backup` with no extra words to see numbered boards — client-side, self-management, and Exit — with server-side hidden; pick **1** then **17** for grant and drafts; in a pipe or script that same empty run prints help.
+**In one sentence:** At a real terminal, type `folder-backup` with no command to see numbered boards — client-side, self-management, and Exit — with server-side hidden; pick **1** then **17** for grant and drafts. A pipe with no command places this program (`requirement-shell-cli-zero-arguments`).
 
 | Box | Meaning | Example |
 |-----|---------|---------|
@@ -55,14 +55,14 @@ Channel verbs exist and are explicit (`self-install`, `version-check`, `self-upd
 ### 2.1 Claim and case
 
 1. This product **claims** a default interactive main menu.  
-2. **Case 2** applies: **no** Active specialized zero-argument requirement. Channel verbs do not move empty argv to install-ensure.  
-3. This file **owns empty argv**.  
-4. Interactive empty argv (`TTY=1`, `$# -eq 0` at `app_main`) **MUST** open the numbered boards (`app_cmd_menu`).  
-5. Non-interactive empty argv (`TTY=0`, `$# -eq 0`) **MUST** be **help** (`app_help`). **MUST NOT** prompt. **MUST NOT** install-ensure.  
-6. `--json` with **no command token** **MUST** be JSON help (flags-only; `--json` is non-interactive).  
+2. **Case 2** applies to the **interactive** zero-cli-verb. The non-interactive zero-cli-verb is **`requirement-shell-cli-zero-arguments`** (`inst_self_install`).  
+3. This file **owns the numbered boards**. It does not own a pipe with no command.  
+4. An interactive zero-cli-verb (`TTY=1`, `JSON=0`, `QUIET=0`, no verb after switches) **MUST** open the numbered boards (`app_cmd_menu`). It **MUST NOT** place the program.  
+5. A non-interactive zero-cli-verb **MUST NOT** draw these boards and **MUST NOT** be help. That route is `inst_self_install`.  
+6. `--json` or `--quiet` with **no command token** is a non-interactive zero-cli-verb (self-install), including on a terminal.  
 7. Routed-verbs **`menu`** and **`main` MUST** call the same handler. They remain valid ways to open the boards.  
 8. `app_main` **MUST** route `menu` / `main` to `app_cmd_menu`. `app_main_menu` **MAY** remain a one-line alias of `app_cmd_menu`.  
-9. `requirement-shell-cli-zero-arguments` **MUST** stay **Withdrawn** while this case 2 claim is Active.
+9. `requirement-shell-cli-zero-arguments` **MUST** stay **Active** and own the non-interactive zero-cli-verb.
 
 ### 2.2 Mode check
 
@@ -70,15 +70,16 @@ Measure interactive capability **outside functions** (`TTY=1` only when stdin an
 
 | Invocation | Mode | `--json` | MUST | MUST NOT |
 |------------|------|----------|------|----------|
-| `folder-backup` (no args) | Interactive (`TTY=1`) | *(none on empty argv)* | Draw the numbered boards | Help; hang; install |
-| `folder-backup` (no args) | Non-interactive (`TTY=0`) | *(none)* | **Help** (human) | Draw the menu; hang; install |
-| Flags only, no command (e.g. `--json`) | Any | **Follow** | Help: human when JSON=0; JSON help when JSON=1 | Draw the menu |
+| `folder-backup` (no command) | Interactive (`TTY=1`, not quiet, not json) | off | Draw the numbered boards | Help; hang; place |
+| `folder-backup` (no command) | Non-interactive (`TTY=0`, or quiet, or json) | follows the switch | **CLI self-install** (`requirement-shell-cli-zero-arguments`) | Draw the menu; hang; help |
+| Flags only, no command (`--debug` / `--force`) | Interactive | off | Draw the numbered boards | Place; help |
+| Flags only, no command (`--quiet` / `--json`) | Any | on | CLI self-install | Draw the menu; JSON help |
 | `folder-backup menu` or `main` | Interactive (`TTY=1`) | **Ignore** | Draw the numbered boards | Treat as JSON help; hang |
 | same | Non-interactive (`TTY=0`) | **Follow** | **Help**: human when JSON=0; JSON help when JSON=1 | Draw the menu; hang; silent return |
 | `folder-backup self-management` | Interactive (`TTY=1`) | **Ignore** while drawing | Draw the self board only (§2.3.3) | Draw the front board; hang |
 | same | Non-interactive (`TTY=0`) | **Follow** | **Help** | Draw the self board; hang |
 
-While a board is **drawing**, saved `JSON` and `QUIET` **MUST** be forced off, then restored before a leaf runs. `--quiet` off-TTY is still the help path (do not swallow that help). Reuse `app_help` — **MUST NOT** invent a second JSON help catalog.
+While a board is **drawing**, saved `JSON` and `QUIET` **MUST** be forced off, then restored before a leaf runs. Named `menu` / `main` / `self-management` off-TTY stay help (do not swallow that help). A zero-cli-verb `--quiet` or `--json` is self-install, not that help. Reuse `app_help` for the named off-TTY verbs — **MUST NOT** invent a second JSON help catalog.
 
 ### 2.3 Boards
 
@@ -152,8 +153,8 @@ Client row **17** / `sudoers` **MUST** open the grant/draft board. Membership, r
 |------|--------|
 | **Product** | `folder-backup` |
 | **Claimed** | yes |
-| **Case** | **2** (no Active zero-arg REQ; channel verbs explicit; empty argv is still these boards) |
-| **Empty argv owner** | **this file** (TTY boards; off-TTY help) |
+| **Case** | **2** for the interactive zero-cli-verb. Non-interactive place is `requirement-shell-cli-zero-arguments` |
+| **Empty argv owner** | **Split.** This file: interactive boards. Zero-arguments: non-interactive `inst_self_install` |
 | **Menu verbs** | empty argv on TTY; `menu` (preferred named); `main` alias |
 | **Handlers** | `app_cmd_menu` · `app_cmd_menu_client` · `app_cmd_menu_self` · `app_cmd_menu_sudoers` |
 | **Aliases** | `app_main_menu` → `app_cmd_menu`; `app_default_self_loop` → `app_cmd_menu_self` |
@@ -167,7 +168,7 @@ Client row **17** / `sudoers` **MUST** open the grant/draft board. Membership, r
 | **Back** | **0** on child boards |
 | **Test-purpose (this product)** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` — off **every** numbered board |
 | **Typed-only (not a hide cause)** | `uninstall`, `where-is-me` |
-| **Withdrawn peer** | `requirement-shell-cli-zero-arguments` |
+| **Zero-cli-verb peer** | `requirement-shell-cli-zero-arguments` (Active) |
 | **Honesty** | **Implemented** (suite **TP-CLI-13** · **TP-CLI-14** · **TP-CLI-16** · **TP-CLI-18** · **TP-CLI-19** · **TP-CLI-21**) |
 
 **Normative front draft** (README / this fence use markdown emphasis; the live TTY uses SGR, never paste CSI here):
@@ -200,7 +201,7 @@ On a real terminal the first three **MUST** show the front board. `folder-backup
 ### 2.6 Why This Requirement Exists (CIAO)
 
 - **Principle 2 – Intentional**: Empty argv has one owner (this file, case 2). Daily folder work is client-side. This program’s own place and update is self-management. There is no host service, so server-side stays reserved.  
-- **Principle 1 – Caution**: Scripts do not hang; empty argv never install-ensure.  
+- **Principle 1 – Caution**: Scripts do not hang. A pipe with no command places the CLI. An interactive line does not.  
 - **Principle 16 – Interactive vs non-interactive**: TTY vs pipe is explicit.  
 - **Principle 10 – Least privilege**: `sudoers` is not a dispatcher token. Test-purpose grant-emit stays off every numbered board.
 
@@ -212,7 +213,7 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 
 | MUST | MUST NOT |
 |------|----------|
-| Numbered boards as this login | Hang; install-ensure on empty argv |
+| Numbered boards as this login | Hang; wrap sudo to place this program |
 | Git Bash / Windows cmd: no Termux `pkg` | Treat WSL as this class |
 
 Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` is set. Git Bash — `MSYSTEM` is `MINGW*` / `MSYS*`. Windows cmd — `OS=Windows_NT` and `COMSPEC` names `cmd.exe` after excluding Git Bash, Cygwin, and WSL.
@@ -221,7 +222,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
-- **Caution:** Do not hang off-TTY; do not steal empty argv for install.  
+- **Caution:** Do not hang off-TTY. Do not place on an interactive zero-cli-verb. Do not print help for a non-interactive zero-cli-verb.  
 - **Intentional:** Case 2; labels from the kept list; domain categories use parent-prefix numbers.  
 - **Anti-fragile:** `menu` / `main` open the same boards as a bare TTY run; Back **0** returns to the parent; a finished leaf redisplays the front.  
 - **Over-protect:** Test-purpose verbs stay off every numbered board; front Exit is **9**; child Back is **0**; number **2** stays reserved.
@@ -232,15 +233,15 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
-1. Restore Type N always-help on empty argv while this case 2 claim is Active (do not reactivate `requirement-shell-cli-zero-arguments`).  
-2. Attach empty argv to install-ensure (Type O).  
+1. Route a non-interactive zero-cli-verb to help, or withdraw `requirement-shell-cli-zero-arguments`.  
+2. Place the program on an interactive zero-cli-verb, or call `inst_local_install` from that line.  
 3. Invent menu labels instead of `command: what it does` from the kept list (category rows use this file’s table).  
 4. Put `help`, `menu`, `main`, `uninstall`, `where-is-me`, or a test-purpose verb (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) on any numbered board.  
 4b. Put `backup`, `restore`, or the five grant/draft verbs on the **front** board.  
 4c. Restate sudoers-board membership as a second SSOT here (that table lives on **`requirement-shell-cli-sudoers-submenu`**).  
 4d. Print a server-side row, or add `app_cmd_menu_server`, while this program has no host service.  
 5. Restart a child board at **1**, compact a hidden number, number front Exit as anything other than **9**, or print Back **8** / Exit **9** on a child board. Child Back **MUST** be **0**.  
-6. Draw the menu in non-interactive mode (including off-TTY empty argv and off-TTY `self-management`).  
+6. Draw the menu on a non-interactive zero-cli-verb, or on off-TTY `menu` / `self-management`.  
 7. Treat interactive `folder-backup menu --json` as JSON help.  
 8. Drop `menu`/`main` routing after attaching the boards to empty argv.  
 9. Auto-write `/etc` from a menu choice (print/submit stay Type 0 drafts).  
@@ -260,11 +261,11 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 | ID | Criterion |
 |----|-----------|
-| AC-1 | Non-interactive empty argv is help (not install, not the numbered boards) |
-| AC-2 | Case 2 recorded; this file owns empty argv; `menu` / `main` named and routed to `app_cmd_menu` |
+| AC-1 | A non-interactive zero-cli-verb does not draw these boards (place is `requirement-shell-cli-zero-arguments`) |
+| AC-2 | Case 2 recorded for the interactive line; `menu` / `main` named and routed to `app_cmd_menu` |
 | AC-3 | Interactive empty argv **and** interactive `menu` draw the front board: hide sentence, **1** client-side, **8** self-management, **9** Exit; row **2** is not printed |
 | AC-4 | Interactive `menu --json` still draws the front board |
-| AC-5 | Non-interactive `menu` is help; `--json` is JSON help; non-interactive `self-management` is help |
+| AC-5 | Non-interactive `menu` is help; non-interactive `self-management` is help. `--json` **with no command** is self-install, not JSON help |
 | AC-6 | No numbered board lists `help`, `menu`, `main`, `uninstall`, `where-is-me`, or a test-purpose verb. The front board does not list backup, restore, or the five grant/draft verbs |
 | AC-7 | Leaf labels match kept-list human-readable `verb: explain`; category explains are this file’s tables |
 | AC-8 | TTY header is live `folder-backup(VERSION)` with bold name and italic version; short name is bold; numbered `explain` is italic and light gray; number, Exit, and Back stay unstyled; no CSI off-TTY |
@@ -279,7 +280,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 | Key | Relationship |
 |-----|--------------|
-| `requirement-shell-cli-zero-arguments` | **Withdrawn** predecessor (Type N always-help) |
+| `requirement-shell-cli-zero-arguments` | **Active** owner of the non-interactive zero-cli-verb (`inst_self_install`) |
 | `requirement-shell-cli-interface` | Dual mention: empty argv row + `menu` / `main` + self board on the command table |
 | `requirement-shell-cli-sudoers-submenu` | Client row **17** / `sudoers`; sudoers-board membership and live-verb rule |
 | `requirement-shell-interactive-vs-noninteractive` | `TTY`; no hang |
@@ -294,10 +295,11 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 | TP family / ID | Suite | Status |
 |----------------|-------|--------|
-| **TP-CLI-07** | `tests/test_cli.sh` | **have** — off-TTY empty argv is help, not install (AC-1) |
+| **TP-CLI-07** | `tests/test_cli.sh` | **have** — off-TTY empty argv places the CLI, not these boards (AC-1) |
 | **TP-CLI-13** | `tests/test_cli.sh` | **have** — front board, client **11**/**12**/**17**, sudoers **172**/**175**, hide sentences, `sudoers` not dispatched (AC-3 / AC-10 / AC-11) |
 | **TP-CLI-14** | same | **have** — interactive `menu --json` still prints the front board (AC-4) |
-| **TP-CLI-15** | same | **have** — non-interactive empty argv and `menu` are help; `--json` JSON help (AC-5) |
+| **TP-CLI-15** | same | **have** — non-interactive `menu` and `self-management` are help (AC-5) |
+| **TP-CLI-23** | same | **have** — `--json` / `--quiet` with no verb place; TTY `--debug` draws the front (AC-5 / AC-3) |
 | **TP-CLI-16** | same | **have** — front shows **8** self-management and omits verb rows that belong on a child board (AC-6) |
 | **TP-CLI-18** | same | **have** — bold short name, italic light-gray explain, unstyled Exit, sudoers title (AC-8) |
 | **TP-CLI-19** | same | **have** — child number **12** on the front is invalid and the front reprints (AC-12) |
@@ -319,6 +321,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-03 | Active 1.6.0 | Submenu **body** moved to **`requirement-shell-cli-sudoers-submenu`**; this file keeps the family row on the start list |
 | 2026-09-30 | Active 1.6.1 | Channel verbs are live and stay off the flat list. Case 2 still owns empty argv. |
 | 2026-09-30 | Active 1.7.0 | Hierarchical boards: front **1** / hidden **2** / **8** / **9**; client **11**/**12**/**17**; self **81**–**87**; child Back **0**; finished leaf redisplays the front; short name bold |
+| 2026-09-30 | Active 1.8.0 | Non-interactive zero-cli-verb moves to `requirement-shell-cli-zero-arguments` (self-install). This file keeps the interactive boards. Named `menu` off-TTY stays help. |
 
 ---
 

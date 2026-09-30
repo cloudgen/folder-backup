@@ -5,9 +5,9 @@ Durable failure modes. **Always re-check on product review.**
 | ID | Mode | Prevention | Status |
 |----|------|------------|--------|
 | L-MENU-SUDOERS-01 | Family token `sudoers` wired as a live command, or operational grant verbs dropped from the dispatcher, or test-purpose verbs put back on a numbered board | Family row is menu-only (client **17**); **172**/**175** stay on the sudoers board; **171**/**173**/**174** stay reserved; five names stay live CLI commands; TP-CLI-13 | open watch |
-| L-TYPE-N-01 | Empty argv becomes install-ensure (parent Type O leak) | case 2 off-TTY help + never ensure; TP-CLI-07 | open watch |
-| L-CASE2-01 | Empty argv on TTY stays help after case 2 (always-help leak) | `requirement-shell-cli-default-interaction` 1.3.0; TP-CLI-13 empty argv | open watch |
-| L-ONLINE-01 | Channel verbs dropped, or empty argv turned into install-ensure | User order 2026-09-30 keeps self-install / version-check / self-update / self-uninstall. Empty argv stays case 2. TP-CLI-04/07/10 | closed by that order; watch the empty-argv split |
+| L-TYPE-N-01 | Non-interactive zero-cli-verb prints help, or places through local `install` (mode 0755), or a terminal with no command places | `requirement-shell-cli-zero-arguments` 1.2.0; interactive boards; non-interactive `inst_self_install`; TP-CLI-07 · TP-CLI-23 | open watch |
+| L-CASE2-01 | Empty argv on TTY stays help after case 2 (always-help leak) | `requirement-shell-cli-default-interaction` 1.8.0; TP-CLI-13 empty argv | open watch |
+| L-ONLINE-01 | Channel verbs dropped, a pipe with no command prints help, or a terminal with no command downloads | User order 2026-09-30: pipe / `--quiet` / `--json` with no command is `inst_self_install`. A terminal with no command stays the boards. TP-CLI-04/07/10/23 | closed by that order; watch the split |
 | L-UNIN-01 | Non-interactive uninstall succeeds without force | TP-LC-05 confirm fail-closed | open watch |
 | L-INST-MODE-01 | Install leaves `0711`/`0700` (chmod +x after mktemp) so non-owners cannot run shell ship unit | absolute `chmod 0755` + heal on reinstall; TP-LC-09/10; local-self-management §2.3.1 | open watch |
 | L-DEPOSIT-01 | Unprivileged write to `/var/backup` or silent deposit success without sudo | fail-closed + print-sudoers; TP-FOLDER-BACKUP-05 | open watch |
@@ -29,4 +29,4 @@ Durable failure modes. **Always re-check on product review.**
 | L-TEST-REVIEW-01 | Green emit TP-22 + stub TP-20 + S14 Pass miss sibling decode drop | Assert inbound after **real** sudoer-cli; pretty + compact fixtures; do not treat `tests/run.sh` PASS as grant fidelity; INC-20260817-001 | open watch |
 | L-SAFE-RM-01 | Host `safe-rm` success text lands inside sudoer-cli `$(sr_render_sudoers)` and visudo rejects line 4 | Tests that call real sudoer-cli put a quiet `rm` first on `PATH`. The guard still runs. Production submit on this host fails the same way until sudoer-cli stops capturing `rm` stdout. | open watch |
 
-**Bootstrap parent is selfmanaged (2026-09-30).** Keep its output SSOT, no basename gate, storage leaf, and channel verbs. Empty argv stays the folder-backup numbered boards (case 2), not the parent’s off-TTY install. `install` stays the local copy (mode 0755) and self-board row **81**.
+**Bootstrap parent is selfmanaged (2026-09-30).** Keep its output SSOT, no basename gate, storage leaf, and channel verbs. A terminal with no command stays the folder-backup numbered boards. A pipe, or `--quiet` / `--json` with no command, calls `inst_self_install`. Local `install` stays the mode 0755 copy and self-board row **81**.

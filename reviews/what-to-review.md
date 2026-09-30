@@ -1,12 +1,12 @@
 # What to review — folder-backup
 
 **Living checklist** (review plan). Product: **folder-backup** local self-managed CLI + domain backup/restore + narrow sudo deposit.  
-**Class:** software-development · domain SSOT present · channel verbs kept from selfmanaged · empty argv is the numbered boards.  
+**Class:** software-development · domain SSOT present · channel verbs kept from selfmanaged · a terminal with no command is the numbered boards; a pipe or `--quiet` / `--json` with no command is CLI self-install.  
 **Always load first:** `reviews/lessons.md`
 
 **Last plan update:** 2026-09-30  
-**Ship unit VERSION:** 1.18.0  
-**Suite baseline:** see `reviews/test-plan.md` (1.18.0 numbered boards; channel verbs on the self board; empty argv is still case 2; compact JSON `--json` twins still todo)
+**Ship unit VERSION:** 1.19.0  
+**Suite baseline:** see `reviews/test-plan.md` (1.19.0: PASS=455 FAIL=0 SKIP=2; numbered boards on a terminal; non-interactive zero-cli-verb is self-install; compact JSON `--json` twins still todo)
 
 ---
 
@@ -18,7 +18,7 @@
 | P2 | Confirm ship unit `src/folder-backup` | `APP_NAME` / `VERSION` hard-assign (**1.9.0+**) |
 | P3 | Load `reviews/lessons.md` and re-check every open L-* | Mandatory (esp. **L-SUDOERS-01/02** · **L-SUDOERS-06** · **L-OUTPUT-01** · **L-TEST-REVIEW-01**) |
 | P4 | Run `./tests/run.sh` | Record PASS/FAIL/SKIP in report; **must include TP-22e/22f** (not emit-only 22) **and TP-24*/25*** when generate/submit copy is in scope |
-| P5 | Confirm channel verbs are explicit and empty argv is still the numbered boards | Help lists `self-install` and `SCRIPT_URL`. Off-TTY empty argv is help. `install` is the local copy and self row **81**. |
+| P5 | Confirm the zero-cli-verb split and that channel verbs stay explicit | A terminal with no command is the numbered boards. A pipe, `--quiet`, or `--json` with no command calls `inst_self_install`. Named `menu` and `self-management` off a terminal stay help. `install` is the local copy and self row **81**. |
 | P6 | Privilege law version | three-layer **≥1.10.0** (S13 + AC-21/22 + **independent generate AC-23/24**) · sudoer-json **≥1.2.0** §2.7 item 5 · **operator-readable-error** 1.0.0 |
 | P7 | Host elev posture (if reviewing runtime) | Global vs local binary; trust tier; `/etc/sudoers.d/` status |
 | P8 | **JSON re-encode / inbound fidelity** | Complete section below. **Revise/Block** if skipped when submit or JSON grant is in scope. |
@@ -33,14 +33,14 @@
 | Surface | Path | Review focus |
 |---------|------|--------------|
 | Class | `requirement-class-software-dev.md` | posix-sh; origin selfmanaged |
-| Bootstrap chain | `requirement-bootstrap-chain.md` | A=selfmanaged → B; channel kept; case 2 empty argv |
+| Bootstrap chain | `requirement-bootstrap-chain.md` | A=selfmanaged → B; channel kept; terminal boards / non-interactive self-install |
 | Project folder | `requirement-project-folder.md` | `src/`, bins, `/var/backup` |
 | **Privilege / sudoers** | `requirement-three-layer-privilege-model.md` | Type 0/1; **trust tiers S13**; print-sudoers; **install-script**; **remove-project-sudoers**; **generate-sudoer-request** (§2.3.2a / AC-23/24); **submit-sudoer-request** public inbound; **inbound fidelity AC-21**; **host-probe add/update AC-22**; no ALL ALL |
 | **JSON sudoer file** | `requirement-sudoer-json-file.md` | `folder-backup` backup/**and** restore; §2.7a re-encode; pretty JSON legal; **independent generate dest AC-10** |
 | **Operator-readable error** | `requirement-operator-readable-error.md` | Blocking `[ERROR]` what-happened + next step; no jargon-only |
 | CLI interface | `requirement-shell-cli-interface.md` | Commands, flags, dispatch (incl. **generate-sudoer-request**); test-purpose grant-emit listed **apart** |
-| Default interaction | `requirement-shell-cli-default-interaction.md` | Case 2 TTY empty argv = numbered boards; front **1**/**8**/**9**; hidden **2**; client **11**/**12**/**17**; self **81**–**87**; test-purpose off every board |
-| Empty argv (withdrawn Type N) | `requirement-shell-cli-zero-arguments.md` | **Withdrawn** — off-TTY still help; never install-ensure |
+| Default interaction | `requirement-shell-cli-default-interaction.md` | Interactive zero-cli-verb = numbered boards; front **1**/**8**/**9**; hidden **2**; client **11**/**12**/**17**; self **81**–**87**; test-purpose off every board; named `menu` off a terminal stays help |
+| Zero-cli-verb | `requirement-shell-cli-zero-arguments.md` | **Active 1.2.0** — non-interactive zero-cli-verb is `inst_self_install` (not help, not local `install`) |
 | Local self-management | `requirement-shell-local-self-management.md` | install/uninstall; global preferred for elev |
 | Output SSOT | `requirement-shell-output-requirements.md` | `out_*`; JSON errors |
 | Modular design | `requirement-shell-modular-function-design.md` | `fb_*` domain prefix |
@@ -61,7 +61,7 @@
 | Mold | `docs/templates/requirements/template-three-layer-privilege-model.md` | §2.3.1a, §2.3.2a, §2.3.3a–d |
 | Terms | `project-sudoers-file` · `sudoers-fragment` · `independent-sudoer-generate` · `operator-readable-error` | Draft vs installed vs generate dest vs error copy |
 
-**Do not drop without owner order:** channel verbs, the work-list empty argv, or local `install` as the 0755 copy.
+**Do not drop without owner order:** channel verbs, the terminal numbered boards, the non-interactive self-install route, or local `install` as the 0755 copy.
 
 ---
 
@@ -69,8 +69,8 @@
 
 | Path / symbol | Risk | Lesson / TP |
 |--------------|------|-------------|
-| Empty argv branch | Type O install leak from parent | L-TYPE-N-01 · TP-CLI-07 |
-| Channel verbs vs empty argv | Bare run must not download | L-ONLINE-01 · TP-CLI-04/07/10 |
+| Zero-cli-verb branch | A terminal places, or a pipe prints help, or the place calls `inst_local_install` | L-TYPE-N-01 · TP-CLI-07 · TP-CLI-23 |
+| Channel verbs vs a terminal with no command | A terminal with no command must not download; a pipe places through `inst_self_install` | L-ONLINE-01 · TP-CLI-04/07/10/23 |
 | `inst_local_uninstall` | Fake success without force | L-UNIN-01 · TP-LC-05 |
 | `inst_local_install` | Mode `0711` / `chmod +x` only (non-owners cannot run shell unit) | L-INST-MODE-01 · TP-LC-09/10 |
 | `fb_deposit_archive` | Silent success without sudo | L-DEPOSIT-01 · TP-FOLDER-BACKUP-05 |

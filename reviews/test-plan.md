@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.18.0  
+**Product VERSION:** 1.19.0  
 **Last plan update:** 2026-09-30  
-**Last suite run:** `sh tests/run.sh` (1.18.0: PASS=436 FAIL=0 SKIP=2)
+**Last suite run:** `sh tests/run.sh` (1.19.0: PASS=455 FAIL=0 SKIP=2)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -17,12 +17,13 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 |------|--------|----------|
 | Syntax `sh -n` | have | TP-CLI-01 |
 | version / help / about human + JSON | have | TP-CLI-02..06 |
-| Off-TTY empty argv = help (not install) | have | TP-CLI-07 |
-| TTY empty argv + `menu`/`main` boards / sudoers board / self board / off-TTY help | have | TP-CLI-13..16 · **19** · **21** |
+| Non-interactive zero-cli-verb = CLI self-install (copy, mode 0700, second run already installed) | have | TP-CLI-07 |
+| Switches with no verb: `--quiet` / `--json` / non-TTY `--debug` place; TTY `--debug` stays the boards; `--debug version` stays version | have | TP-CLI-23 |
+| TTY empty argv + `menu`/`main` boards / sudoers board / self board; named `menu` off a terminal is help | have | TP-CLI-13..16 · **19** · **21** |
 | TTY main-menu look (nametag + bold short name + gray italic explain) | have | TP-CLI-18 |
 | Unknown + quiet + set -u HOME | have | TP-CLI-08..11 |
 | Per-login per-process cache folder + persistence `${HOME}/.local/folder-backup/` | have | TP-CLI-06 · TP-CLI-12 |
-| Channel verbs listed; offline version-check / self-update fail closed; empty argv is not install | have | TP-CLI-04, TP-CLI-07, TP-CLI-10 |
+| Channel verbs listed; offline version-check / self-update fail closed; a script `$0` with no command copies and does not fetch | have | TP-CLI-04, TP-CLI-07, TP-CLI-10 |
 | Local install / idempotent / uninstall / mode 0755 | have | TP-LC-01..10 |
 | Help lists sudoers verbs (print / install-script / remove draft / **generate** / submit + public inbound) | have | TP-CLI-04 |
 | Independent generate dest readable without sudo | have | TP-FOLDER-BACKUP-24/24b/24c/24d |
@@ -55,7 +56,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-04 | help lists channel verbs and SCRIPT_URL; print-sudoers + install-script + remove-project-sudoers + generate-sudoer-request + submit-sudoer-request; no CHECKSUM in help | test_cli | requirement-shell-cli-interface · domain | **have** |
 | TP-CLI-05 | help JSON short | test_cli | requirement-shell-output-requirements | **have** |
 | TP-CLI-06 | about JSON cache_used / cache_preferred / cache_fallback / cache_fallback_2 / persistence_storage + human Cache folder used, preferred, 1st fallback, 2nd fallback + Persistence storage + domain fields + channel script_url | test_cli | requirement-shell-cli-storage · domain | **have** |
-| TP-CLI-07 | off-TTY empty argv help (not install) | test_cli | requirement-shell-cli-default-interaction | **have** |
+| TP-CLI-07 | off-TTY empty argv copies this file (self-install), mode 0700, second run already installed; not help and not the boards | test_cli | **shell-cli-zero-arguments** AC-1 / AC-2 / AC-5 · **shell-cli-default-interaction** AC-1 | **have** |
 | TP-CLI-08 | unknown fail-closed | test_cli | requirement-shell-cli-interface | **have** |
 | TP-CLI-09 | quiet suppresses version | test_cli | requirement-shell-output-requirements | **have** |
 | TP-CLI-10 | channel verbs routed; offline version-check / self-update fail closed (non-empty dead URL); self-uninstall with no binary exits 0 | test_cli | requirement-bootstrap-chain | **have** |
@@ -63,13 +64,14 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-12 | Linux / Git Bash / Mac cache chains; silent skip of preferred; leaf mode 0700 owned by this login; persistence `${HOME}/.local/folder-backup` exists | test_cli | requirement-shell-cli-storage | **have** |
 | TP-CLI-13 | interactive empty argv **and** `menu` print front **1**/**8**/**9**, hidden server sentence, client **11**/**12**/**17**, sudoers **172**/**175** + hide sentence + Back **0**, self **81**/**87**; `sudoers` not dispatched; members live **without** enqueueing live inbound | test_cli | **shell-cli-default-interaction** AC-3 / AC-10 / AC-11 · **shell-cli-sudoers-submenu** AC-1–AC-5 | **have** |
 | TP-CLI-14 | interactive `menu --json` still prints the list | test_cli | **shell-cli-default-interaction** AC-4 | **have** |
-| TP-CLI-15 | non-interactive `menu` is help; `--json` JSON help; flags-only `--json` JSON help (not the boards); off-TTY `self-management` is help | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
+| TP-CLI-15 | non-interactive `menu` / `main` is help; `menu --json` is JSON help; off-TTY `self-management` is help. Flags-only `--json` is **TP-CLI-23** (self-install), not this row | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
 | TP-CLI-16 | front board shows **8** self-management and omits help / verb rows that belong on a child board (backup, grant verbs, test-purpose) | test_cli | **shell-cli-default-interaction** AC-6 · **shell-cli-sudoers-submenu** AC-5 | **have** |
 | TP-CLI-17 | help lists test-purpose grant-emit verbs under a heading apart from operational | test_cli | **shell-cli-interface** AC-9 | **have** |
 | TP-CLI-18 | default CLI main menu style: header `APP_NAME(VERSION)` bold/italic; short name bold; numbered explain italic + light gray; Exit unstyled; no CSI off-TTY; sudoers title (portable **TP-CLI-17** alias) | test_cli | **shell-cli-default-interaction** AC-8 · **shell-cli-sudoers-submenu** AC-6 · **shell-output-requirements** AC-5 | **have** |
 | TP-CLI-19 | child number **12** on the front is invalid and the front reprints | test_cli | **shell-cli-default-interaction** AC-12 | **have** |
 | TP-CLI-20 | ship unit has no `$()` of `prompt_*` helpers | test_cli | **shell-script-coding** · **shell-interactive-vs-noninteractive** AC-4 | **have** |
 | TP-CLI-21 | typing `version` on the front runs it and the front reprints | test_cli | **shell-cli-default-interaction** AC-12 | **have** |
+| TP-CLI-23 | `--quiet`, `--json`, and non-TTY `--debug` with no command place the CLI; TTY `--json` places and is not the boards; TTY `--debug` shows the front and does not place; `--debug version` stays version | test_cli | **shell-cli-zero-arguments** AC-3 / AC-4 | **have** |
 
 ### TP-LC (local lifecycle)
 

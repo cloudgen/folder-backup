@@ -31,7 +31,7 @@ Inventory from dispatcher case, not help. Human-readable is `{{short-descript}}:
 | remove-project-sudoers | `fb_remove_project_sudoers` | you | 2026-08-09 | operational | remove-project-sudoers: Remove the local grant draft only |
 | generate-sudoer-request | `fb_generate_sudoer_request` | you | 2026-08-17 | test-purpose | generate-sudoer-request: Write a local JSON grant you can read without sudo |
 | submit-sudoer-request | `fb_submit_sudoer_request` | you | 2026-08-17 | operational | submit-sudoer-request: Hand the JSON grant to the approval queue |
-| menu | `app_cmd_menu` (`app_main_menu` aliases it) | you | 2026-09-30 | operational | menu: Numbered boards: client-side, self-management, and Exit (same boards as a TTY empty run; off-TTY is help) |
+| menu | `app_cmd_menu` (`app_main_menu` aliases it) | you | 2026-09-30 | operational | menu: Numbered boards: client-side, self-management, and Exit (same boards as a TTY empty run; a script prints help) |
 | main | `app_cmd_menu` | you | 2026-09-30 | operational | main: Same as menu |
 
 ## Not-yet-wired
@@ -48,4 +48,4 @@ A TTY **front** board prints category rows, not the flat work list. folder-backu
 
 ## Honesty
 
-Dispatcher tokens on 2026-09-30: version, about, help, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, self-management, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Empty argv is **not** a token: on a real terminal it calls `app_cmd_menu` (case 2); off-TTY it is help. Channel verbs are live and sit on the self board (front row **8**), not as front rows. `install` is the local copy and self row **81**. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose** (off every numbered board; numbers reserved). **`sudoers` is not a dispatcher token.**
+Dispatcher tokens on 2026-09-30: version, about, help, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, self-management, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Empty argv is **not** a token: on a real terminal it calls `app_cmd_menu`; a pipe, `--quiet`, or `--json` with no command calls `inst_self_install`. Named `menu` and `self-management` off a terminal stay help. Channel verbs are live and sit on the self board (front row **8**), not as front rows. `install` is the local copy and self row **81**. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose** (off every numbered board; numbers reserved). **`sudoers` is not a dispatcher token.**

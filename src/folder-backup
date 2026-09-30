@@ -9,7 +9,8 @@
 # self-update / self-uninstall / channel checksum). Direction A → B only.
 # Specialize: identity folder-backup + domain backup/restore/sudoers.
 # Main menu is the numbered tree: 1 client-side, 8 self-management, 9 Exit.
-# Row 2 server-side stays reserved. Empty argv stays case 2 (TTY tree; off-TTY help).
+# Row 2 server-side stays reserved. A zero-cli-verb line is the tree on a
+# terminal and CLI self-install off a terminal (not help, not local install).
 #
 # Project requirements (docs/requirements/ only — never cite templates here):
 # - requirement-bootstrap-chain.md
@@ -17,6 +18,7 @@
 # - requirement-domain-folder-backup.md
 # - requirement-shell-cli-interface.md
 # - requirement-shell-cli-default-interaction.md
+# - requirement-shell-cli-zero-arguments.md
 # - requirement-shell-cli-sudoers-submenu.md
 # - requirement-shell-local-self-management.md
 # - requirement-shell-cli-storage.md
@@ -24,7 +26,7 @@
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.18.0"
+# VERSION: hard-assign VERSION="1.19.0"
 # SCRIPT_URL: composed from REPO_USER / REPO_NAME / SCRIPT_RELPATH (selfmanaged channel).
 #
 # =============================================================================
@@ -42,8 +44,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered boards.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.18.0"
-: "${VERSION:=1.18.0}"
+VERSION="1.19.0"
+: "${VERSION:=1.19.0}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -353,7 +355,7 @@ out_menu_choice() {
 # =============================================================================
 util_app_ident() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.18.0}"
+    : "${VERSION:=1.19.0}"
     : "${TTY:=0}"
     : "${JSON:=0}"
     if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
@@ -1012,7 +1014,7 @@ inst_perform_install_atomic_install() {
 # (not the ship unit). Login-dash prefixes are stripped.
 #
 # ALIGNMENT (live requirements only):
-# - requirement-shell-cli-self-install.md
+# - requirement-shell-cli-interface.md
 #
 # Last updated: 2026-09-17
 # =============================================================================
@@ -1041,7 +1043,7 @@ inst_argv0_is_shell_interpreter() {
 # PRINTF EXCEPTION (class B – function return-via-stdout): path or nothing.
 #
 # ALIGNMENT (live requirements only):
-# - requirement-shell-cli-self-install.md
+# - requirement-shell-cli-interface.md
 #
 # Last updated: 2026-09-17
 # =============================================================================
@@ -1075,7 +1077,7 @@ inst_resolve_self_script() {
 # =============================================================================
 #
 # ALIGNMENT (live requirements only):
-# - requirement-shell-cli-self-install.md
+# - requirement-shell-cli-interface.md
 #
 # Last updated: 2026-09-17
 # =============================================================================
@@ -1096,7 +1098,7 @@ inst_cli_dest_mode() {
 # MUST NOT chmod +x on mktemp 0600 (that mints 0711).
 #
 # ALIGNMENT (live requirements only):
-# - requirement-shell-cli-self-install.md
+# - requirement-shell-cli-interface.md
 #
 # Last updated: 2026-09-17
 # =============================================================================
@@ -1146,14 +1148,14 @@ inst_self_install_copy_from_script() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Type O CLI place/ensure. Empty argv and the self-install verb (install is
-# an alias). Script $0 → copy without download. Interpreter $0 → channel
-# download. Dest mode 0755 global / 0700 local. PATH rc MAY.
+# CLI place/ensure. The self-install verb and a non-interactive zero-cli-verb
+# line use this function. Local install is a different verb. Script $0 → copy
+# without download. Interpreter $0 → channel download. Dest mode 0755 global /
+# 0700 local. PATH rc MAY.
 #
 # ALIGNMENT (live requirements only):
-# - requirement-shell-cli-self-install.md
 # - requirement-shell-cli-zero-arguments.md
-# - requirement-shell-automatic-checksum.md
+# - requirement-shell-cli-interface.md
 #
 # Last updated: 2026-09-17
 # =============================================================================
@@ -1295,7 +1297,7 @@ inst_maybe_install() {
     if inst_is_installed && [ "${FORCE_REINSTALL}" -eq 0 ]; then
         return 0
     fi
-    # Quiet or JSON: CLI place with no prompt (requirement-shell-cli-self-install).
+    # Quiet or JSON: CLI place with no prompt (requirement-shell-cli-zero-arguments).
     if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ]; then
         inst_self_install
         return $?
@@ -3002,7 +3004,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.18.0}"
+    : "${VERSION:=1.19.0}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"
@@ -3200,7 +3202,7 @@ app_about() {
 
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.18.0}"
+    : "${VERSION:=1.19.0}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path
@@ -6400,7 +6402,7 @@ app_help() {
     if [ "${JSON}" -eq 1 ]; then
         out_json "success" "Help text available in human-readable mode. Run without --json." \
             "command" "help" \
-            "note" "Use --json with version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore. Empty argv off-TTY, flags-only --json, and menu/main off-TTY use this help."
+            "note" "Use --json with version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore. A non-interactive line with no command places this program. menu/main off-TTY use this help."
         return 0
     fi
     if [ "${QUIET}" -eq 1 ]; then
@@ -6496,7 +6498,7 @@ app_help() {
     out_plain "  SUDOERS_D_DIR           host sudoers.d dir (default /etc/sudoers.d; tests)"
     out_empty_line
     out_info "Examples:"
-    out_plain "  ${APP_NAME}                    # TTY numbered boards; off-TTY is help"
+    out_plain "  ${APP_NAME}                    # TTY numbered boards; a pipe places this program"
     out_plain "  ${APP_NAME} menu"
     out_plain "  ${APP_NAME} install"
     out_plain "  ${APP_NAME} self-install           # copy this file, or download when piped"
@@ -6507,8 +6509,8 @@ app_help() {
     out_plain "  ${APP_NAME} restore genesis-template"
     out_plain "  ${APP_NAME} restore genesis-template --ram"
     out_empty_line
-    out_info "On a real terminal, no arguments shows the numbered boards; in a script, no arguments shows this help."
-    out_info "Channel place/update is explicit: self-install, version-check, self-update, self-uninstall."
+    out_info "On a real terminal, no command shows the numbered boards. A pipe, or --quiet / --json with no command, places this program."
+    out_info "Local install stays the verb install. Channel update stays version-check, self-update, and self-uninstall."
     out_info "Restore default destination is hard-disk (not RAM) unless --ram or dest is set."
     out_info "Local install + sudoers is TEST MODE ONLY; prefer global for durable elevation."
 }
@@ -6548,18 +6550,20 @@ app_default_self_loop() {
 #
 # GENERAL PURPOSE:
 # Single dispatcher. Architecture and self-management verbs come from
-# selfmanaged. Folder-backup verbs and the work-list menu are added here.
-# Empty argv = case 2 (TTY numbered boards; off-TTY help). Not install-ensure.
+# selfmanaged. Folder-backup verbs and the numbered boards are added here.
+# Zero-cli-verb: interactive → numbered boards; non-interactive → self-install.
+# Local install is the verb install, not this path.
 #
 # ALIGNMENT:
 # - requirement-bootstrap-chain.md
 # - requirement-shell-cli-interface.md
 # - requirement-shell-cli-default-interaction.md
+# - requirement-shell-cli-zero-arguments.md
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # =============================================================================
 app_main() {
-    : "${COMMAND:=help}"
+    COMMAND=""
     : "${QUIET:=0}"
     : "${JSON:=0}"
     : "${DEBUG:=0}"
@@ -6580,11 +6584,16 @@ app_main() {
     export EFFECTIVE_STORAGE_DIR STORAGE_DIR PERSISTENT_STORAGE_DIR
     export TMPDIR="${EFFECTIVE_STORAGE_DIR}"
 
-    # Case 2: empty argv → TTY numbered boards; off-TTY help.
-    # Self-install stays an explicit verb (full selfmanaged channel, not surprise install).
+    # Zero-cli-verb (no tokens). Interactive → numbered boards.
+    # Non-interactive → CLI self-install (not help, not local install).
+    # requirement-shell-cli-zero-arguments.md
     if [ $# -eq 0 ]; then
-        app_cmd_menu
-        return 0
+        if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ] && [ "${QUIET}" -eq 0 ]; then
+            app_cmd_menu
+            return $?
+        fi
+        inst_self_install
+        return $?
     fi
 
     _domain_arg=""
@@ -6680,6 +6689,18 @@ app_main() {
         shift
     done
 
+    # Zero-cli-verb after switches. --debug / --force are not a verb.
+    # --quiet / --json with no verb are non-interactive (CLI self-install).
+    # requirement-shell-cli-zero-arguments.md
+    if [ -z "${COMMAND}" ]; then
+        if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ] && [ "${QUIET}" -eq 0 ]; then
+            app_cmd_menu
+            return $?
+        fi
+        inst_self_install
+        return $?
+    fi
+
     out_debug "dispatch command=${COMMAND} quiet=${QUIET} json=${JSON} force=${FORCE} force_global=${FORCE_GLOBAL} allow_test_local=${ALLOW_TEST_LOCAL_SUDOERS} restore_host=${RESTORE_HOST:-}"
 
     case "${COMMAND}" in
@@ -6725,7 +6746,8 @@ app_main() {
 # BOOTSTRAP
 # =============================================================================
 # Always invoke app_main. No basename gate (pipe-safe entry).
-# Product law: requirement-shell-cli-default-interaction.md (case 2 empty argv).
-# Self-management channel remains on explicit verbs (selfmanaged full feature).
+# Product law: requirement-shell-cli-zero-arguments.md (interactive boards /
+# non-interactive self-install) and requirement-shell-cli-default-interaction.md.
+# Local install stays the verb install.
 # =============================================================================
 app_main "$@"

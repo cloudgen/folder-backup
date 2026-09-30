@@ -1,7 +1,8 @@
 # =============================================================================
 # tests/test_cli.sh — CLI surface
 # Channel verbs are listed. version-check / self-update use a non-empty
-# unreachable URL (127.0.0.1 only). Empty argv is not install. No live GitHub fetch.
+# unreachable URL (127.0.0.1 only). A non-interactive line with no command
+# copies this file (self-install). No live GitHub fetch.
 # =============================================================================
 # Primary REQs: requirement-shell-cli-interface, requirement-shell-cli-default-interaction,
 # requirement-shell-output-requirements, requirement-shell-cli-storage
@@ -128,13 +129,24 @@ run_test_cli() {
     assert_not_contains "TP-CLI-06 no Storage (fallback) label" "$_hout" "Storage (fallback)"
     assert_not_contains "TP-CLI-06 no Cache folder (live) label" "$_hout" "Cache folder (live)"
 
-    # TP-CLI-07 off-TTY empty argv = help (not install; case 2)
-    _out=$(sh "${SCRIPT}" 2>/dev/null)
+    # TP-CLI-07 off-TTY empty argv = CLI self-install (copy; not help; not the boards)
+    _out=$(SCRIPT_URL="http://127.0.0.1:9/folder-backup-offline" sh "${SCRIPT}" 2>&1)
     _ec=$?
     assert_eq "TP-CLI-07 empty argv exit 0" 0 "$_ec"
-    assert_contains "TP-CLI-07 empty argv is help" "$_out" "Usage:"
-    assert_contains "TP-CLI-07 empty argv mentions help" "$_out" "help"
+    assert_file_exists "TP-CLI-07 empty argv installed binary" "${CI_USER_BIN}/${APP_NAME}"
+    assert_contains "TP-CLI-07 empty argv self-install banner" "$_out" "Starting self-install"
+    assert_contains "TP-CLI-07 empty argv copies the local script" "$_out" "Installing from local script"
+    assert_not_contains "TP-CLI-07 empty argv is not help" "$_out" "Usage:"
     assert_not_contains "TP-CLI-07 empty argv not numbered list" "$_out" "9. Exit"
+    _mode=$(stat -c '%a' "${CI_USER_BIN}/${APP_NAME}" 2>/dev/null || stat -f '%OLp' "${CI_USER_BIN}/${APP_NAME}" 2>/dev/null || echo "")
+    case "${_mode}" in
+        700|0700) t_pass "TP-CLI-07 local dest mode 0700" ;;
+        *) t_fail "TP-CLI-07 local dest mode 0700, got '${_mode}'" ;;
+    esac
+    _out=$(SCRIPT_URL="http://127.0.0.1:9/folder-backup-offline" sh "${SCRIPT}" 2>&1)
+    assert_eq "TP-CLI-07 second empty argv exit 0" 0 "$?"
+    assert_contains "TP-CLI-07 second empty argv already installed" "$_out" "already installed"
+    rm -f "${CI_USER_BIN}/${APP_NAME}"
 
     # TP-CLI-08 unknown command fail-closed
     _err=$(sh "${SCRIPT}" no-such-command 2>&1 >/dev/null)
@@ -274,7 +286,8 @@ run_test_cli() {
     esac
     ci_cleanup_env
 
-    # TP-CLI-15 non-interactive menu is help; --json JSON help; off-TTY empty argv is help
+    # TP-CLI-15 named menu / self-management off-TTY stay help.
+    # A line with no command is TP-CLI-07 / TP-CLI-23 (self-install), not this block.
     _out=$(sh "${SCRIPT}" menu 2>/dev/null)
     _ec=$?
     assert_eq "TP-CLI-15 menu off-TTY exit 0" 0 "$_ec"
@@ -291,16 +304,6 @@ run_test_cli() {
     assert_eq "TP-CLI-15 menu --json off-TTY exit 0" 0 "$_ec"
     assert_contains "TP-CLI-15 menu --json off-TTY JSON help" "$_out" '"type":"success"'
     assert_not_contains "TP-CLI-15 menu --json off-TTY not numbered list" "$_out" "9. Exit"
-
-    _out=$(sh "${SCRIPT}" --json 2>/dev/null)
-    _ec=$?
-    assert_eq "TP-CLI-15 flags-only --json off-TTY exit 0" 0 "$_ec"
-    assert_contains "TP-CLI-15 flags-only --json is JSON help" "$_out" '"type":"success"'
-    assert_not_contains "TP-CLI-15 flags-only --json not numbered list" "$_out" "9. Exit"
-
-    _out=$(sh "${SCRIPT}" 2>/dev/null)
-    assert_not_contains "TP-CLI-15 empty argv not numbered list" "$_out" "9. Exit"
-    assert_contains "TP-CLI-15 empty argv still help" "$_out" "Usage:"
 
     _out=$(sh "${SCRIPT}" --quiet menu 2>/dev/null)
     _ec=$?
@@ -321,6 +324,38 @@ run_test_cli() {
 
     assert_contains "TP-CLI-15 help lists menu" "$(sh "${SCRIPT}" help 2>/dev/null)" "Numbered boards: client-side, self-management, and Exit"
     assert_contains "TP-CLI-15 help lists main" "$(sh "${SCRIPT}" help 2>/dev/null)" "Same as menu"
+    assert_contains "TP-CLI-15 help says a pipe places this program" "$(sh "${SCRIPT}" help 2>/dev/null)" "a pipe places this program"
+
+    # TP-CLI-23 a switch is not a verb. Isolate bins so this does not place
+    # into the login that is running the suite.
+    ci_isolated_env
+    _out=$(HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" GLOBAL_BIN="${CI_GLOBAL_BIN}" SCRIPT_URL="http://127.0.0.1:9/folder-backup-offline" sh "${SCRIPT}" --quiet 2>&1)
+    assert_eq "TP-CLI-23 --quiet exit 0" 0 "$?"
+    assert_file_exists "TP-CLI-23 --quiet placed binary" "${CI_USER_BIN}/${APP_NAME}"
+    assert_not_contains "TP-CLI-23 --quiet is not help" "$_out" "Usage:"
+    assert_not_contains "TP-CLI-23 --quiet is not the boards" "$_out" "9. Exit"
+    ci_cleanup_env
+
+    ci_isolated_env
+    _out=$(HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" GLOBAL_BIN="${CI_GLOBAL_BIN}" SCRIPT_URL="http://127.0.0.1:9/folder-backup-offline" sh "${SCRIPT}" --json 2>&1)
+    assert_eq "TP-CLI-23 --json exit 0" 0 "$?"
+    assert_file_exists "TP-CLI-23 --json placed binary" "${CI_USER_BIN}/${APP_NAME}"
+    assert_contains "TP-CLI-23 --json success" "$_out" '"type":"out_success"'
+    assert_not_contains "TP-CLI-23 --json is not help" "$_out" "Usage:"
+    assert_not_contains "TP-CLI-23 --json is not the boards" "$_out" "9. Exit"
+    ci_cleanup_env
+
+    ci_isolated_env
+    _out=$(HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" GLOBAL_BIN="${CI_GLOBAL_BIN}" SCRIPT_URL="http://127.0.0.1:9/folder-backup-offline" sh "${SCRIPT}" --debug 2>&1)
+    assert_eq "TP-CLI-23 non-TTY --debug exit 0" 0 "$?"
+    assert_file_exists "TP-CLI-23 non-TTY --debug placed binary" "${CI_USER_BIN}/${APP_NAME}"
+    assert_contains "TP-CLI-23 non-TTY --debug self-install banner" "$_out" "Starting self-install"
+    assert_not_contains "TP-CLI-23 non-TTY --debug is not help" "$_out" "Usage:"
+    ci_cleanup_env
+
+    _out=$(sh "${SCRIPT}" --debug version 2>/dev/null)
+    assert_contains "TP-CLI-23 --debug version stays version" "$_out" "version ${PRODUCT_VERSION}"
+    assert_not_contains "TP-CLI-23 --debug version is not self-install" "$_out" "Starting self-install"
 
     if command -v python3 >/dev/null 2>&1; then
         _esc=$(printf '\033')
@@ -398,9 +433,23 @@ run_test_cli() {
         assert_contains "TP-CLI-14 TTY self-management --json still the board" "$_plain" "81. install:"
         assert_not_contains "TP-CLI-14 TTY self-management --json ignores JSON help" "$_out" '"type":"success"'
 
-        _out=$(PTY_IN="9" ci_pty_run --json)
-        assert_contains "TP-CLI-15 TTY flags-only --json is JSON help" "$_out" '"type":"success"'
-        assert_not_contains "TP-CLI-15 TTY flags-only --json not numbered list" "$_out" "9. Exit"
+        ci_isolated_env
+        _out=$(PTY_IN="9" SCRIPT_URL="http://127.0.0.1:9/folder-backup-offline" ci_pty_run --json)
+        assert_file_exists "TP-CLI-23 TTY --json placed binary" "${CI_USER_BIN}/${APP_NAME}"
+        assert_contains "TP-CLI-23 TTY --json success" "$_out" '"type":"out_success"'
+        assert_not_contains "TP-CLI-23 TTY --json is not the boards" "$_out" "9. Exit"
+        ci_cleanup_env
+
+        ci_isolated_env
+        _out=$(PTY_IN="9" ci_pty_run --debug)
+        _plain=$(ci_strip_ansi "$_out")
+        assert_contains "TP-CLI-23 TTY --debug shows the front" "$_plain" "1. client-side:"
+        if [ -e "${CI_USER_BIN}/${APP_NAME}" ]; then
+            t_fail "TP-CLI-23 TTY --debug placed a binary"
+        else
+            t_pass "TP-CLI-23 TTY --debug does not place"
+        fi
+        ci_cleanup_env
 
         _out=$(PTY_IN="9" ci_pty_run menu)
         _plain=$(ci_strip_ansi "$_out")
@@ -459,8 +508,11 @@ run_test_cli() {
         _off=$(sh "${SCRIPT}" menu 2>/dev/null)
         assert_not_contains "TP-CLI-18 off-TTY menu no explain CSI" "$_off" "${_esc}[3;37m"
         assert_not_contains "TP-CLI-18 off-TTY menu no ident CSI" "$_off" "${_esc}[1m${APP_NAME}"
-        _empty=$(sh "${SCRIPT}" 2>/dev/null)
+        ci_isolated_env
+        _empty=$(SCRIPT_URL="http://127.0.0.1:9/folder-backup-offline" sh "${SCRIPT}" 2>/dev/null)
         assert_not_contains "TP-CLI-18 off-TTY empty argv no explain CSI" "$_empty" "${_esc}[3;37m"
+        rm -f "${CI_USER_BIN}/${APP_NAME}"
+        ci_cleanup_env
     else
         t_skip "TP-CLI-13 TTY menu (no python3 for PTY)"
         t_skip "TP-CLI-13 TTY sudoers submenu (no python3 for PTY)"

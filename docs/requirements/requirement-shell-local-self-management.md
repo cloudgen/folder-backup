@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-local-self-management.md  
-**Status**: Active (Version 1.3.1)  
+**Status**: Active (Version 1.3.2)  
 **Area**: shell  
 **Key**: `requirement-shell-local-self-management`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -8,7 +8,7 @@
 
 This requirement is the **project Single Source of Truth** for **local self-managed lifecycle** of the folder-backup POSIX shell CLI: **`install`**, **`uninstall`**, and **`where-is-me`**, plus the local diagnostics package contract for **`version`**, **`about`**, and **`help`** (wiring owned with CLI interface).
 
-**This file owns the local copy pair.** `install` copies the running file (mode **0755**). `uninstall` removes that managed binary. `where-is-me` reports paths. The channel verbs `self-install`, `version-check`, `self-update`, `self-uninstall`, and `self-management` are live and are owned by `requirement-shell-cli-interface` and `requirement-bootstrap-chain`. Do not alias `install` to `self-install`. Empty argv is the numbered boards, not either install. On a terminal, `install` is also self-board row **81** (`requirement-shell-cli-default-interaction`). `uninstall` and `where-is-me` stay typed commands.
+**This file owns the local copy pair.** `install` copies the running file (mode **0755**). `uninstall` removes that managed binary. `where-is-me` reports paths. The channel verbs `self-install`, `version-check`, `self-update`, `self-uninstall`, and `self-management` are live and are owned by `requirement-shell-cli-interface` and `requirement-bootstrap-chain`. Do not alias `install` to `self-install`. A terminal with no command is the numbered boards. A pipe with no command is `self-install`, not this file’s `install`. On a terminal, `install` is also self-board row **81** (`requirement-shell-cli-default-interaction`). `uninstall` and `where-is-me` stay typed commands.
 
 ### 1.1 Human-facing
 
@@ -165,7 +165,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 1. Replace local `uninstall` with `self-uninstall` as the only remove verb.  
 2. Require `SCRIPT_URL` for `install`.  
-3. Make empty argv install-ensure (case 2 owns empty argv).  
+3. Route a zero-cli-verb line to `inst_local_install`. Non-interactive place is `inst_self_install` (`requirement-shell-cli-zero-arguments`).  
 4. Delete user data or `/var/backup` content during uninstall.  
 5. Fetch remote version inside `version`.  
 6. Install the managed binary with execute-only group/other bits (`0711` / `chmod +x` after `0600` stage) — **must** keep absolute **`0755`** so global install remains multi-user runnable for a shell ship unit.
@@ -194,7 +194,8 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | Key | Relationship |
 |-----|--------------|
 | `requirement-shell-cli-interface` | Command table + flags |
-| `requirement-shell-cli-default-interaction` | Case 2 empty argv (TTY menu / off-TTY help); never install-ensure |
+| `requirement-shell-cli-default-interaction` | Interactive zero-cli-verb boards |
+| `requirement-shell-cli-zero-arguments` | Non-interactive zero-cli-verb is `inst_self_install`, not local `install` |
 | `requirement-project-folder` | Path defaults |
 | `requirement-shell-idempotency` | Already installed / uninstalled |
 | `requirement-bootstrap-chain` | Why the channel verbs exist beside this local pair |
@@ -222,6 +223,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-08-28 | Active 1.2.1 | Empty-argv owner is default-interaction case 2; Type O fence unchanged |
 | 2026-09-30 | Active 1.3.0 | Channel verbs are live beside this pair. `install` stays the local copy. |
 | 2026-09-30 | Active 1.3.1 | Empty argv is the numbered boards. `install` is also self-board row **81**. `uninstall` and `where-is-me` stay typed. Version cell points at the ship unit. |
+| 2026-09-30 | Active 1.3.2 | A pipe with no command is `self-install`, not this file’s `install`. |
 
 ---
 

@@ -1,9 +1,10 @@
 # Review reports index — folder-backup
 
-**Current product (2026-09-30):** VERSION **1.18.0**. Bootstrap parent is **selfmanaged**. Channel verbs stay on the self board. Empty argv is the numbered boards. `install` is the local copy and self row **81**. The table below is the report index; older rows stay as written.
+**Current product (2026-09-30):** VERSION **1.19.0**. Bootstrap parent is **selfmanaged**. A terminal with no command is the numbered boards. A pipe, or `--quiet` / `--json` with no command, is CLI self-install. `install` is the local copy and self row **81**. The table below is the report index; older rows stay as written.
 
 | Date | Report | Scope | Verdict | Suite |
 |------|--------|-------|---------|-------|
+| 2026-09-30 | `reports/2026-09-30-requirement-coverage-zero-cli-verb.md` | C-full-product after non-interactive zero-cli-verb became self-install | Sufficient with Gaps | 1.19.0 PASS=455 FAIL=0 SKIP=2 |
 | 2026-09-30 | `reports/2026-09-30-requirement-coverage-main-menu.md` | C-full-product after the numbered-board menu | Sufficient with Gaps | 1.18.0 PASS=436 FAIL=0 SKIP=2 |
 | 2026-09-27 | `reports/2026-09-27-checklist-temp-file-system-cache-folder.md` | CL-TEMP-FILE-SYSTEM cache folder; storage law 1.4.0; TP-CLI-06/12 | **Pass** | 1.16.5 PASS=410 FAIL=0 SKIP=2 |
 | 2026-09-06 | `reports/2026-09-06-requirement-coverage-human-readability.md` | C-full-product coverage + README/REQ human-facing; TP-CLI-17 have; coding-style + sudo-command REQs; wrap/detect/TP-27 Gaps | Sufficient with Gaps | 1.16.3 |

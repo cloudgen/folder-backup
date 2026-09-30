@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-bootstrap-chain.md  
-**Status**: Active (Version 2.2.1)  
+**Status**: Active (Version 2.3.0)  
 **Area**: architecture  
 **Key**: `requirement-bootstrap-chain`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -23,7 +23,7 @@ Declare the **bootstrap chain** for this product: ordered lineage, direction, ar
 | Includes | Excludes |
 |----------|----------|
 | Ancestor → descendant only | Copying this product onto selfmanaged “to share fixes” |
-| Parent channel verbs kept, plus this product’s local `install` | Empty argv as download-and-run (this product stays case 2) |
+| Parent channel verbs kept, plus this product’s local `install` | Calling local `install` from a pipe with no command |
 
 | Surface | What you open | What for |
 |---------|---------------|----------|
@@ -33,7 +33,7 @@ Declare the **bootstrap chain** for this product: ordered lineage, direction, ar
 | You do… | What it means | What you type |
 |---------|---------------|---------------|
 | Change this product | Edits stay here. Do not overwrite the parent CLI. | work under this workspace root |
-| Check install mode | Channel verbs are explicit. A bare run on a terminal is the numbered boards. | `folder-backup help` lists `self-install` and `SCRIPT_URL` |
+| Check install mode | A terminal with no command is the numbered boards. A pipe with no command is `self-install`. | `curl … \| sh` places this program |
 
 ---
 
@@ -56,7 +56,7 @@ Declare the **bootstrap chain** for this product: ordered lineage, direction, ar
 | **A ship unit** | Sibling: `{{PROJECTS_ROOT}}/selfmanaged/src/selfmanaged` (not in this tree; do not write it from here) |
 | **B ship unit** | `src/folder-backup` |
 | **A channel ownership** | `self-install`, `version-check`, `self-update`, `self-uninstall`; composed `SCRIPT_URL` |
-| **B channel ownership** | Same verbs, retargeted to `REPO_USER` / `REPO_NAME` = this product. Empty argv is **not** A’s off-TTY install. |
+| **B channel ownership** | Same verbs, retargeted to `REPO_USER` / `REPO_NAME` = this product. A non-interactive zero-cli-verb is `inst_self_install` (CLI place), not local `install`. |
 | **A domain** | none (Type 0 lifecycle) |
 | **B domain** | folder tar.gz backup + sudoers-elevated deposit (see `requirement-domain-folder-backup`) |
 | **Retired names (not live hops)** | `cli-template` — live parent from 2026-08-13 through 2026-09-29. **Not** the live parent after 2.2.0. |
@@ -75,7 +75,7 @@ B **MUST** inherit A’s structural contracts:
 | Integrity companion | **Keep** A’s `CHECKSUM` download check when set. No separate checksum requirement file. |
 | Online lifecycle | **Keep** `self-install`, `version-check`, `self-update`, `self-uninstall`, `self-management` |
 | Local lifecycle | **Keep** folder-backup `install` / `uninstall` / `where-is-me` (`inst_local_*`, mode **0755**) |
-| Empty argv | **Extend** case 2 TTY menu / off-TTY help — **not** A’s off-TTY install-ensure |
+| Empty argv | **Extend** interactive boards / non-interactive `inst_self_install` |
 | Domain | **Add** on B only |
 
 ### 2.4 Keep / extend matrix (normative for this product)
@@ -88,7 +88,7 @@ B **MUST** inherit A’s structural contracts:
 | Storage resolve | **Keep / adapt** | Staging for tar.gz |
 | Idempotency / interactive modes | **Keep / retarget** | Domain confirm paths stay fail-closed |
 | Online channel (`SCRIPT_URL`, `REPO_*`) | **Keep** | Composed for this product. Help lists the URL. `install` does not download. |
-| Type O empty argv | **Do not take** | Empty argv stays case 2 (TTY numbered boards / off-TTY help), even though A installs off-TTY |
+| Non-interactive zero-cli-verb | **Take as CLI self-install** | `inst_self_install` (copy or download). Not local `install`. Interactive line stays the boards |
 | `self-install` / `version-check` / `self-update` / `self-uninstall` | **Keep** | Explicit verbs. `self-install` is `inst_self_install` (script copy or download). |
 | `self-management` | **Keep** | TTY opens the self board (front row **8**, rows **81**–**87**). Off-TTY help. |
 | Companion `CHECKSUM` | **Keep code path** | Optional env. Not a second requirement file. |
@@ -103,8 +103,8 @@ B **MUST** inherit A’s structural contracts:
 | `APP_NAME` | `folder-backup` |
 | `VERSION` | ship unit SSOT (see `src/folder-backup`; do not pin a stale number here) |
 | Primary day-to-day install | Local copy `install` → `${USER_BIN}` (default `~/.local/bin`), mode **0755** |
-| Channel place | Explicit `self-install` / `self-update` (copy when `$0` is a file; download when piped) |
-| README | Names both the local `install` and the explicit channel verbs |
+| Channel place | `self-install` / `self-update`, and a non-interactive zero-cli-verb (copy when `$0` is a file; download when piped) |
+| README | The pipe one-liner is the online install. Local `install` stays the checkout copy |
 
 ### 2.6 Implementation Notes (this project)
 
@@ -113,7 +113,7 @@ B **MUST** inherit A’s structural contracts:
 | **A (bootstrap)** | `selfmanaged` at `{{PROJECTS_ROOT}}/selfmanaged` (do not reverse-copy; do not edit A from this tree) |
 | **B (this product)** | folder-backup |
 | **Specialize intent** | A’s architecture and channel verbs, plus folder-backup domain and the folder-backup main menu |
-| **Install mode** | **Dual, explicit.** `install` copies the running file (mode 0755) and is self-board row **81**. `self-install` is the channel verb (row **87**). Empty argv is the numbered boards, not either install. |
+| **Install mode** | **Dual.** `install` copies the running file (mode 0755) and is self-board row **81**. `self-install` is the channel verb (row **87**) and the non-interactive zero-cli-verb. A terminal with no command is the numbered boards. |
 | **Cache host knob** | `SELFMANAGED_CACHE_HOST` stays that name (inherited). Do not rename it. |
 | **Domain after specialize** | Active `requirement-domain-folder-backup` |
 | **Historical origin** | 2026-08-03 first named `selfmanaged` then trimmed online. 2026-08-13 retargeted A to `cli-template` and dropped the channel. 2026-09-30 user ordered A=`selfmanaged` again and **kept** the channel. |
@@ -142,7 +142,7 @@ B **MUST** inherit A’s structural contracts:
 
 1. Reverse-copy `folder-backup` onto `selfmanaged` or treat reverse as “cleanup.”  
 2. Name `cli-template` as this product’s live origin without updating this file.  
-3. Point empty argv at install-ensure. The numbered boards (case 2) own empty argv.  
+3. Point a zero-cli-verb line at `inst_local_install`, or print help for a pipe with no command.  
 4. Alias `install` to `inst_self_install`, or drop `self-install` while claiming A’s lifecycle.  
 5. Drop `out_*` / modular Protection Zones as “part of specialize.”  
 6. Invent a second bootstrap origin that contradicts this declaration without updating this file.  
@@ -157,7 +157,7 @@ B **MUST** inherit A’s structural contracts:
 | ID | Criterion |
 |----|-----------|
 | AC-1 | Hop table names A=selfmanaged, B=folder-backup, direction A→B |
-| AC-2 | Keep/extend matrix matches the registry (channel verbs kept; domain present; empty argv case 2) |
+| AC-2 | Keep/extend matrix matches the registry (channel verbs kept; domain present; interactive boards / non-interactive self-install) |
 | AC-3 | B identity retarget complete (`APP_NAME=folder-backup`, `VERSION` matches the ship unit hard-assign, this product’s `SCRIPT_URL`) |
 | AC-4 | Domain SSOT present for backup surface |
 | AC-5 | `install` is local copy mode 0755; `self-install` is the channel verb |
@@ -170,8 +170,8 @@ B **MUST** inherit A’s structural contracts:
 |-----|--------------|
 | `requirement-class-software-dev` | Class gate |
 | `requirement-shell-local-self-management` | Local `install` / `uninstall` / `where-is-me` (not the channel verbs) |
-| `requirement-shell-cli-zero-arguments` | **Withdrawn** — Type N always-help retired |
-| `requirement-shell-cli-default-interaction` | Case 2 empty argv (TTY menu / off-TTY help) |
+| `requirement-shell-cli-zero-arguments` | **Active** — non-interactive zero-cli-verb is `inst_self_install` |
+| `requirement-shell-cli-default-interaction` | Interactive zero-cli-verb numbered boards |
 | `requirement-domain-folder-backup` | Domain extend |
 | `docs/requirements/index.md` | Registry |
 
@@ -182,7 +182,7 @@ B **MUST** inherit A’s structural contracts:
 | TP family / ID | Suite | Status | Note |
 |----------------|-------|--------|------|
 | **TP-CLI-04,10** | `tests/test_cli.sh` | have | help lists channel verbs; offline `version-check` / `self-update` fail closed |
-| **TP-CLI-07** | `tests/test_cli.sh` | have | Off-TTY empty argv is help, not install |
+| **TP-CLI-07** | `tests/test_cli.sh` | have | Off-TTY empty argv is CLI self-install |
 | **TP-CLI-13** | `tests/test_cli.sh` | have | TTY empty argv numbered boards (case 2) |
 | **TP-FOLDER-BACKUP-*** | `tests/test_domain_folder_backup.sh` | have | domain extend |
 
@@ -198,6 +198,7 @@ B **MUST** inherit A’s structural contracts:
 | 2026-08-28 | Active 2.1.0 | Empty argv **extend**: case 2 TTY menu; Type O still absent |
 | 2026-09-30 | Active 2.2.0 | User ordered A=`selfmanaged` again. Channel verbs kept. Empty argv stays case 2. `install` stays the local copy. |
 | 2026-09-30 | Active 2.2.1 | Self board is front row **8**. Empty argv wording is numbered boards. Version cell and AC-3 point at the ship unit. |
+| 2026-09-30 | Active 2.3.0 | Non-interactive zero-cli-verb is `inst_self_install`. Interactive line stays the boards. Local `install` stays the 0755 copy. |
 
 ---
 

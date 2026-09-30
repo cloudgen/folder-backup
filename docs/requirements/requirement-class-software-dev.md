@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-class-software-dev.md  
-**Status**: Active (Version 1.1.4 – origin selfmanaged; channel verbs kept)  
+**Status**: Active (Version 1.1.5 – origin selfmanaged; channel verbs kept)  
 **Area**: class  
 **Key**: `requirement-class-software-dev`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -100,9 +100,9 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | **Primary runtime / OS family** | POSIX Linux (and compatible UNIX where `/bin/sh` + `tar` + `gzip`/`tar -z` + `mktemp` exist) |
 | **Architectures supported** | any arch with POSIX sh and the external tools the script invokes |
 | **Git surface** | used when product is published |
-| **Ship unit / install** | yes — `src/folder-backup`. Day-to-day `install` copies to `${USER_BIN}/folder-backup` (default `~/.local/bin`, mode 0755). Channel place is explicit `self-install`. |
+| **Ship unit / install** | yes — `src/folder-backup`. Checkout copy is `install` (mode 0755). A pipe with no command is `self-install` (local mode 0700, global 0755). |
 | **Product version SSOT** | ship unit `VERSION=` in `src/folder-backup` (do not pin a stale number here) |
-| **Bootstrap origin** | sibling product **selfmanaged** (`{{PROJECTS_ROOT}}/selfmanaged`) — channel verbs kept; domain extend on B; empty argv stays case 2 |
+| **Bootstrap origin** | sibling product **selfmanaged** (`{{PROJECTS_ROOT}}/selfmanaged`) — channel verbs kept; domain extend on B; interactive zero-cli-verb is the boards; non-interactive is `self-install` |
 
 **Residual ownership table:**
 
@@ -114,7 +114,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | Bootstrap lineage / keep-extend | `requirement-bootstrap-chain` | A=selfmanaged → B; channel kept; domain extend |
 | Project layout / ship path | `requirement-project-folder` | `src/` + bin targets |
 | Type 0 CLI surface / flags / dispatch | `requirement-shell-cli-interface` | Do not duplicate |
-| Empty argv TTY numbered list / off-TTY help | `requirement-shell-cli-default-interaction` | Case 2; not channel install |
+| Interactive boards / non-interactive self-install | `requirement-shell-cli-default-interaction` · `requirement-shell-cli-zero-arguments` | Terminal boards; pipe places the CLI |
 | Local self-managed lifecycle | `requirement-shell-local-self-management` | install / uninstall / where-is-me |
 | Output SSOT (`out_*`) | `requirement-shell-output-requirements` | Do not duplicate |
 | Operator-readable error wording | `requirement-operator-readable-error` | Human-intro-style `[ERROR]` copy; do not duplicate |
@@ -162,7 +162,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 3. Hard-code secrets, personal owner identity, or production host FQDNs into core rules as universal law.  
 4. Duplicate full peer requirement bodies into this residual section.  
 5. Leave Implementation Notes as hollow stubs when Status claims Active.  
-6. Drop the channel verbs, or point empty argv at install-ensure, without an explicit user order and a bootstrap-chain update.  
+6. Drop the channel verbs, or point a zero-cli-verb line at local `install`, without an explicit user order and a bootstrap-chain update.  
 7. Treat this file as server-maintenance allowlist law, or register an Active server-maintenance class file in parallel.  
 8. Invent a second primary language SSOT that contradicts peer modular/CLI requirements.
 
@@ -180,7 +180,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | AC-4 | Core rules remain free of frozen secret/host hardcodes |
 | AC-5 | No class file conflict with `requirement-class-server-maintenance` |
 | AC-6 | Ship unit identity (posix-sh single-file, local install) consistent with peer shell REQs |
-| AC-7 | Channel verbs are recorded on the bootstrap chain and the CLI interface; empty argv stays case 2 |
+| AC-7 | Channel verbs are recorded on the bootstrap chain and the CLI interface; non-interactive zero-cli-verb is `self-install` |
 
 ---
 
@@ -191,7 +191,8 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | `requirement-bootstrap-chain` | Lineage A=selfmanaged → B=folder-backup (channel kept, domain extend) |
 | `requirement-project-folder` | Layout and install locations |
 | `requirement-shell-cli-interface` | Command surface, flags, dispatch |
-| `requirement-shell-cli-default-interaction` | Case 2 empty argv (TTY menu / off-TTY help) |
+| `requirement-shell-cli-default-interaction` | Interactive zero-cli-verb boards |
+| `requirement-shell-cli-zero-arguments` | Non-interactive zero-cli-verb is `inst_self_install` |
 | `requirement-shell-local-self-management` | Local install lifecycle |
 | `requirement-shell-output-requirements` | `out_*` SSOT |
 | `requirement-operator-readable-error` | Operator error wording |
@@ -221,6 +222,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | 2026-09-06 | Active (1.1.2) | Residual pointers: `requirement-shell-script-coding` · `requirement-shell-sudo-command`. §1.1 says **project nature**. |
 | 2026-09-30 | Active (1.1.3) | Origin is selfmanaged again. Channel verbs kept. Empty argv stays case 2. |
 | 2026-09-30 | Active (1.1.4) | Product version cell points at the ship unit hard-assign. |
+| 2026-09-30 | Active (1.1.5) | Non-interactive zero-cli-verb is CLI self-install. Interactive line stays the boards. |
 
 ---
 

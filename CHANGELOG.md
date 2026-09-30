@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.19.0] - 2026-09-30
+
+### Changed
+
+- **A pipe with no command places this program.** On a real terminal, no command (and `--debug` or `--force` with no command) still opens the numbered boards. A pipe, no TTY, `--quiet`, or `--json` with no command calls `inst_self_install`: a checkout file is copied (mode `0700` for your login, `0755` for root) and a pipe downloads. Naming `menu` or `self-management` off a terminal still prints help. Local `install` stays the mode `0755` copy and is not this route.
+- **Install lead.** README Quick Installation leads with `curl … | sh`. That line is the place. It does not print help.
+- **Suite.** `sh tests/run.sh`: PASS=455 FAIL=0 SKIP=2. Proof **TP-CLI-07** · **TP-CLI-23**.
+- Law: **requirement-shell-cli-zero-arguments** **Active 1.2.0** (owner of the split), **requirement-shell-cli-default-interaction** **1.8.0**, **requirement-shell-cli-interface** **1.10.0**, **requirement-bootstrap-chain** **2.3.0**, **requirement-shell-local-self-management** **1.3.2**, **requirement-shell-interactive-vs-noninteractive** **1.1.2**, **requirement-class-software-dev** **1.1.5**.
+
 ## [1.18.0] - 2026-09-30
 
 ### Changed
