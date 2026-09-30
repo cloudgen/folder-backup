@@ -5,6 +5,7 @@
 | Version | Supported |
 |---------|-----------|
 | 1.17.0 (current) | Yes |
+| 1.16.5 | Yes |
 | 1.16.4 | Yes |
 | 1.16.3 | Yes |
 | 1.16.2 | Yes |

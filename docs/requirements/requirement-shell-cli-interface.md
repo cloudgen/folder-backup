@@ -121,7 +121,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `self-uninstall` | Type 0 | `inst_self_uninstall` | Remove the channel-managed binary. Off-TTY without `--force` fails closed when a binary exists. |
 | `self-management` | Type 0 | `app_default_self_loop` | TTY opens the self-care board. Off-TTY help. **Not** a main-menu row. |
 | `version` | Type 0 | `app_version` | Local `VERSION` only; no network |
-| `about` | Type 0 | `app_about` | Diagnostics: install presence, paths, user, shell, TTY, **Cache folder (preferred)/(fallback)/(live)**, **Persistence storage** `${HOME}/.local/folder-backup`, channel `script_url`, backup defaults |
+| `about` | Type 0 | `app_about` | Diagnostics: install presence, paths, user, shell, TTY, **Cache folder used**, **Cache folder (preferred)**, **Cache folder (1st fallback)**, **Cache folder (2nd fallback)** when this host has one, **Persistence storage** `${HOME}/.local/folder-backup`, channel `script_url`, backup defaults |
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
 | `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | **Operational.** Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
 | `restore` | Type 0 (+ Type 1 stage fetch) | `fb_restore` (domain) | **Operational.** Put an archive back onto the hard-disk projects tree |
@@ -274,6 +274,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-03 | Active 1.8.0 | Grant/draft setup verbs stay live CLI commands; numbered **main** list uses family **sudoers** (submenu); `sudoers` not dispatched; AC-10 |
 | 2026-09-03 | Active 1.8.1 | Submenu SSOT **`requirement-shell-cli-sudoers-submenu`** |
 | 2026-09-06 | Active 1.8.2 | §1.1 Human-facing; help **Work commands** vs **Grant and draft setup** (AC-9 / TP-CLI-17 have); Under command line section |
+| 2026-09-27 | Active 1.8.3 | About cache lines: used, preferred, 1st fallback, 2nd fallback when this host has one (`requirement-shell-cli-storage` 1.4.0) |
 | 2026-09-30 | Active 1.9.0 | Channel verbs from selfmanaged are routed. `install` stays the local copy. Main menu unchanged. |
 
 ---

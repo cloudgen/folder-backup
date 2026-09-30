@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-folder-archive-backup.md  
-**Status**: Active (Version 1.2.0)  
+**Status**: Active (Version 1.2.1)  
 **Area**: backup  
 **Key**: `requirement-folder-archive-backup`  
 **Optional RQ-ID**: `RQ-FOLDER-ARCHIVE-BACKUP`  
@@ -326,7 +326,7 @@ Errors **MUST** use structured error emission with stable codes when feasible (e
 | **RESTORE_HOST_DEFAULT** | `hard-disk` (reverse of ram-drive-first) |
 | **PROJECTS_ROOT** | env or auto-detect (e.g. `…/prjs`) |
 | **RAM_ROOT** | `/dev/shm` |
-| **Stage roots** | `/dev/shm/cache/cache-folder-backup` (preferred), `/tmp/cache/cache-folder-backup`, XDG `cache-folder-backup` fallback |
+| **Stage roots** | Live cache from `requirement-shell-cli-storage` 1.4.0: Linux `/dev/shm/cache/cache-folder-backup-<login>-<pid>`, then `/tmp/cache/...`, then `${HOME}/.cache/cache-folder-backup-<pid>` |
 | **Archive pattern** | `${SOURCE_FOLDER_NAME}-YYYYMMDD-N.tar.gz` |
 | **Worked sample basename** | `genesis-template-20260803-3.tar.gz` |
 | **Verify modes implemented** | `dest_tar_list+size`, `stage_counts+dest_size` |
@@ -456,9 +456,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-08-03 | Active 1.0.0 | Split operational backup law out of domain; full create/name/deposit/verify coverage |
 | 2026-08-03 | Active 1.1.0 | **Restore** feature; default dest host = hard-disk (reverse of ram-drive-first) |
 | 2026-08-12 | Active 1.2.0 | Restore dest **whitelist** §2.6b.2a: **W-ETC-USER** = `/etc/{{username}}` (invoker); hard-deny `/etc` and **`/etc/passwd`** (INC-20260812-001) |
+| 2026-09-27 | Active 1.2.1 | Stage root follows per-login per-process cache (`requirement-shell-cli-storage` 1.4.0) |
 
 ---
 
-**Last Updated**: 2026-08-15  
+**Last Updated**: 2026-09-27  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; INC-20260812-001; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

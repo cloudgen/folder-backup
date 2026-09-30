@@ -121,7 +121,7 @@ ci_isolated_env() {
     export SUDOER_CLI="${CI_HOME}/no-such-sudoer-cli"
     unset SUDOER_CLI_QUEUE_ROOT 2>/dev/null || true
     unset LPU_HOME 2>/dev/null || true
-    # Local-only product: ensure no channel env is required
+    # Do not inherit a caller SCRIPT_URL or CHECKSUM. Channel tests set their own URL.
     unset SCRIPT_URL 2>/dev/null || true
     unset CHECKSUM 2>/dev/null || true
 }

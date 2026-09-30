@@ -352,7 +352,7 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | Invocation | `sudo -n` after passwordless fragment; non-interactive without ticket **fails closed** |
 | Scope | Deposit only — not package install, not shell |
 | Destination create | Deposit dir `/var/backup/folder-backup` **SHOULD** exist (admin or project command after elev) |
-| Staging | Cache under `/dev/shm/cache/cache-folder-backup-<login>-<pid>` (preferred), else `/tmp/cache/…`, else `${HOME}/.cache/cache-folder-backup-<pid>` — Type 1 internals, **not** fragment operands |
+| Staging | Cache chain in `requirement-shell-cli-storage` (Linux: `/dev/shm/cache/cache-folder-backup-<login>-<pid>`, else `/tmp/cache/...`, else `${HOME}/.cache/cache-folder-backup-<pid>`) — Type 1 internals, **not** fragment operands |
 
 ### 2.5 Implementation Notes (this project)
 
@@ -581,6 +581,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-08-17 | Active 1.10.0 | §2.3.2a independent generate (any sudoer generate = Type 0 subcommand → readable dest); AC-24; TP-24d |
 | 2026-08-23 | Active 1.11.0 | Sudoers exact-argv: `backup *` / `restore *` required; verb-only withdrawn; AC-25; probe honesty |
 | 2026-08-23 | Active 1.12.0 | `--json backup *` / `--json restore *` **MUST** (not SHOULD); JSON body dual on `requirement-sudoer-json-file` 1.4.0 |
+| 2026-09-27 | Active 1.12.1 | Staging cache leaf is per login and per process (`requirement-shell-cli-storage` 1.4.0) |
 | 2026-09-30 | Active 1.12.1 | Privilege paths stay off the network. Channel download is not a sudoers grant. |
 
 ---

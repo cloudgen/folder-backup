@@ -26,7 +26,7 @@
 | requirement-shell-modular-function-design | shell | (indirect) | `fb_print_sudoers*`, `fb_remove_project_sudoers`, deposit/restore |
 | requirement-shell-idempotency | shell | TP-LC-03,07 · TP-FOLDER-BACKUP-06,08 | Re-install; next-N |
 | requirement-shell-interactive-vs-noninteractive | shell | TP-LC-05 · TP-FOLDER-BACKUP-15 · **15b** | Uninstall / remove-project-sudoers confirm; multi-draft non-interactive path required |
-| requirement-shell-cli-storage | shell | TP-CLI-06 · TP-CLI-12 · domain staging | Cache folder **and** persistence `${HOME}/.local/folder-backup/`; live leaf mode 0700 |
+| requirement-shell-cli-storage | shell | TP-CLI-06 · TP-CLI-12 · domain staging | Per-login per-process cache (law **1.4.1**); silent tier miss; leaf mode 0700; persistence `${HOME}/.local/folder-backup/` |
 | requirement-domain-folder-backup | domain | TP-FOLDER-BACKUP-01,02,09,14,15,19,20,**21**,**21b**,**23**,**23b**,**24** · TP-CLI-04,06 | Surface verbs/help/about; submit public inbound; generate-sudoer-request; host-probe add/update |
 
 **Checklist / mold (harness, not product suite):** **S11–S12** elev tables (when claimed); **S13** trust tier; **S14** emit; **S15** convert/inbound; **S16** independent generate dest — agent path `SK-CREATE-SUDOERS-FILE` / `CL-CREATE-SUDOERS-SECURITY`. Operator errors: `SK-OPERATOR-READABLE-ERROR` / `CL-OPERATOR-READABLE-ERROR`.

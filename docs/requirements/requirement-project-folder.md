@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-project-folder.md  
-**Status**: Active (Version 1.0.0)  
+**Status**: Active (Version 1.0.1)  
 **Area**: architecture  
 **Key**: `requirement-project-folder`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -71,14 +71,14 @@ Rules:
 
 | Purpose | Pattern |
 |---------|---------|
-| Cache / staging root | From `util_resolve_storage` (see `requirement-shell-cli-storage`); preferred `/dev/shm/cache/cache-folder-backup` |
+| Cache / staging root | From `util_resolve_storage` (see `requirement-shell-cli-storage`); Linux preferred `/dev/shm/cache/cache-folder-backup-<login>-<pid>` |
 | Persistence storage | `${HOME}/.local/folder-backup/` (`util_resolve_persistent_storage`) — **not** `${HOME}/.local/bin` |
 | Archive staging | under `${EFFECTIVE_STORAGE_DIR}` (or `mktemp` under that root) |
 | Sudoers fragment draft | User-writable path under config: `…/sudoers.fragment-<user>` (legacy un-suffixed still discoverable; never auto-write `/etc/sudoers.d`) |
 
 Rules:
 
-1. Scratch **MUST** use the cache resolver (`requirement-shell-cli-storage`): preferred `/dev/shm/cache/cache-${APP_NAME}`; fallback under the invoking user’s XDG cache. **MUST NOT** use `/dev/shm/${APP_NAME}` as cache. Persistence **MUST** be `${HOME}/.local/${APP_NAME}/` — **MUST NOT** use `${HOME}/.local/bin` as persistence.  
+1. Scratch **MUST** use the cache resolver (`requirement-shell-cli-storage`): Linux preferred `/dev/shm/cache/cache-${APP_NAME}-${login}-$$`, then `/tmp/cache/...`, then `${HOME}/.cache/cache-${APP_NAME}-$$`. Git Bash and Mac preferred `/tmp/cache/cache-${APP_NAME}-${login}-$$`. **MUST NOT** use `/dev/shm/${APP_NAME}` as cache. Persistence **MUST** be `${HOME}/.local/${APP_NAME}/` — **MUST NOT** use `${HOME}/.local/bin` as persistence.  
 2. Temps **MUST** clean up (`trap`) after success/failure of a backup run.  
 3. Staging archives are **EPHEMERAL** until successfully deposited; do not leave world-writable archives.
 
@@ -175,10 +175,11 @@ Rules:
 
 | Date | Status | Note |
 |------|--------|------|
-| 2026-08-03 | Active | Specialized project folder law for folder-backup |
+| 2026-08-03 | Active 1.0.0 | Specialized project folder law for folder-backup |
+| 2026-09-27 | Active 1.0.1 | Scratch leaf follows storage 1.4.0 (per login, per process) |
 
 ---
 
-**Last Updated**: 2026-08-03  
+**Last Updated**: 2026-09-27  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

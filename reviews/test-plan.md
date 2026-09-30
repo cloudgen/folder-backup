@@ -21,7 +21,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TTY empty argv + `menu`/`main` list / sudoers submenu / off-TTY help | have | TP-CLI-13..16 |
 | TTY main-menu look (nametag + gray italic explain) | have | TP-CLI-18 |
 | Unknown + quiet + set -u HOME | have | TP-CLI-08..11 |
-| Cache folder + persistence `${HOME}/.local/folder-backup/` | have | TP-CLI-06 · TP-CLI-12 |
+| Per-login per-process cache folder + persistence `${HOME}/.local/folder-backup/` | have | TP-CLI-06 · TP-CLI-12 |
 | Channel verbs listed; offline version-check / self-update fail closed; empty argv is not install | have | TP-CLI-04, TP-CLI-07, TP-CLI-10 |
 | Local install / idempotent / uninstall / mode 0755 | have | TP-LC-01..10 |
 | Help lists sudoers verbs (print / install-script / remove draft / **generate** / submit + public inbound) | have | TP-CLI-04 |
@@ -39,7 +39,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Backup ops (name, fail-closed, verify) | have | TP-FOLDER-BACKUP-03..06 · **requirement-folder-archive-backup** |
 | Elevated deposit + next-N + verify | have (root **or** allowlisted `sudo -n`) | TP-FOLDER-BACKUP-07/08 |
 | Restore (explicit + hard-disk default) | have | TP-FOLDER-BACKUP-11..13 |
-| Online curl / companion checksum | n/a | Local-only product |
+| Companion SHA-256 on download | todo | Ship unit fetches `${SCRIPT_URL}.sha256` on `self-install` / `self-update`. Suite does not stand up a companion. No live GitHub fetch. |
 
 ---
 
@@ -54,13 +54,13 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-03 | version JSON | test_cli | requirement-shell-output-requirements | **have** |
 | TP-CLI-04 | help lists channel verbs and SCRIPT_URL; print-sudoers + install-script + remove-project-sudoers + generate-sudoer-request + submit-sudoer-request; no CHECKSUM in help | test_cli | requirement-shell-cli-interface · domain | **have** |
 | TP-CLI-05 | help JSON short | test_cli | requirement-shell-output-requirements | **have** |
-| TP-CLI-06 | about JSON cache + persistent_storage + human Cache folder preferred/fallback/live + Persistence storage + domain fields | test_cli | requirement-shell-cli-storage · domain | **have** |
+| TP-CLI-06 | about JSON cache_used / cache_preferred / cache_fallback / cache_fallback_2 / persistence_storage + human Cache folder used, preferred, 1st fallback, 2nd fallback + Persistence storage + domain fields + channel script_url | test_cli | requirement-shell-cli-storage · domain | **have** |
 | TP-CLI-07 | off-TTY empty argv help (not install) | test_cli | requirement-shell-cli-default-interaction | **have** |
 | TP-CLI-08 | unknown fail-closed | test_cli | requirement-shell-cli-interface | **have** |
 | TP-CLI-09 | quiet suppresses version | test_cli | requirement-shell-output-requirements | **have** |
 | TP-CLI-10 | channel verbs routed; offline version-check / self-update fail closed (non-empty dead URL); self-uninstall with no binary exits 0 | test_cli | requirement-bootstrap-chain | **have** |
 | TP-CLI-11 | env -u HOME version | test_cli | class / defensive | **have** |
-| TP-CLI-12 | cache folder exists, mode 0700, owned by this login; persistence `${HOME}/.local/folder-backup` exists | test_cli | requirement-shell-cli-storage | **have** |
+| TP-CLI-12 | Linux / Git Bash / Mac cache chains; silent skip of preferred; leaf mode 0700 owned by this login; persistence `${HOME}/.local/folder-backup` exists | test_cli | requirement-shell-cli-storage | **have** |
 | TP-CLI-13 | interactive empty argv **and** `menu` print backup / restore / family sudoers + `9. Exit`; submenu five grant/draft verbs + Back 8 / Exit 9; `sudoers` not dispatched; members live **without** enqueueing live inbound | test_cli | **shell-cli-default-interaction** AC-3 / AC-10 / AC-11 · **shell-cli-sudoers-submenu** AC-1–AC-4 | **have** |
 | TP-CLI-14 | interactive `menu --json` still prints the list | test_cli | **shell-cli-default-interaction** AC-4 | **have** |
 | TP-CLI-15 | non-interactive `menu` is help; `--json` JSON help; flags-only `--json` JSON help (not the list) | test_cli | **shell-cli-default-interaction** AC-5 | **have** |

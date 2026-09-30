@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Suite.** Channel verbs stay off the main menu (TP-CLI-16). Cache about lines match 1.16.5 (TP-CLI-06, TP-CLI-12). `sh tests/run.sh`: PASS=418 FAIL=0 SKIP=2.
 - Law: **requirement-bootstrap-chain** **2.2.0**, **requirement-shell-cli-interface** **1.9.0**, **requirement-shell-cli-storage** **1.4.1**, **requirement-shell-cli-default-interaction** **1.6.1**, **requirement-shell-interactive-vs-noninteractive** **1.1.1**.
 
+## [1.16.5] - 2026-09-27
+
+### Changed
+
+- **Scratch is one folder per login and per process.** On Linux the preferred folder is `/dev/shm/cache/cache-folder-backup-<login>-<pid>`, then `/tmp/cache/cache-folder-backup-<login>-<pid>`, then `${HOME}/.cache/cache-folder-backup-<pid>`. Git Bash prefers `/tmp/cache/...` then `${HOME}/AppData/Local/Temp/cache-folder-backup-<pid>` (no second fallback). Mac prefers `/tmp/cache/...`, then `${HOME}/Library/Caches/cache-folder-backup-<pid>`, then `${HOME}/cache/cache-folder-backup-<pid>`. A skipped folder is silent. An error is only when every folder on this host fails. Files inside the folder stay `mktemp` names. Durable data stays `${HOME}/.local/folder-backup` (no login suffix, no process id). Human `about` prints **Cache folder used**, **Cache folder (preferred)**, **Cache folder (1st fallback)**, **Cache folder (2nd fallback)** when that host has one, and **Persistence storage**. JSON uses `cache_used`, `cache_preferred`, `cache_fallback`, `cache_fallback_2`, and `persistence_storage`. Law: **requirement-shell-cli-storage** **1.4.0**. Suite **TP-CLI-06** · **TP-CLI-12** (PASS=410 FAIL=0 SKIP=2).
+
 ## [1.16.4] - 2026-09-23
 
 ### Fixed

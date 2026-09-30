@@ -35,6 +35,7 @@
 - **Grant you can read**: write JSON (`generate-sudoer-request`); hand it to the approval queue (`submit-sudoer-request`) without writing `/etc`
 - **Admin grant install**: print a sudoers draft and an admin script; an admin copies it to `/etc/sudoers.d/`
 - **Fail closed**: missing source, unauthorized deposit, verify mismatch, non-empty restore without `--force`
+- **Scratch stays with this login and this run**: temporary files live in a private folder named for you and this process. `about` prints the folder in use, the preferred folder, and the fallbacks. A folder that cannot be used is skipped quietly. Notes that must survive a reboot stay in `~/.local/folder-backup`
 
 ## Quick Installation
 
@@ -204,6 +205,7 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 ## Last Update
 
 2026-09-30 — version **1.17.0** (rebuilt from selfmanaged; channel verbs explicit; empty argv stays the work list; `install` stays the local copy; automatic SHA-256 companion on download).
+2026-09-27 — version **1.16.5** (scratch folder is per login and per process; `about` prints used, preferred, 1st fallback, and 2nd fallback; a skipped folder is silent).
 2026-09-23 — version **1.16.4** (private cache leaf mode 0700; live cache line in about; multi-draft remove reads the choice in this shell).
 2026-09-06 — version **1.16.3** (help lists grant-emit testers apart; README people-and-folders voice; requirement human-facing + coverage).
 2026-09-03 — version **1.16.2** (suite no longer queues live sudoer inbound; TP-CLI-13 / L-INBOUND-02).
