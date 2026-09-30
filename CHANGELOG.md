@@ -11,10 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - **Rebuilt from sibling selfmanaged.** The ship unit keeps that parent’s self-install, version-check, self-update, self-uninstall, and self-management board, and keeps folder-backup’s backup, restore, and sudoers verbs. Direction is selfmanaged → folder-backup. The parent tree was not edited.
 - **Main menu is unchanged.** On a terminal, no arguments shows `1 backup`, `2 restore`, `3 sudoers`, `9 Exit`. Off a terminal, no arguments shows help. `install` still copies this file (mode 0755). `self-install` is the extra channel verb.
-- **Cache leaf** is per login and per process: `/dev/shm/cache/cache-folder-backup-<login>-<pid>`. About labels stay Cache folder (preferred), (fallback), (live), and Persistence storage.
+- **Cache leaf** stays the 1.16.5 contract: per login and per process. `about` prints Cache folder used, preferred, 1st fallback, and 2nd fallback. JSON keeps `cache_used`, `cache_fallback_2`, `persistence_storage`, and `effective_storage`. `SELFMANAGED_CACHE_HOST` still works beside `FOLDER_BACKUP_CACHE_HOST`.
 - **Download integrity.** `self-install` and `self-update` fetch `src/folder-backup.sha256` beside the raw script when `CHECKSUM` is unset. Algorithm is SHA-256. A match continues. A mismatch aborts. A missing companion warns and continues. Local `install` does not download.
-- **Suite.** Channel verbs stay off the main menu (TP-CLI-16). `sh tests/run.sh`: PASS=395 FAIL=0 SKIP=2.
-- Law: **requirement-bootstrap-chain** **2.2.0**, **requirement-shell-cli-interface** **1.9.0**, **requirement-shell-cli-storage** **1.4.0**, **requirement-shell-cli-default-interaction** **1.6.1**, **requirement-shell-interactive-vs-noninteractive** **1.1.1**.
+- **Suite.** Channel verbs stay off the main menu (TP-CLI-16). Cache about lines match 1.16.5 (TP-CLI-06, TP-CLI-12). `sh tests/run.sh`: PASS=418 FAIL=0 SKIP=2.
+- Law: **requirement-bootstrap-chain** **2.2.0**, **requirement-shell-cli-interface** **1.9.0**, **requirement-shell-cli-storage** **1.4.1**, **requirement-shell-cli-default-interaction** **1.6.1**, **requirement-shell-interactive-vs-noninteractive** **1.1.1**.
 
 ## [1.16.4] - 2026-09-23
 

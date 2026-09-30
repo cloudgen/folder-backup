@@ -27,6 +27,7 @@
 
 - **Install for yourself**: copy this program into `~/.local/bin` (`install`); remove it (`uninstall`); ask where it lives (`where-is-me`)
 - **Channel, when you ask**: `self-install` places a copy or a download; `version-check` and `self-update` use the GitHub raw URL for this repository; `self-uninstall` removes that placed binary. A bare `folder-backup` does not do this.
+- **Scratch stays with this login and this run**: temporary files live in a private folder named for you and this process. `about` prints the folder in use, the preferred folder, and the fallbacks. A folder that cannot be used is skipped quietly. Notes that must survive a reboot stay in `~/.local/folder-backup`
 - **Numbered work list**: on a real terminal, a bare `folder-backup` (or `menu` / `main`) shows backup, restore, grant/drafts, then Exit
 - **Backup a folder**: pack it to a dated gzip under `/var/backup/folder-backup/`, check counts, then keep at most **5** same-day and **30** total copies per project name
 - **Restore**: put an archive back onto the hard-disk projects tree (or a path you name)

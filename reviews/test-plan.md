@@ -5,7 +5,7 @@ Maps **TP-*** coverage to `tests/`.
 **Ship unit:** `src/folder-backup`  
 **Product VERSION:** 1.17.0  
 **Last plan update:** 2026-09-30  
-**Last suite run:** `sh tests/run.sh` (1.17.0: PASS=395 FAIL=0 SKIP=2)
+**Last suite run:** `sh tests/run.sh` (1.17.0: PASS=418 FAIL=0 SKIP=2)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 

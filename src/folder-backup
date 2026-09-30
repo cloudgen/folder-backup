@@ -2340,8 +2340,10 @@ util_backup() {
 # printf is a data return for $(util_cache_host_kind), not a product message.
 #
 # ALIGNMENT: requirement-shell-cli-storage.md
-# Test-purpose: SELFMANAGED_CACHE_HOST=linux|gitbash|mac
-#               SELFMANAGED_CACHE_SKIP=preferred skips tier 1 with no message
+# Test-purpose: FOLDER_BACKUP_CACHE_HOST or SELFMANAGED_CACHE_HOST
+#               = linux|gitbash|mac. Do not rename SELFMANAGED_CACHE_HOST.
+#               FOLDER_BACKUP_CACHE_SKIP or SELFMANAGED_CACHE_SKIP
+#               = preferred skips tier 1 with no message.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # Designed to be reusable in other projects.
@@ -2349,12 +2351,15 @@ util_backup() {
 # Last updated: 2026-09-27
 # =============================================================================
 util_cache_host_kind() {
-    case "${SELFMANAGED_CACHE_HOST:-}" in
+    _cache_host_force="${FOLDER_BACKUP_CACHE_HOST:-${SELFMANAGED_CACHE_HOST:-}}"
+    case "${_cache_host_force}" in
         linux|gitbash|mac)
-            printf '%s' "${SELFMANAGED_CACHE_HOST}"
+            printf '%s' "${_cache_host_force}"
+            unset _cache_host_force
             return 0
             ;;
     esac
+    unset _cache_host_force
     if [ -n "${MSYSTEM:-}" ]; then
         printf '%s' "gitbash"
         return 0
@@ -2683,7 +2688,8 @@ util_resolve_storage() {
     : "${HOME:=/tmp}"
 
     _storage_candidate=""
-    if [ "${SELFMANAGED_CACHE_SKIP:-}" != "preferred" ]; then
+    _cache_skip="${FOLDER_BACKUP_CACHE_SKIP:-${SELFMANAGED_CACHE_SKIP:-}}"
+    if [ "${_cache_skip}" != "preferred" ]; then
         _pref=$(util_preferred_cache_dir)
         if util_cache_try_dir "${_pref}"; then
             _storage_candidate="${_pref}"
@@ -2707,7 +2713,7 @@ util_resolve_storage() {
         out_die "Cannot create cache folder. Every cache location on this computer failed. Next: make /tmp or your home directory writable, then run ${APP_NAME} about."
     fi
     echo "${_storage_candidate}"
-    unset _storage_candidate _pref _fb1 _fb2
+    unset _storage_candidate _pref _fb1 _fb2 _cache_skip
     return 0
 }
 
@@ -3016,9 +3022,10 @@ app_about() {
     if [ -z "${EFFECTIVE_STORAGE_DIR:-}" ]; then
         EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
     fi
-    : "${STORAGE_DIR:=$(util_fallback_cache_dir)}"
     _cache_pref=$(util_preferred_cache_dir)
     _cache_fb=$(util_fallback_cache_dir)
+    _cache_fb2=$(util_fallback2_cache_dir)
+    STORAGE_DIR="${_cache_fb}"
     if [ -z "${PERSISTENT_STORAGE_DIR:-}" ]; then
         PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)
     fi
@@ -3091,11 +3098,13 @@ app_about() {
             "shell" "${_shell}" \
             "interactive" "${_interactive}" \
             "user" "${_user}" \
+            "cache_used" "${EFFECTIVE_STORAGE_DIR}" \
             "cache_preferred" "${_cache_pref}" \
             "cache_fallback" "${_cache_fb}" \
+            "cache_fallback_2" "${_cache_fb2}" \
+            "persistence_storage" "${PERSISTENT_STORAGE_DIR}" \
             "effective_storage" "${EFFECTIVE_STORAGE_DIR}" \
             "storage_dir" "${STORAGE_DIR}" \
-            "persistent_storage" "${PERSISTENT_STORAGE_DIR}" \
             "backup_root" "${BACKUP_ROOT}" \
             "backup_notation" "${BACKUP_NOTATION}" \
             "deposit_dir" "${BACKUP_ROOT}/${BACKUP_NOTATION}" \
@@ -3152,9 +3161,12 @@ app_about() {
         out_info "TTY / Interactive: no"
     fi
     out_empty_line
+    out_info "Cache folder used: ${EFFECTIVE_STORAGE_DIR}"
     out_info "Cache folder (preferred): ${_cache_pref}"
-    out_info "Cache folder (fallback):  ${_cache_fb}"
-    out_info "Cache folder (live):      ${EFFECTIVE_STORAGE_DIR}"
+    out_info "Cache folder (1st fallback): ${_cache_fb}"
+    if [ -n "${_cache_fb2}" ]; then
+        out_info "Cache folder (2nd fallback): ${_cache_fb2}"
+    fi
     out_info "Persistence storage:      ${PERSISTENT_STORAGE_DIR}"
     out_empty_line
     out_info "Backup root:       ${BACKUP_ROOT}"

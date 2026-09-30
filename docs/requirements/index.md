@@ -26,7 +26,7 @@
 | requirement-shell-modular-function-design | Single-file modular prefixes (`out_`/`inst_`/`app_`/`fb_`); parent selfmanaged | shell | Active (1.0.1) | `requirement-shell-modular-function-design.md` | 2026-09-30 |
 | requirement-shell-idempotency | Re-run safety; archive next-N no overwrite | shell | Active | `requirement-shell-idempotency.md` | 2026-08-03 |
 | requirement-shell-interactive-vs-noninteractive | Interactive vs non-interactive / confirm policy; `prompt_ask` → `PROMPT_ASK_VALUE`; off-TTY empty argv is help | shell | Active (1.1.1) | `requirement-shell-interactive-vs-noninteractive.md` | 2026-09-30 |
-| requirement-shell-cli-storage | Cache folder **and** persistence `${HOME}/.local/folder-backup/`; per-login per-pid cache leaf; about Cache folder (preferred/fallback/live) + Persistence storage | shell | Active (1.4.0) | `requirement-shell-cli-storage.md` | 2026-09-30 |
+| requirement-shell-cli-storage | Cache folder **and** persistence `${HOME}/.local/folder-backup/`; per-login per-pid leaves; about Cache folder used / preferred / 1st / 2nd | shell | Active (1.4.1) | `requirement-shell-cli-storage.md` | 2026-09-30 |
 | requirement-domain-folder-backup | Domain **surface** SSOT (four pillars); ops defer to folder-archive-backup; submit public inbound; **host-probe add/update**; **independent generate-sudoer-request**; grant-emit **test-purpose** (help apart); submenu on sudoers-submenu REQ | domain | Active (1.6.6) | `requirement-domain-folder-backup.md` | 2026-09-30 |
 
 ## Channel (kept from selfmanaged — user order 2026-09-30)

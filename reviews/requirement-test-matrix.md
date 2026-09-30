@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-30 (1.17.0)  
 **Product VERSION:** 1.17.0  
-**Suite:** `tests/run.sh` (PASS=395 FAIL=0 SKIP=2)
+**Suite:** `tests/run.sh` (PASS=418 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
