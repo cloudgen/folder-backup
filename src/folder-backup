@@ -26,7 +26,7 @@
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.19.0"
+# VERSION: hard-assign VERSION="1.20.0"
 # SCRIPT_URL: composed from REPO_USER / REPO_NAME / SCRIPT_RELPATH (selfmanaged channel).
 #
 # =============================================================================
@@ -44,8 +44,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered boards.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.19.0"
-: "${VERSION:=1.19.0}"
+VERSION="1.20.0"
+: "${VERSION:=1.20.0}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -355,7 +355,7 @@ out_menu_choice() {
 # =============================================================================
 util_app_ident() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.19.0}"
+    : "${VERSION:=1.20.0}"
     : "${TTY:=0}"
     : "${JSON:=0}"
     if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
@@ -3004,7 +3004,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.19.0}"
+    : "${VERSION:=1.20.0}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"
@@ -3202,7 +3202,7 @@ app_about() {
 
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.19.0}"
+    : "${VERSION:=1.20.0}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path
@@ -6080,7 +6080,9 @@ app_menu_run_leaf() {
             inst_local_install
             ;;
         version)
-            app_version
+            # On a numbered board, version is the about diagnostics.
+            # Argv version stays app_version in the dispatcher.
+            app_about
             ;;
         about)
             app_about
@@ -6132,7 +6134,7 @@ app_cmd_menu_sudoers() {
         fi
         _pick="${_prompt_line}"
         case "${_pick}" in
-            0|back|Back|""|exit|quit|Exit|QUIT)
+            0|back|Back|""|exit|quit|Exit|QUIT|q|Q)
                 unset _pick _a
                 return 0
                 ;;
@@ -6181,7 +6183,7 @@ app_cmd_menu_client() {
         fi
         _pick="${_prompt_line}"
         case "${_pick}" in
-            0|back|Back|""|exit|quit|Exit|QUIT)
+            0|back|Back|""|exit|quit|Exit|QUIT|q|Q)
                 unset _pick _a _b
                 return 0
                 ;;
@@ -6232,7 +6234,7 @@ app_cmd_menu_self() {
         app_menu_draw_on
         out_info "$(util_app_ident) — self-management"
         out_menu_choice 81 install "Copy this program into your bin or /usr/local/bin"
-        out_menu_choice 82 version "Show the local version"
+        out_menu_choice 82 version "Show version and detailed diagnostics (about)"
         out_menu_choice 83 about "Show diagnostics including sudoers trust tier"
         out_menu_choice 84 version-check "Compare this version with the channel"
         out_menu_choice 85 self-update "Replace the placed binary from the channel"
@@ -6244,7 +6246,7 @@ app_cmd_menu_self() {
         fi
         _pick="${_prompt_line}"
         case "${_pick}" in
-            0|back|Back|""|exit|quit|Exit|QUIT)
+            0|back|Back|""|exit|quit|Exit|QUIT|q|Q)
                 unset _pick
                 return 0
                 ;;
@@ -6288,8 +6290,8 @@ app_cmd_menu_self() {
 # GENERAL PURPOSE:
 # On a real terminal: ignore --json while drawing, print client-side and
 # self-management, keep server-side reserved, run a pick. A finished leaf
-# redisplays this board. Off-TTY: help. Never hang. Never install-ensure.
-# sudoers is not a dispatcher token.
+# redisplays this board. An empty line leaves. Off a terminal: stop.
+# Zero-cli-verb place lives in app_main. sudoers is not a dispatcher token.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
@@ -6308,14 +6310,7 @@ app_cmd_menu() {
     _argv_b="${3-}"
 
     if [ "${TTY}" -ne 1 ]; then
-        _menu_quiet="${QUIET}"
-        if [ "${JSON}" -ne 1 ]; then
-            QUIET=0
-        fi
-        app_help
-        QUIET="${_menu_quiet}"
-        unset _argv_pick _argv_a _argv_b _menu_quiet
-        return 0
+        out_die "menu needs a terminal. Next: ${APP_NAME} help"
     fi
 
     _menu_json="${JSON}"
@@ -6340,7 +6335,7 @@ app_cmd_menu() {
             _pick="${_prompt_line}"
         fi
         case "${_pick}" in
-            9|99|exit|quit|Exit|QUIT)
+            9|99|exit|quit|Exit|QUIT|""|q|Q)
                 app_menu_draw_off
                 unset _pick _argv_pick _argv_a _argv_b _menu_json _menu_quiet
                 return 0
@@ -6402,7 +6397,7 @@ app_help() {
     if [ "${JSON}" -eq 1 ]; then
         out_json "success" "Help text available in human-readable mode. Run without --json." \
             "command" "help" \
-            "note" "Use --json with version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore. A non-interactive line with no command places this program. menu/main off-TTY use this help."
+            "note" "Use --json with version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore. A non-interactive line with no command places this program. menu off a terminal stops: menu needs a terminal."
         return 0
     fi
     if [ "${QUIET}" -eq 1 ]; then
@@ -6420,7 +6415,7 @@ app_help() {
     out_plain "  version-check        Compare local vs remote version (needs SCRIPT_URL)"
     out_plain "  self-update          Update ${APP_NAME} to a newer remote version"
     out_plain "  self-uninstall       Remove ${APP_NAME} (confirm or --force; PATH cleanup)"
-    out_plain "  self-management      On a terminal, numbered self-management board (81-87). Off a terminal, this help"
+    out_plain "  self-management      On a terminal, numbered self-management board (81-87). Off a terminal, stops: self-management needs a terminal"
     out_empty_line
     out_info "Install and self-care (your own login):"
     out_plain "  install              Install ${APP_NAME} by local copy (root→global, user→~/.local/bin, mode 0755)"
@@ -6430,7 +6425,7 @@ app_help() {
     out_plain "  version              Show local version"
     out_plain "  about                Show diagnostics (incl. sudoers trust tier)"
     out_plain "  help                 Show this help"
-    out_plain "  menu                 Numbered boards: client-side, self-management, and Exit (same boards as a TTY empty run; off-TTY is help)"
+    out_plain "  menu                 Numbered boards: client-side, self-management, and Exit (same boards as a TTY empty run; off a terminal, stops: menu needs a terminal)"
     out_plain "  main                 Same as menu"
     out_empty_line
     out_info "Work commands:"
@@ -6509,7 +6504,7 @@ app_help() {
     out_plain "  ${APP_NAME} restore genesis-template"
     out_plain "  ${APP_NAME} restore genesis-template --ram"
     out_empty_line
-    out_info "On a real terminal, no command shows the numbered boards. A pipe, or --quiet / --json with no command, places this program."
+    out_info "On a real terminal, no command shows the numbered boards. A pipe, or --quiet / --json with no command, places this program. Naming menu off a terminal stops: menu needs a terminal."
     out_info "Local install stays the verb install. Channel update stays version-check, self-update, and self-uninstall."
     out_info "Restore default destination is hard-disk (not RAM) unless --ram or dest is set."
     out_info "Local install + sudoers is TEST MODE ONLY; prefer global for durable elevation."
@@ -6519,22 +6514,15 @@ app_help() {
 # app_default_self_loop() - Verb self-management opens the same board as row 8
 # =============================================================================
 #
-# Off-TTY this verb is help (same as menu). On a TTY it is only the self
-# board: a leaf or Back ends the verb and does not open the front board.
+# Off a terminal this verb stops. On a TTY it is only the self board:
+# a leaf or Back ends the verb and does not open the front board.
 # =============================================================================
 app_default_self_loop() {
     : "${TTY:=0}"
     : "${JSON:=0}"
     : "${QUIET:=0}"
     if [ "${TTY}" -ne 1 ]; then
-        _menu_quiet="${QUIET}"
-        if [ "${JSON}" -ne 1 ]; then
-            QUIET=0
-        fi
-        app_help
-        QUIET="${_menu_quiet}"
-        unset _menu_quiet
-        return 0
+        out_die "self-management needs a terminal. Next: ${APP_NAME} help"
     fi
     _menu_json="${JSON}"
     _menu_quiet="${QUIET}"
@@ -6714,21 +6702,7 @@ app_main() {
         self-uninstall) inst_self_uninstall ;;
         version-check) ver_check ;;
         self-management)
-            if [ "${TTY}" -eq 1 ]; then
-                _menu_json="${JSON}"
-                _menu_quiet="${QUIET}"
-                app_default_self_loop
-                JSON="${_menu_json}"
-                QUIET="${_menu_quiet}"
-                export JSON QUIET
-            else
-                _menu_quiet="${QUIET}"
-                if [ "${JSON}" -ne 1 ]; then
-                    QUIET=0
-                fi
-                app_help
-                QUIET="${_menu_quiet}"
-            fi
+            app_default_self_loop
             ;;
         backup)       fb_backup "${_domain_arg}" ;;
         restore)      fb_restore "${_domain_arg}" "${_domain_arg2}" ;;

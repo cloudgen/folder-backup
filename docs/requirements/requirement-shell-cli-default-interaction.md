@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-default-interaction.md  
-**Status**: Active (Version 1.8.0)  
+**Status**: Active (Version 1.9.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-default-interaction`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-DEFAULT-INTERACTION`  
@@ -9,11 +9,11 @@
 
 This requirement is the **product Single Source of Truth** for folder-backup’s **claimed default interactive main menu**.
 
-Channel verbs exist (`self-install`, `version-check`, `self-update`, `self-uninstall`, `self-management`). **Case 2** applies to the **interactive** zero-cli-verb: on a real terminal, with quiet and json off, a bare `folder-backup` run opens the numbered boards. A **non-interactive** zero-cli-verb (no TTY, or `--quiet` / `--json` with no command) is CLI self-install, owned by **`requirement-shell-cli-zero-arguments`**. This file does not replace that path. Named commands **`menu`** and **`main`** open the same boards. Off a terminal those named commands are help. The sudoers **board body** is owned by **`requirement-shell-cli-sudoers-submenu`**. **`sudoers` is not a live dispatcher token.**
+Channel verbs exist (`self-install`, `version-check`, `self-update`, `self-uninstall`, `self-management`). **Case 2** applies to the **interactive** zero-cli-verb: on a real terminal, with quiet and json off, a bare `folder-backup` run opens the numbered boards. A **non-interactive** zero-cli-verb (no TTY, or `--quiet` / `--json` with no command) is CLI self-install, owned by **`requirement-shell-cli-zero-arguments`**. This file does not replace that path. Named commands **`menu`** and **`main`** open the same boards. Off a terminal those named commands stop: `menu needs a terminal`. The sudoers **board body** is owned by **`requirement-shell-cli-sudoers-submenu`**. **`sudoers` is not a live dispatcher token.**
 
 ### 1.1 Human-facing
 
-**In one sentence:** At a real terminal, type `folder-backup` with no command to see numbered boards — client-side, self-management, and Exit — with server-side hidden; pick **1** then **17** for grant and drafts. A pipe with no command places this program (`requirement-shell-cli-zero-arguments`).
+**In one sentence:** At a real terminal, type `folder-backup` with no command to see numbered boards — client-side, self-management, and Exit — with server-side hidden; pick **1** then **17** for grant and drafts. A pipe with no command places this program (`requirement-shell-cli-zero-arguments`). Naming `menu` off a terminal stops.
 
 | Box | Meaning | Example |
 |-----|---------|---------|
@@ -46,7 +46,8 @@ Channel verbs exist (`self-install`, `version-check`, `self-update`, `self-unins
 | Install, version, or update this program | Front row **8**. Local copy is **81**. Channel place is **87**. | `8` then `81` |
 | Step back one board | Back on a child board | `0` |
 | Leave the menu | Exit on the front board | `9` |
-| Run a bare invocation in CI | No prompt. Human help, or JSON help with `--json` and no command. | `folder-backup </dev/null` |
+| Run a bare invocation in CI | No prompt. The program places itself. | `folder-backup </dev/null` |
+| Name the menu in a script | The program stops. The next step is help. | `folder-backup menu </dev/null` |
 
 ---
 
@@ -75,11 +76,11 @@ Measure interactive capability **outside functions** (`TTY=1` only when stdin an
 | Flags only, no command (`--debug` / `--force`) | Interactive | off | Draw the numbered boards | Place; help |
 | Flags only, no command (`--quiet` / `--json`) | Any | on | CLI self-install | Draw the menu; JSON help |
 | `folder-backup menu` or `main` | Interactive (`TTY=1`) | **Ignore** | Draw the numbered boards | Treat as JSON help; hang |
-| same | Non-interactive (`TTY=0`) | **Follow** | **Help**: human when JSON=0; JSON help when JSON=1 | Draw the menu; hang; silent return |
+| same | Non-interactive (`TTY=0`) | error when JSON=1 | **Stop**: `menu needs a terminal. Next: folder-backup help` (exit 1; JSON error when JSON=1) | Draw the menu; hang; print help; exit 0 |
 | `folder-backup self-management` | Interactive (`TTY=1`) | **Ignore** while drawing | Draw the self board only (§2.3.3) | Draw the front board; hang |
-| same | Non-interactive (`TTY=0`) | **Follow** | **Help** | Draw the self board; hang |
+| same | Non-interactive (`TTY=0`) | error when JSON=1 | **Stop**: `self-management needs a terminal. Next: folder-backup help` | Draw the self board; hang; print help |
 
-While a board is **drawing**, saved `JSON` and `QUIET` **MUST** be forced off, then restored before a leaf runs. Named `menu` / `main` / `self-management` off-TTY stay help (do not swallow that help). A zero-cli-verb `--quiet` or `--json` is self-install, not that help. Reuse `app_help` for the named off-TTY verbs — **MUST NOT** invent a second JSON help catalog.
+While a board is **drawing**, saved `JSON` and `QUIET` **MUST** be forced off, then restored before a leaf runs. That force applies only when `TTY=1`. Named `menu` / `main` / `self-management` off a terminal **MUST** `out_die`. A zero-cli-verb `--quiet` or `--json` is self-install, not that stop. Interactive `menu --json` still draws.
 
 ### 2.3 Boards
 
@@ -90,7 +91,7 @@ While a board is **drawing**, saved `JSON` and `QUIET` **MUST** be forced off, t
 4. A choice **MUST** be read in the **current shell**. Typical: `prompt_line "Choice"` then `_pick="${_prompt_line}"`. **MUST NOT** `_pick=$(prompt_line …)` / `_pick=$(prompt_ask …)` / `$()` / backticks of **any** function whose body contains `read` (do-not-capture-read / **PP-A-22**). stderr+$() is **not** a license.  
 5. An invalid choice **MUST** use `out_error` (not `out_die`, not `out_warn`) and **MUST** reprint **this** layer.  
 6. **0** / `back` / `Back` / empty line / EOF on a **child** board is **Back** to the parent. `exit` / `quit` on a child board is the same Back. Child boards **MUST NOT** print Exit **9** and **MUST NOT** print Back **8**.  
-7. Front Exit is **9**, **99**, `exit`, `quit`, or EOF, and returns 0. An empty line on the **front** is an invalid retry.  
+7. Front Exit is **9**, **99**, `exit`, `quit`, `q`, an empty line, or EOF, and returns 0. `q` on a **child** board is Back.  
 8. After a valid leaf opened from the front (or from a child of the front), the front board **MUST** redisplay. **MUST NOT** exit the menu on success. **MUST NOT** stay on the launching child board. A leaf that calls `out_die` still ends the process. An empty required backup/restore field prints `Next:` and the front redisplays.  
 9. Typing a **listed leaf verb** at the front pick prompt **MUST** run that leaf, then redisplay the front. Typing `sudoers` at the front **MUST** be invalid (open client **1**, then **17**). Typing a child number on the wrong layer **MUST** be invalid.  
 10. **`sudoers` is not a live CLI command.** `folder-backup sudoers` **MUST** remain unknown.
@@ -131,7 +132,7 @@ Header title: `self-management`. This product is **dual** place: local copy and 
 | # | Token | Label |
 |---|-------|-------|
 | 81 | `install` | `install: Copy this program into your bin or /usr/local/bin` |
-| 82 | `version` | `version: Show the local version` |
+| 82 | `version` | `version: Show version and detailed diagnostics (about)` |
 | 83 | `about` | `about: Show diagnostics including sudoers trust tier` |
 | 84 | `version-check` | `version-check: Compare this version with the channel` |
 | 85 | `self-update` | `self-update: Replace the placed binary from the channel` |
@@ -139,9 +140,9 @@ Header title: `self-management`. This product is **dual** place: local copy and 
 | 87 | `self-install` | `self-install: Copy this file, or download it when the shell is a pipe` |
 | **0** | **Back** | return to the caller |
 
-`uninstall` and `where-is-me` stay **typed commands**. Their absence is **not** a hide cause (no hide sentence on this board). **81** is the local copy. **87** is the channel place. **86** is channel remove, not local `uninstall`.
+`uninstall` and `where-is-me` stay **typed commands**. Their absence is **not** a hide cause (no hide sentence on this board). **81** is the local copy. **87** is the channel place. **86** is channel remove, not local `uninstall`. On this board, row **82** and a typed `version` **MUST** run `app_about`. Argv `folder-backup version` stays `app_version` (the thin version line). Row **83** also runs `app_about`.
 
-Opened from the front, Back **and** a finished leaf both return to the front. Opened as the argv verb `self-management`, the self board is the whole session: a leaf runs and the verb ends; Back ends the verb; the front board is not opened. Handler: `app_cmd_menu_self`. `app_default_self_loop` **MUST** be a one-line alias of that function. Invalid self text: `Not a menu choice '<pick>'. Type 81-87, 0 back, or a listed command name.`
+Opened from the front, Back **and** a finished leaf both return to the front. Opened as the argv verb `self-management`, the self board is the whole session: a leaf runs and the verb ends; Back ends the verb; the front board is not opened. Handler: `app_cmd_menu_self`. `app_default_self_loop` saves JSON and QUIET, and on a terminal calls `app_cmd_menu_self`. Off a terminal it stops with `self-management needs a terminal`. Invalid self text: `Not a menu choice '<pick>'. Type 81-87, 0 back, or a listed command name.`
 
 ### 2.4 Sudoers board (owned elsewhere)
 
@@ -196,7 +197,7 @@ folder-backup print-sudoers-install-script
 folder-backup remove-project-sudoers
 ```
 
-On a real terminal the first three **MUST** show the front board. `folder-backup menu --json` on a real terminal **MUST** still show the front board. `folder-backup self-management` on a real terminal **MUST** show the self board and **MUST NOT** show the front board first. Off-TTY, `folder-backup`, `folder-backup menu`, and `folder-backup self-management` **MUST** call help; `folder-backup --json` and `folder-backup menu --json` **MUST** call JSON help. The five grant/draft names **MUST** run as live commands. `folder-backup sudoers` **MUST** fail as unknown.
+On a real terminal the first three **MUST** show the front board. `folder-backup menu --json` on a real terminal **MUST** still show the front board. `folder-backup self-management` on a real terminal **MUST** show the self board and **MUST NOT** show the front board first. Off a terminal, `folder-backup` with no command **MUST** place the program. Off a terminal, `folder-backup menu` and `folder-backup self-management` **MUST** stop (`menu needs a terminal` / `self-management needs a terminal`, exit 1). `folder-backup --json` with no command **MUST** place the program. `folder-backup menu --json` off a terminal **MUST** be a JSON error, not JSON help. An empty line on the front **MUST** leave. Row **82** and a typed `version` on a board **MUST** run `about`. The five grant/draft names **MUST** run as live commands. `folder-backup sudoers` **MUST** fail as unknown.
 
 ### 2.6 Why This Requirement Exists (CIAO)
 
@@ -241,8 +242,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 4c. Restate sudoers-board membership as a second SSOT here (that table lives on **`requirement-shell-cli-sudoers-submenu`**).  
 4d. Print a server-side row, or add `app_cmd_menu_server`, while this program has no host service.  
 5. Restart a child board at **1**, compact a hidden number, number front Exit as anything other than **9**, or print Back **8** / Exit **9** on a child board. Child Back **MUST** be **0**.  
-6. Draw the menu on a non-interactive zero-cli-verb, or on off-TTY `menu` / `self-management`.  
+6. Draw the menu on a non-interactive zero-cli-verb, or on off-TTY `menu` / `self-management`. Off-TTY named menu **MUST** stop; it **MUST NOT** print help.  
 7. Treat interactive `folder-backup menu --json` as JSON help.  
+7b. Send row **82** or a typed `version` on a numbered board to the thin `app_version` line. Argv `version` stays that thin line.  
+7c. Treat an empty line on the front as an invalid choice. Empty on the front is Exit.  
 8. Drop `menu`/`main` routing after attaching the boards to empty argv.  
 9. Auto-write `/etc` from a menu choice (print/submit stay Type 0 drafts).  
 10. Claim the ship unit lacks the TTY empty-argv menu while `app_main` routes empty argv to `app_cmd_menu`.  
@@ -265,14 +268,15 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | AC-2 | Case 2 recorded for the interactive line; `menu` / `main` named and routed to `app_cmd_menu` |
 | AC-3 | Interactive empty argv **and** interactive `menu` draw the front board: hide sentence, **1** client-side, **8** self-management, **9** Exit; row **2** is not printed |
 | AC-4 | Interactive `menu --json` still draws the front board |
-| AC-5 | Non-interactive `menu` is help; non-interactive `self-management` is help. `--json` **with no command** is self-install, not JSON help |
+| AC-5 | Non-interactive `menu` / `main` / `self-management` exit 1 with `needs a terminal` (JSON error when `--json`). `--json` **with no command** is self-install, not JSON help |
 | AC-6 | No numbered board lists `help`, `menu`, `main`, `uninstall`, `where-is-me`, or a test-purpose verb. The front board does not list backup, restore, or the five grant/draft verbs |
 | AC-7 | Leaf labels match kept-list human-readable `verb: explain`; category explains are this file’s tables |
 | AC-8 | TTY header is live `folder-backup(VERSION)` with bold name and italic version; short name is bold; numbered `explain` is italic and light gray; number, Exit, and Back stay unstyled; no CSI off-TTY |
 | AC-9 | Menu choice is current-shell `prompt_line` / `_prompt_line`; **MUST NOT** `$()` a `read` helper |
 | AC-10 | Client **1** lists **11** / **12** / **17** / **0** Back. Choosing **17** opens the sudoers board (**`requirement-shell-cli-sudoers-submenu`**). Self **8** lists **81**–**87** and **0** Back |
 | AC-11 | `folder-backup sudoers` is unknown. Typing `sudoers` on the front is invalid. The five grant/draft names remain live CLI verbs |
-| AC-12 | A finished leaf redisplays the front board. An invalid child number reprints the front board. Typing **2** is an invalid retry |
+| AC-12 | A finished leaf redisplays the front board. An invalid child number reprints the front board. Typing **2** is an invalid retry. An empty line on the front leaves |
+| AC-13 | Row **82** and a typed `version` on a board run `about`. Argv `folder-backup version` stays the thin version line |
 
 ---
 
@@ -298,12 +302,12 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | **TP-CLI-07** | `tests/test_cli.sh` | **have** — off-TTY empty argv places the CLI, not these boards (AC-1) |
 | **TP-CLI-13** | `tests/test_cli.sh` | **have** — front board, client **11**/**12**/**17**, sudoers **172**/**175**, hide sentences, `sudoers` not dispatched (AC-3 / AC-10 / AC-11) |
 | **TP-CLI-14** | same | **have** — interactive `menu --json` still prints the front board (AC-4) |
-| **TP-CLI-15** | same | **have** — non-interactive `menu` and `self-management` are help (AC-5) |
+| **TP-CLI-15** | same | **have** — non-interactive `menu` and `self-management` stop (`needs a terminal`, exit 1) (AC-5) |
 | **TP-CLI-23** | same | **have** — `--json` / `--quiet` with no verb place; TTY `--debug` draws the front (AC-5 / AC-3) |
 | **TP-CLI-16** | same | **have** — front shows **8** self-management and omits verb rows that belong on a child board (AC-6) |
 | **TP-CLI-18** | same | **have** — bold short name, italic light-gray explain, unstyled Exit, sudoers title (AC-8) |
 | **TP-CLI-19** | same | **have** — child number **12** on the front is invalid and the front reprints (AC-12) |
-| **TP-CLI-21** | same | **have** — typing `version` on the front runs it and the front reprints (AC-12) |
+| **TP-CLI-21** | same | **have** — empty Enter leaves the front; row **82** and typed `version` run `about`; the front reprints (AC-12 / AC-13) |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -322,6 +326,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.6.1 | Channel verbs are live and stay off the flat list. Case 2 still owns empty argv. |
 | 2026-09-30 | Active 1.7.0 | Hierarchical boards: front **1** / hidden **2** / **8** / **9**; client **11**/**12**/**17**; self **81**–**87**; child Back **0**; finished leaf redisplays the front; short name bold |
 | 2026-09-30 | Active 1.8.0 | Non-interactive zero-cli-verb moves to `requirement-shell-cli-zero-arguments` (self-install). This file keeps the interactive boards. Named `menu` off-TTY stays help. |
+| 2026-09-30 | Active 1.9.0 | Named `menu` / `main` / `self-management` off a terminal stop (`needs a terminal`). Empty Enter on the front leaves. Row **82** and a typed `version` on a board run `about`. Argv `version` stays the thin line. Interactive `menu --json` still draws. |
 
 ---
 

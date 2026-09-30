@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-interactive-vs-noninteractive.md  
-**Status**: Active (Version 1.1.2)  
+**Status**: Active (Version 1.1.3)  
 **Area**: shell  
 **Key**: `requirement-shell-interactive-vs-noninteractive`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -122,7 +122,7 @@ prompt_ask() {
 | `print-sudoers` | Print fragment | Print fragment (stdout/file); no `/etc` write |
 | `generate-sudoer-request` | May show path + verify via `out_*` | No prompts; write + verify; no hang |
 | `submit-sudoer-request` | May show detect/submit via `out_*` | No prompts; fail closed if sudoer-cli / inbound missing; no hang |
-| `menu` / `main` | Numbered list; ignore `--json` | Help (human; `--json` → JSON help). **MUST NOT** prompt |
+| `menu` / `main` | Numbered list; ignore `--json` | Stop: `menu needs a terminal` (exit 1). **MUST NOT** prompt. **MUST NOT** print help |
 | Missing required operand | Clear error | Clear error; non-zero exit |
 
 ### 2.4 Implementation Notes (this project)
@@ -206,6 +206,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-23 | Active 1.1.0 | `prompt_ask` returns `PROMPT_ASK_VALUE`; `$()` capture forbidden |
 | 2026-09-30 | Active 1.1.1 | Off-TTY empty argv stays help. `self-install` is explicit. |
 | 2026-09-30 | Active 1.1.2 | Off-TTY zero-cli-verb is `inst_self_install`. Named `menu` off-TTY stays help. |
+| 2026-09-30 | Active 1.1.3 | Named `menu` / `main` off a terminal stop. They do not print help. |
 
 ---
 

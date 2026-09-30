@@ -1,6 +1,6 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.19.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.20.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
@@ -140,39 +140,39 @@ After install, on a terminal:
 
 ```text
 $ folder-backup
-[INFO] **folder-backup**(*1.19.0*) — numbered list
+[INFO] **folder-backup**(*1.20.0*) — numbered list
 [INFO] server-side is hidden: this program does not run a host service. Number 2 stays reserved.
 1. **client-side**: *this login's folders: pack, restore, and grants*
 8. **self-management**: *this CLI install, version, update, uninstall*
 9. Exit
 Choice: 1
-[INFO] **folder-backup**(*1.19.0*) — client-side
+[INFO] **folder-backup**(*1.20.0*) — client-side
 11. **backup**: *Pack a named folder into a dated gzip archive under /var/backup/folder-backup*
 12. **restore**: *Put an archive back onto the hard-disk projects tree*
 17. **sudoers**: *Grant and drafts*
 0. Back
 Choice: 17
-[INFO] **folder-backup**(*1.19.0*) — sudoers (grant and drafts)
+[INFO] **folder-backup**(*1.20.0*) — sudoers (grant and drafts)
 [INFO] Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 171, 173, and 174 stay reserved.
 172. **submit-sudoer-request**: *Hand the JSON grant to the approval queue*
 175. **remove-project-sudoers**: *Remove the local grant draft only*
 0. Back
 Choice: 0
-[INFO] **folder-backup**(*1.19.0*) — client-side
+[INFO] **folder-backup**(*1.20.0*) — client-side
 11. **backup**: *Pack a named folder into a dated gzip archive under /var/backup/folder-backup*
 12. **restore**: *Put an archive back onto the hard-disk projects tree*
 17. **sudoers**: *Grant and drafts*
 0. Back
 Choice: 0
-[INFO] **folder-backup**(*1.19.0*) — numbered list
+[INFO] **folder-backup**(*1.20.0*) — numbered list
 [INFO] server-side is hidden: this program does not run a host service. Number 2 stays reserved.
 1. **client-side**: *this login's folders: pack, restore, and grants*
 8. **self-management**: *this CLI install, version, update, uninstall*
 9. Exit
 Choice: 8
-[INFO] **folder-backup**(*1.19.0*) — self-management
+[INFO] **folder-backup**(*1.20.0*) — self-management
 81. **install**: *Copy this program into your bin or /usr/local/bin*
-82. **version**: *Show the local version*
+82. **version**: *Show version and detailed diagnostics (about)*
 83. **about**: *Show diagnostics including sudoers trust tier*
 84. **version-check**: *Compare this version with the channel*
 85. **self-update**: *Replace the placed binary from the channel*
@@ -180,7 +180,7 @@ Choice: 8
 87. **self-install**: *Copy this file, or download it when the shell is a pipe*
 0. Back
 Choice: 0
-[INFO] **folder-backup**(*1.19.0*) — numbered list
+[INFO] **folder-backup**(*1.20.0*) — numbered list
 [INFO] server-side is hidden: this program does not run a host service. Number 2 stays reserved.
 1. **client-side**: *this login's folders: pack, restore, and grants*
 8. **self-management**: *this CLI install, version, update, uninstall*
@@ -188,14 +188,14 @@ Choice: 0
 Choice: 9
 ```
 
-Choose a number, or type a command name. **1** opens this login’s folders. **17** opens grant and drafts: queue a JSON grant, or remove the local draft. `generate-sudoer-request`, `print-sudoers`, and `print-sudoers-install-script` stay typed commands. **8** opens install, version, and update. **0** steps back. **9** leaves. A finished command shows the front board again. `folder-backup sudoers` is not a command. In a script or pipe, `folder-backup` with no arguments places this program. Naming `menu` or `self-management` in a script prints help.
+Choose a number, or type a command name. **1** opens this login’s folders. **17** opens grant and drafts: queue a JSON grant, or remove the local draft. `generate-sudoer-request`, `print-sudoers`, and `print-sudoers-install-script` stay typed commands. **8** opens install, version, and update. Row **82** shows the diagnostics (`about`). **0** steps back. An empty line on the front leaves. **9** leaves. A finished command shows the front board again. `folder-backup sudoers` is not a command. In a script or pipe, `folder-backup` with no arguments places this program. Naming `menu` or `self-management` in a script stops: menu needs a terminal.
 
 ## Usage
 
 ```sh
 folder-backup                               # TTY numbered boards; a pipe places this program
 folder-backup help
-folder-backup menu                          # same boards on a TTY; a script prints help
+folder-backup menu                          # same boards on a TTY; a script stops: menu needs a terminal
 folder-backup about
 folder-backup --json about
 
@@ -268,6 +268,7 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
+2026-09-30 — version **1.20.0** (naming `menu` or `self-management` off a terminal stops; an empty line on the front leaves; row **82** shows diagnostics; a pipe with no command still places this program).
 2026-09-30 — version **1.19.0** (a pipe, or `--quiet` / `--json` with no command, places this program; a terminal with no command stays the numbered boards; local `install` stays the mode `0755` copy).
 2026-09-30 — version **1.18.0** (numbered boards: client-side, hidden server-side, self-management, Exit; sudoers board shows submit and remove; a finished command returns to the front).
 2026-09-30 — version **1.17.0** (rebuilt from selfmanaged; channel verbs explicit; empty argv stays the work list; `install` stays the local copy; automatic SHA-256 companion on download).

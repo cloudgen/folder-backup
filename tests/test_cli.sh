@@ -286,40 +286,48 @@ run_test_cli() {
     esac
     ci_cleanup_env
 
-    # TP-CLI-15 named menu / self-management off-TTY stay help.
+    # TP-CLI-15 named menu / self-management off a terminal stop.
     # A line with no command is TP-CLI-07 / TP-CLI-23 (self-install), not this block.
-    _out=$(sh "${SCRIPT}" menu 2>/dev/null)
+    _out=$(sh "${SCRIPT}" menu 2>&1)
     _ec=$?
-    assert_eq "TP-CLI-15 menu off-TTY exit 0" 0 "$_ec"
-    assert_contains "TP-CLI-15 menu off-TTY is help" "$_out" "Usage:"
+    assert_eq "TP-CLI-15 menu off-TTY exit 1" 1 "$_ec"
+    assert_contains "TP-CLI-15 menu off-TTY needs a terminal" "$_out" "menu needs a terminal"
+    assert_not_contains "TP-CLI-15 menu off-TTY is not help" "$_out" "Usage:"
     assert_not_contains "TP-CLI-15 menu off-TTY not the numbered list" "$_out" "9. Exit"
 
-    _out=$(sh "${SCRIPT}" main 2>/dev/null)
+    _out=$(sh "${SCRIPT}" main 2>&1)
     _ec=$?
-    assert_eq "TP-CLI-15 main off-TTY exit 0" 0 "$_ec"
-    assert_contains "TP-CLI-15 main off-TTY is help" "$_out" "Usage:"
+    assert_eq "TP-CLI-15 main off-TTY exit 1" 1 "$_ec"
+    assert_contains "TP-CLI-15 main off-TTY needs a terminal" "$_out" "menu needs a terminal"
+    assert_not_contains "TP-CLI-15 main off-TTY is not help" "$_out" "Usage:"
 
-    _out=$(sh "${SCRIPT}" --json menu 2>/dev/null)
+    _out=$(sh "${SCRIPT}" --json menu 2>&1)
     _ec=$?
-    assert_eq "TP-CLI-15 menu --json off-TTY exit 0" 0 "$_ec"
-    assert_contains "TP-CLI-15 menu --json off-TTY JSON help" "$_out" '"type":"success"'
+    assert_eq "TP-CLI-15 menu --json off-TTY exit 1" 1 "$_ec"
+    assert_contains "TP-CLI-15 menu --json off-TTY JSON error" "$_out" '"type":"out_error"'
+    assert_contains "TP-CLI-15 menu --json off-TTY message" "$_out" "menu needs a terminal"
+    assert_not_contains "TP-CLI-15 menu --json off-TTY not JSON help" "$_out" '"type":"success"'
     assert_not_contains "TP-CLI-15 menu --json off-TTY not numbered list" "$_out" "9. Exit"
 
-    _out=$(sh "${SCRIPT}" --quiet menu 2>/dev/null)
+    _out=$(sh "${SCRIPT}" --quiet menu 2>&1)
     _ec=$?
-    assert_eq "TP-CLI-15 menu --quiet off-TTY exit 0" 0 "$_ec"
-    assert_contains "TP-CLI-15 menu --quiet off-TTY still help" "$_out" "Usage:"
+    assert_eq "TP-CLI-15 menu --quiet off-TTY exit 1" 1 "$_ec"
+    assert_contains "TP-CLI-15 menu --quiet off-TTY needs a terminal" "$_out" "menu needs a terminal"
+    assert_not_contains "TP-CLI-15 menu --quiet off-TTY is not help" "$_out" "Usage:"
 
-    _out=$(sh "${SCRIPT}" self-management 2>/dev/null)
+    _out=$(sh "${SCRIPT}" self-management 2>&1)
     _ec=$?
-    assert_eq "TP-CLI-15 self-management off-TTY exit 0" 0 "$_ec"
-    assert_contains "TP-CLI-15 self-management off-TTY is help" "$_out" "Usage:"
+    assert_eq "TP-CLI-15 self-management off-TTY exit 1" 1 "$_ec"
+    assert_contains "TP-CLI-15 self-management off-TTY needs a terminal" "$_out" "self-management needs a terminal"
+    assert_not_contains "TP-CLI-15 self-management off-TTY is not help" "$_out" "Usage:"
     assert_not_contains "TP-CLI-15 self-management off-TTY not the board" "$_out" "81. install:"
 
-    _out=$(sh "${SCRIPT}" --json self-management 2>/dev/null)
+    _out=$(sh "${SCRIPT}" --json self-management 2>&1)
     _ec=$?
-    assert_eq "TP-CLI-15 self-management --json off-TTY exit 0" 0 "$_ec"
-    assert_contains "TP-CLI-15 self-management --json off-TTY JSON help" "$_out" '"type":"success"'
+    assert_eq "TP-CLI-15 self-management --json off-TTY exit 1" 1 "$_ec"
+    assert_contains "TP-CLI-15 self-management --json off-TTY JSON error" "$_out" '"type":"out_error"'
+    assert_contains "TP-CLI-15 self-management --json off-TTY message" "$_out" "self-management needs a terminal"
+    assert_not_contains "TP-CLI-15 self-management --json off-TTY not JSON help" "$_out" '"type":"success"'
     assert_not_contains "TP-CLI-15 self-management --json off-TTY not the board" "$_out" "81. install:"
 
     assert_contains "TP-CLI-15 help lists menu" "$(sh "${SCRIPT}" help 2>/dev/null)" "Numbered boards: client-side, self-management, and Exit"
@@ -424,6 +432,7 @@ run_test_cli() {
         _out=$(PTY_IN="$(printf '%s\n' '8' '0' '9')" ci_pty_run menu)
         _plain=$(ci_strip_ansi "$_out")
         assert_contains "TP-CLI-13 self board install" "$_plain" "81. install: Copy this program into your bin or /usr/local/bin"
+        assert_contains "TP-CLI-13 self board version is about" "$_plain" "82. version: Show version and detailed diagnostics (about)"
         assert_contains "TP-CLI-13 self board self-install" "$_plain" "87. self-install: Copy this file, or download it when the shell is a pipe"
         assert_contains "TP-CLI-13 self board back" "$_plain" "0. Back"
         assert_not_contains "TP-CLI-13 self board no where-is-me row" "$_plain" "where-is-me:"
@@ -457,7 +466,7 @@ run_test_cli() {
         assert_not_contains "TP-CLI-16 no install row" "$_plain" "install: Copy this program"
         assert_not_contains "TP-CLI-16 no uninstall row" "$_plain" "uninstall: Remove the managed binary"
         assert_not_contains "TP-CLI-16 no where-is-me row" "$_plain" "where-is-me: Show running"
-        assert_not_contains "TP-CLI-16 no version row" "$_plain" "version: Show the local version"
+        assert_not_contains "TP-CLI-16 no version row" "$_plain" "version: Show version and detailed diagnostics"
         assert_not_contains "TP-CLI-16 no about row" "$_plain" "about: Show diagnostics"
         assert_not_contains "TP-CLI-16 no print-sudoers row" "$_plain" "print-sudoers: Write a grant file"
         assert_not_contains "TP-CLI-16 no install-script row" "$_plain" "print-sudoers-install-script: Write an admin script"
@@ -496,8 +505,27 @@ run_test_cli() {
         else
             t_fail "TP-CLI-19 invalid choice did not reprint the front board (count=${_front_n})"
         fi
+        _out=$(PTY_IN="$(printf '\n')" ci_pty_run menu)
+        _plain=$(ci_strip_ansi "$_out")
+        assert_contains "TP-CLI-21 empty Enter shows the front" "$_plain" "9. Exit"
+        assert_not_contains "TP-CLI-21 empty Enter is not a bad choice" "$_out" "Not a menu choice"
+        _front_n=$(printf '%s\n' "$_plain" | grep -c "1. client-side:" || true)
+        if [ "${_front_n}" -eq 1 ]; then
+            t_pass "TP-CLI-21 empty Enter leaves the front"
+        else
+            t_fail "TP-CLI-21 empty Enter did not leave the front (count=${_front_n})"
+        fi
+        _out=$(PTY_IN="$(printf '%s\n' '8' '' '9')" ci_pty_run menu)
+        _plain=$(ci_strip_ansi "$_out")
+        assert_contains "TP-CLI-21 empty on self is Back" "$_plain" "81. install:"
+        assert_contains "TP-CLI-21 empty on self returns to the front" "$_plain" "9. Exit"
+        assert_not_contains "TP-CLI-21 empty on self is not a bad choice" "$_out" "Not a menu choice"
+        _out=$(PTY_IN="$(printf '%s\n' '8' '82' '9')" ci_pty_run menu)
+        assert_contains "TP-CLI-21 row 82 runs about" "$_out" "Cache folder used"
+        assert_not_contains "TP-CLI-21 row 82 is not the thin version line" "$_out" "version ${PRODUCT_VERSION}"
         _out=$(PTY_IN="$(printf '%s\n' 'version' '9')" ci_pty_run menu)
-        assert_contains "TP-CLI-21 typed version runs" "$_out" "version ${PRODUCT_VERSION}"
+        assert_contains "TP-CLI-21 typed version runs about" "$_out" "Cache folder used"
+        assert_not_contains "TP-CLI-21 typed version is not the thin version line" "$_out" "version ${PRODUCT_VERSION}"
         _plain=$(ci_strip_ansi "$_out")
         _front_n=$(printf '%s\n' "$_plain" | grep -c "1. client-side:" || true)
         if [ "${_front_n}" -ge 2 ]; then

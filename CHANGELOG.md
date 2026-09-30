@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.20.0] - 2026-09-30
+
+### Changed
+
+- **Named menu off a terminal stops.** `menu`, `main`, and `self-management` with no terminal exit 1: `menu needs a terminal` (or `self-management needs a terminal`). Next step is `folder-backup help`. `--json` on that line is a JSON error. On a real terminal, `menu --json` still draws the boards.
+- **Empty Enter on the front leaves.** An empty line, or `q`, is Exit. On a child board, an empty line or `q` is Back.
+- **Row 82 is diagnostics.** On a numbered board, row **82** and a typed `version` run `about`. `folder-backup version` stays the thin version line.
+- **A pipe with no command still places this program.** That 1.19.0 route is unchanged. Local `install` stays the mode `0755` copy.
+- **Suite.** `sh tests/run.sh`: PASS=473 FAIL=0 SKIP=2. Proof **TP-CLI-15** · **TP-CLI-21**.
+- Law: **requirement-shell-cli-default-interaction** **1.9.0**, **requirement-shell-cli-zero-arguments** **1.2.1**, **requirement-shell-cli-interface** **1.10.1**, **requirement-shell-interactive-vs-noninteractive** **1.1.3**.
+
 ## [1.19.0] - 2026-09-30
 
 ### Changed

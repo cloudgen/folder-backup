@@ -5,8 +5,8 @@
 **Always load first:** `reviews/lessons.md`
 
 **Last plan update:** 2026-09-30  
-**Ship unit VERSION:** 1.19.0  
-**Suite baseline:** see `reviews/test-plan.md` (1.19.0: PASS=455 FAIL=0 SKIP=2; numbered boards on a terminal; non-interactive zero-cli-verb is self-install; compact JSON `--json` twins still todo)
+**Ship unit VERSION:** 1.20.0  
+**Suite baseline:** see `reviews/test-plan.md` (1.20.0: PASS=473 FAIL=0 SKIP=2; numbered boards on a terminal; non-interactive zero-cli-verb is self-install; named menu off a terminal stops; compact JSON `--json` twins still todo)
 
 ---
 

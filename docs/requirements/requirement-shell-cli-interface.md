@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.10.0)  
+**Status**: Active (Version 1.10.1)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -119,7 +119,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `version-check` | Type 0 | `ver_check` | Compare local `VERSION` with the channel. Needs a reachable `SCRIPT_URL`. |
 | `self-update` | Type 0 | `inst_self_update` | Replace the managed binary from the channel. |
 | `self-uninstall` | Type 0 | `inst_self_uninstall` | Remove the channel-managed binary. Off-TTY without `--force` fails closed when a binary exists. |
-| `self-management` | Type 0 | `app_default_self_loop` → `app_cmd_menu_self` | TTY opens the self board (**81**–**87**). Off-TTY help. Front row **8** opens the same board and returns to the front. The argv verb ends after a leaf or Back. |
+| `self-management` | Type 0 | `app_default_self_loop` → `app_cmd_menu_self` | TTY opens the self board (**81**–**87**). Off a terminal, stops: `self-management needs a terminal`. Front row **8** opens the same board and returns to the front. The argv verb ends after a leaf or Back. |
 | `version` | Type 0 | `app_version` | Local `VERSION` only; no network |
 | `about` | Type 0 | `app_about` | Diagnostics: install presence, paths, user, shell, TTY, **Cache folder used**, **Cache folder (preferred)**, **Cache folder (1st fallback)**, **Cache folder (2nd fallback)** when this host has one, **Persistence storage** `${HOME}/.local/folder-backup`, channel `script_url`, backup defaults |
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
@@ -130,7 +130,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `remove-project-sudoers` | Type 0 | `fb_remove_project_sudoers` (domain) | **Operational.** Remove the local grant draft only (not `/etc`). Sudoers board row **175**. Live CLI verb |
 | `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Test-purpose.** **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound. Listed apart in help; **off every numbered board**; number **171** stays reserved. Live CLI verb |
 | `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | **Operational.** Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound. Sudoers board row **172**. Live CLI verb |
-| `menu` | Type 0 | `app_cmd_menu` | Numbered boards: front **1** client-side, hidden **2**, **8** self-management, **9** Exit (`requirement-shell-cli-default-interaction`). Same boards as interactive empty argv. **`sudoers` is not a command** |
+| `menu` | Type 0 | `app_cmd_menu` | Numbered boards: front **1** client-side, hidden **2**, **8** self-management, **9** Exit (`requirement-shell-cli-default-interaction`). Same boards as interactive empty argv. Off a terminal, stops: `menu needs a terminal`. **`sudoers` is not a command** |
 | `main` | Type 0 | `app_cmd_menu` | Alias of `menu`. **MUST NOT** appear as a choice on its own board. |
 
 #### Global flags (normative wiring)
@@ -278,6 +278,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.9.0 | Channel verbs from selfmanaged are routed. `install` stays the local copy. Main menu unchanged. |
 | 2026-09-30 | Active 1.9.1 | Handlers `app_cmd_menu` / `app_cmd_menu_self`. Self board **81**–**87**. Test-purpose verbs off every numbered board. Sudoers rows **172** and **175**. |
 | 2026-09-30 | Active 1.10.0 | Non-interactive zero-cli-verb is `inst_self_install`. Interactive zero-cli-verb stays the boards. Local `install` stays `inst_local_install`. |
+| 2026-09-30 | Active 1.10.1 | Named `menu` and `self-management` off a terminal stop. They do not print help. |
 
 ---
 

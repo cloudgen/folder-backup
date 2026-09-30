@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-zero-arguments.md  
-**Status**: Active (Version 1.2.0)  
+**Status**: Active (Version 1.2.1)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-zero-arguments`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -53,7 +53,7 @@ Sibling shape: `sshd-cli` uses the same split (terminal → menu, non-interactiv
 
 1. An **interactive** zero-cli-verb **MUST** call `app_cmd_menu`. It **MUST NOT** call `inst_self_install`, `inst_local_install`, or `app_help`. `--debug` and `--force` do not change this route.  
 2. A **non-interactive** zero-cli-verb **MUST** call `inst_self_install` and return its status. It **MUST NOT** open the boards, **MUST NOT** call `app_help`, and **MUST NOT** call `inst_local_install`. This includes `--quiet` and `--json` with no verb, including on a terminal.  
-3. `folder-backup help` is the usage path. `folder-backup menu` and `folder-backup main` are named menu verbs. Those lines are not zero-cli-verb. Off-TTY, those named verbs stay help (`requirement-shell-cli-default-interaction`).  
+3. `folder-backup help` is the usage path. `folder-backup menu` and `folder-backup main` are named menu verbs. Those lines are not zero-cli-verb. Off a terminal, those named verbs stop (`requirement-shell-cli-default-interaction`). This file does not own that stop.  
 4. Bootstrap **MUST** call `app_main "$@"`. No basename gate.  
 5. A second non-interactive zero-cli-verb **MUST** succeed without `--force` when the managed binary is already present. The human line **MUST** say already installed. JSON **MUST** be a success object, not help JSON.  
 6. When no managed binary is present, non-interactive zero-cli-verb **MUST** place one or fail closed. A missing network on a **copy** (`$0` is the script) **MUST** still place. A download failure **MUST** be non-zero.  
@@ -141,6 +141,7 @@ Sibling shape: `sshd-cli` uses the same split (terminal → menu, non-interactiv
 | 2026-08-28 | **Withdrawn** 1.1.0 | Superseded by default-interaction case 2 (TTY boards; off-TTY help) |
 | 2026-09-30 | **Withdrawn** 1.1.1 | Residual fence: empty argv must not install-ensure |
 | 2026-09-30 | **Active** 1.2.0 | User order: match sibling sshd-cli. Interactive zero-cli-verb is the boards. Non-interactive zero-cli-verb is `inst_self_install`, not help. Local `install` stays a different verb. |
+| 2026-09-30 | **Active** 1.2.1 | Portable empty-argv law no longer treats flags-only `--json` as JSON help. Named `menu` off a terminal is owned by default-interaction (stop, not this file). The place route is unchanged. |
 
 ---
 

@@ -112,6 +112,8 @@ No new file kind. The companion digest `src/folder-backup.sha256` stays the down
 
 The 1.18.0 menu report’s sentence that an off-TTY empty line is help describes that release. It is not the 1.19.0 route.
 
+**1.20.0 note:** the place route in this report is unchanged. Named `menu` / `self-management` off a terminal now stop. That contract is `reviews/reports/2026-09-30-requirement-coverage-menu-contract.md`. The sentence above that names **TP-CLI-15** as help describes 1.19.0.
+
 These stay open and must not be treated as done:
 
 - In-tool sudo wrap

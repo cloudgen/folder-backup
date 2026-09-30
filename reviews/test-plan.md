@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.19.0  
+**Product VERSION:** 1.20.0  
 **Last plan update:** 2026-09-30  
-**Last suite run:** `sh tests/run.sh` (1.19.0: PASS=455 FAIL=0 SKIP=2)
+**Last suite run:** `sh tests/run.sh` (1.20.0: PASS=473 FAIL=0 SKIP=2)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -64,13 +64,13 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-12 | Linux / Git Bash / Mac cache chains; silent skip of preferred; leaf mode 0700 owned by this login; persistence `${HOME}/.local/folder-backup` exists | test_cli | requirement-shell-cli-storage | **have** |
 | TP-CLI-13 | interactive empty argv **and** `menu` print front **1**/**8**/**9**, hidden server sentence, client **11**/**12**/**17**, sudoers **172**/**175** + hide sentence + Back **0**, self **81**/**87**; `sudoers` not dispatched; members live **without** enqueueing live inbound | test_cli | **shell-cli-default-interaction** AC-3 / AC-10 / AC-11 · **shell-cli-sudoers-submenu** AC-1–AC-5 | **have** |
 | TP-CLI-14 | interactive `menu --json` still prints the list | test_cli | **shell-cli-default-interaction** AC-4 | **have** |
-| TP-CLI-15 | non-interactive `menu` / `main` is help; `menu --json` is JSON help; off-TTY `self-management` is help. Flags-only `--json` is **TP-CLI-23** (self-install), not this row | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
+| TP-CLI-15 | non-interactive `menu` / `main` / `self-management` exit 1 (`needs a terminal`); `menu --json` off a terminal is a JSON error. Flags-only `--json` is **TP-CLI-23** (self-install), not this row | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
 | TP-CLI-16 | front board shows **8** self-management and omits help / verb rows that belong on a child board (backup, grant verbs, test-purpose) | test_cli | **shell-cli-default-interaction** AC-6 · **shell-cli-sudoers-submenu** AC-5 | **have** |
 | TP-CLI-17 | help lists test-purpose grant-emit verbs under a heading apart from operational | test_cli | **shell-cli-interface** AC-9 | **have** |
 | TP-CLI-18 | default CLI main menu style: header `APP_NAME(VERSION)` bold/italic; short name bold; numbered explain italic + light gray; Exit unstyled; no CSI off-TTY; sudoers title (portable **TP-CLI-17** alias) | test_cli | **shell-cli-default-interaction** AC-8 · **shell-cli-sudoers-submenu** AC-6 · **shell-output-requirements** AC-5 | **have** |
 | TP-CLI-19 | child number **12** on the front is invalid and the front reprints | test_cli | **shell-cli-default-interaction** AC-12 | **have** |
 | TP-CLI-20 | ship unit has no `$()` of `prompt_*` helpers | test_cli | **shell-script-coding** · **shell-interactive-vs-noninteractive** AC-4 | **have** |
-| TP-CLI-21 | typing `version` on the front runs it and the front reprints | test_cli | **shell-cli-default-interaction** AC-12 | **have** |
+| TP-CLI-21 | empty Enter on the front leaves; row **82** and a typed `version` run `about` and the front reprints. Argv `version` stays the thin line | test_cli | **shell-cli-default-interaction** AC-12 / AC-13 | **have** |
 | TP-CLI-23 | `--quiet`, `--json`, and non-TTY `--debug` with no command place the CLI; TTY `--json` places and is not the boards; TTY `--debug` shows the front and does not place; `--debug version` stays version | test_cli | **shell-cli-zero-arguments** AC-3 / AC-4 | **have** |
 
 ### TP-LC (local lifecycle)
