@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-sudoers-submenu.md  
-**Status**: Active (Version 1.2.0)  
+**Status**: Active (Version 1.2.1)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-sudoers-submenu`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-SUDOERS-SUBMENU`  
@@ -63,7 +63,7 @@ This file exists so the sudoers board is a **named, transferable** product law �
 
 ### 2.3 Sudoers board — operational grant and drafts
 
-Choosing front **7** / `sudoers` **MUST** print this board. Header **MUST** use the same `folder-backup(VERSION)` nametag. Title: `sudoers (grant and drafts)`. Explain text **MUST** follow the same default CLI main menu style as the other boards (short name bold; explain italic and light gray).
+Choosing front **7** / `sudoers` **MUST** print this board. Header **MUST** use the same `folder-backup(VERSION)` nametag. Title when `APP_LANG=en`: `sudoers (grant and drafts)`. Other codes translate the header and the longs and keep the English verb shorts (`requirement-shell-cli-language`). Explain text **MUST** follow the same default CLI main menu style as the other boards (short name bold; explain italic and light gray). The hide sentence and the invalid text below are the English sentences.
 
 Print this hide sentence **before** the numbers (exact):
 
@@ -207,6 +207,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-03 | Active 1.0.0 | Dedicated sudoers-submenu SSOT; five setup kinds on the second board; Back 8 / Exit 9 |
 | 2026-09-30 | Active 1.1.0 | Opened as client **17**. Printed rows **172** and **175** only. **171**/**173**/**174** reserved. Back **0**. A leaf returns to the front |
 | 2026-09-30 | Active 1.2.0 | Opened as front **7**. Printed rows **72** and **75**. **71**/**73**/**74** reserved. Back **0** returns to the front |
+| 2026-09-30 | Active 1.2.1 | Header, longs, hide sentence, and invalid text follow `APP_LANG`. English strings stay this table. Numbers stay **72** / **75**. |
 
 ---
 

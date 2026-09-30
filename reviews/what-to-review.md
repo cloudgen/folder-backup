@@ -5,8 +5,8 @@
 **Always load first:** `reviews/lessons.md`
 
 **Last plan update:** 2026-09-30  
-**Ship unit VERSION:** 1.21.0  
-**Suite baseline:** see `reviews/test-plan.md` (1.21.0: PASS=481 FAIL=0 SKIP=2; numbered boards on a terminal; sudoers is front **7**; non-interactive zero-cli-verb is self-install; named menu off a terminal stops; compact JSON `--json` twins still todo)
+**Ship unit VERSION:** 1.22.0  
+**Suite baseline:** see `reviews/test-plan.md` (1.22.0: PASS=570 FAIL=0 SKIP=2; numbered boards on a terminal; front **1**/**6**/**7**/**8**/**9**; language file is not cache; non-interactive zero-cli-verb is self-install; named menu off a terminal stops; compact JSON `--json` twins still todo)
 
 ---
 
@@ -18,7 +18,7 @@
 | P2 | Confirm ship unit `src/folder-backup` | `APP_NAME` / `VERSION` hard-assign (**1.9.0+**) |
 | P3 | Load `reviews/lessons.md` and re-check every open L-* | Mandatory (esp. **L-SUDOERS-01/02** · **L-SUDOERS-06** · **L-OUTPUT-01** · **L-TEST-REVIEW-01**) |
 | P4 | Run `./tests/run.sh` | Record PASS/FAIL/SKIP in report; **must include TP-22e/22f** (not emit-only 22) **and TP-24*/25*** when generate/submit copy is in scope |
-| P5 | Confirm the zero-cli-verb split and that channel verbs stay explicit | A terminal with no command is the numbered boards. A pipe, `--quiet`, or `--json` with no command calls `inst_self_install`. Named `menu` and `self-management` off a terminal stay help. `install` is the local copy and self row **81**. |
+| P5 | Confirm the zero-cli-verb split and that channel verbs stay explicit | A terminal with no command is the numbered boards (front **1**/**6**/**7**/**8**/**9**). A pipe, `--quiet`, or `--json` with no command calls `inst_self_install`. Named `menu` and `self-management` off a terminal stop. `install` is the local copy and self row **81**. |
 | P6 | Privilege law version | three-layer **≥1.10.0** (S13 + AC-21/22 + **independent generate AC-23/24**) · sudoer-json **≥1.2.0** §2.7 item 5 · **operator-readable-error** 1.0.0 |
 | P7 | Host elev posture (if reviewing runtime) | Global vs local binary; trust tier; `/etc/sudoers.d/` status |
 | P8 | **JSON re-encode / inbound fidelity** | Complete section below. **Revise/Block** if skipped when submit or JSON grant is in scope. |

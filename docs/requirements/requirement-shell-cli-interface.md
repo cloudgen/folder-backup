@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.11.0)  
+**Status**: Active (Version 1.12.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -130,7 +130,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `remove-project-sudoers` | Type 0 | `fb_remove_project_sudoers` (domain) | **Operational.** Remove the local grant draft only (not `/etc`). Sudoers board row **75**. Live CLI verb |
 | `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Test-purpose.** **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound. Listed apart in help; **off every numbered board**; number **71** stays reserved. Live CLI verb |
 | `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | **Operational.** Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound. Sudoers board row **72**. Live CLI verb |
-| `menu` | Type 0 | `app_cmd_menu` | Numbered boards: front **1** client-side, hidden **2**, **7** sudoers, **8** self-management, **9** Exit (`requirement-shell-cli-default-interaction`). Same boards as interactive empty argv. Off a terminal, stops: `menu needs a terminal`. **`sudoers` is not a command** |
+| `menu` | Type 0 | `app_cmd_menu` | Numbered boards: front **1** client-side, **6** language, hidden **2**, **7** sudoers, **8** self-management, **9** Exit (`requirement-shell-cli-default-interaction`, `requirement-shell-cli-language`). Same boards as interactive empty argv. Off a terminal, stops: `menu needs a terminal`. **`sudoers` is not a command. `language` is not a command** |
 | `main` | Type 0 | `app_cmd_menu` | Alias of `menu`. **MUST NOT** appear as a choice on its own board. |
 
 #### Global flags (normative wiring)
@@ -280,6 +280,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.10.0 | Non-interactive zero-cli-verb is `inst_self_install`. Interactive zero-cli-verb stays the boards. Local `install` stays `inst_local_install`. |
 | 2026-09-30 | Active 1.10.1 | Named `menu` and `self-management` off a terminal stop. They do not print help. |
 | 2026-09-30 | Active 1.11.0 | Sudoers board is front **7**. Printed rows **72** and **75**. Reserved **71** / **73** / **74**. |
+| 2026-09-30 | Active 1.12.0 | Front **6** is language. `language` is not dispatched. |
 
 ---
 

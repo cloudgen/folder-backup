@@ -25,6 +25,10 @@ export APP_NAME
 
 # shellcheck source=helpers.sh
 . "${TESTS_ROOT}/helpers.sh"
+
+# Pin English so an operator language file cannot flip board asserts.
+# TP-CLI-24 unsets this when the saved file must win.
+export FOLDER_BACKUP_LANG=en
 # shellcheck source=test_cli.sh
 . "${TESTS_ROOT}/test_cli.sh"
 # shellcheck source=test_local_lifecycle.sh

@@ -4,6 +4,7 @@ Durable failure modes. **Always re-check on product review.**
 
 | ID | Mode | Prevention | Status |
 |----|------|------------|--------|
+| L-MENU-LANG-01 | Language file stored in the cache or under `/var/backup`, `FOLDER_BACKUP_LANG` reloaded after a pick so it covers the choice just saved, or `language` wired as a CLI verb | Persistence leaf `${HOME}/.local/folder-backup/language`; `app_lang_load` once at `app_main` start; env does not write the file; `language` is not dispatched; TP-CLI-24 | open watch |
 | L-MENU-SUDOERS-01 | Family token `sudoers` wired as a live command, or operational grant verbs dropped from the dispatcher, or test-purpose verbs put back on a numbered board | Family row is menu-only (front **7**); **72**/**75** stay on the sudoers board; **71**/**73**/**74** stay reserved; five names stay live CLI commands; TP-CLI-13 | open watch |
 | L-MENU-TTY-01 | Named `menu` / `self-management` off a terminal prints help, an empty line on the front retries, or row **82** prints only the thin version line | `requirement-shell-cli-default-interaction` 1.9.0; off-terminal stop; empty front leaves; row **82** runs `about`; argv `version` stays thin; TP-CLI-15 · TP-CLI-21 | open watch |
 | L-TYPE-N-01 | Non-interactive zero-cli-verb prints help, or places through local `install` (mode 0755), or a terminal with no command places | `requirement-shell-cli-zero-arguments` 1.2.1; interactive boards; non-interactive `inst_self_install`; TP-CLI-07 · TP-CLI-23 | open watch |

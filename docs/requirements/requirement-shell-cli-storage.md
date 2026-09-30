@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-storage.md  
-**Status**: Active (Version 1.4.1)  
+**Status**: Active (Version 1.5.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-storage`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -252,6 +252,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 13. Accept a cache leaf this login does not own, or leave a chosen leaf group- or world-accessible.  
 14. Put backup staging in persistence by default.  
 15. Strip the **Under command line for normal user only** section, or enable admin privilege / a dedicated system user from the storage helpers.
+16. Put the menu-language leaf in the cache folder or under `/var/backup`. That leaf is `${HOME}/.local/${APP_NAME}/language` (mode **0600**). Codes and copy are `requirement-shell-cli-language`. English `about` still prints `Cache folder used:` when `APP_LANG=en`.
 
 **Violating this rule is a critical storage isolation regression.**
 
@@ -310,6 +311,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-23 | Active 1.3.0 | Chosen cache leaf is this login’s mode 0700 directory; human about prints **Cache folder (live)** |
 | 2026-09-27 | Active 1.4.0 | Per-login per-process cache leaves. Linux shm → tmp → `${HOME}/.cache`. Git Bash tmp → AppData Local Temp. Mac tmp → Library/Caches → `${HOME}/cache`. Silent tier miss. `about` prints used / preferred / 1st / 2nd. JSON `persistence_storage` |
 | 2026-09-30 | Active 1.4.1 | Same leaves and about lines. `FOLDER_BACKUP_CACHE_HOST` / `FOLDER_BACKUP_CACHE_SKIP` and `SELFMANAGED_CACHE_HOST` / `SELFMANAGED_CACHE_SKIP` are both accepted. |
+| 2026-09-30 | Active 1.5.0 | Persistence leaf `language` (mode 0600). Not cache. Not `/var/backup`. English about still prints `Cache folder used:` when `APP_LANG=en`. |
 
 ---
 

@@ -1,6 +1,6 @@
 # Review reports index — folder-backup
 
-**Current product (2026-09-30):** VERSION **1.21.0**. Bootstrap parent is **selfmanaged**. A terminal with no command is the numbered boards. Front row **7** is sudoers (submit **72**, remove **75**). A pipe, or `--quiet` / `--json` with no command, is CLI self-install. Naming `menu` or `self-management` off a terminal stops. An empty line on the front leaves. Row **82** on a board runs `about`. `install` is the local copy and self row **81**. The table below is the report index; older rows stay as written.
+**Current product (2026-09-30):** VERSION **1.22.0**. Bootstrap parent is **selfmanaged**. A terminal with no command is the numbered boards. Front rows are client-side (**1**), language (**6**), sudoers (**7**), self-management (**8**), and Exit (**9**). Sudoers children are submit (**72**) and remove (**75**). A pipe, or `--quiet` / `--json` with no command, is CLI self-install. Naming `menu` or `self-management` off a terminal stops. An empty line on the front leaves. Row **82** on a board runs `about`. `install` is the local copy and self row **81**. The table below is the report index; older rows stay as written.
 
 | Date | Report | Scope | Verdict | Suite |
 |------|--------|-------|---------|-------|

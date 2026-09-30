@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-domain-folder-backup.md  
-**Status**: Active (Version 1.6.8)  
+**Status**: Active (Version 1.6.9)  
 **Area**: domain  
 **Key**: `requirement-domain-folder-backup`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -191,7 +191,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 5. Create a second Active `requirement-domain-*` without superseding this one.  
 6. Document inbound as `sudoer-approving` (home dropbox) as the preferred dest.  
 7. Let Type 0 `mkdir` `/var/sudoer-cli/sudoer-request`.  
-8. Mix test-purpose grant-emit verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on any numbered board (they stay typed commands; numbers **71**, **73**, and **74** stay reserved on the sudoers board).
+8. Mix test-purpose grant-emit verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on any numbered board (they stay typed commands; numbers **71**, **73**, and **74** stay reserved on the sudoers board). The language board is front **6** and does not list those verbs.
 
 **Violating this rule is a critical domain regression.**
 
@@ -267,6 +267,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.6.6 | Origin note is selfmanaged. Domain verbs and the main menu are unchanged. |
 | 2026-09-30 | Active 1.6.7 | Test-purpose grant-emit verbs stay off every numbered board. Operational submit and remove stay on the sudoers board. |
 | 2026-09-30 | Active 1.6.8 | Reserved sudoers numbers follow the front **7** parent: **71** / **73** / **74**. |
+| 2026-09-30 | Active 1.6.9 | Front **6** is the language board. Grant verbs stay off that board. Reserved **71** / **73** / **74** unchanged. |
 
 ---
 

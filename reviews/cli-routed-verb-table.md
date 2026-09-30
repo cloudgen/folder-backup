@@ -3,7 +3,7 @@
 **Product:** folder-backup  
 **Ship unit:** `src/folder-backup`  
 **Dispatcher:** `app_main`  
-**Scan date:** 2026-09-30 (menu contract re-checked for 1.21.0)  
+**Scan date:** 2026-09-30 (menu contract re-checked for 1.22.0)  
 **Mode:** full (label + purpose refresh)  
 **Copied / re-checked:** 13 live copied · 2 re-checked (`menu`/`main` now routed) · 1 not-yet-wired  
 
@@ -31,7 +31,7 @@ Inventory from dispatcher case, not help. Human-readable is `{{short-descript}}:
 | remove-project-sudoers | `fb_remove_project_sudoers` | you | 2026-08-09 | operational | remove-project-sudoers: Remove the local grant draft only |
 | generate-sudoer-request | `fb_generate_sudoer_request` | you | 2026-08-17 | test-purpose | generate-sudoer-request: Write a local JSON grant you can read without sudo |
 | submit-sudoer-request | `fb_submit_sudoer_request` | you | 2026-08-17 | operational | submit-sudoer-request: Hand the JSON grant to the approval queue |
-| menu | `app_cmd_menu` (`app_main_menu` aliases it) | you | 2026-09-30 | operational | menu: Numbered boards: client-side, self-management, and Exit (same boards as a TTY empty run; a script stops: menu needs a terminal) |
+| menu | `app_cmd_menu` (`app_main_menu` aliases it) | you | 2026-09-30 | operational | menu: Numbered boards: client-side, language, sudoers, self-management, and Exit (same boards as a TTY empty run; off a terminal, stops: menu needs a terminal) |
 | main | `app_cmd_menu` | you | 2026-09-30 | operational | main: Same as menu |
 
 ## Not-yet-wired
@@ -42,7 +42,7 @@ Inventory from dispatcher case, not help. Human-readable is `{{short-descript}}:
 
 Do not list `menu` / `main` as choices on their own menu.
 
-A TTY **front** board prints category rows, not the flat work list. folder-backup is **case 2**. **`sudoers` is not a live dispatcher token.** Front rows are **1** client-side, **7** sudoers, **8** self-management, **9** Exit. Number **2** stays reserved (no host service). Client rows are **11** backup, **12** restore, **0** Back. The sudoers board prints **72** submit-sudoer-request and **75** remove-project-sudoers. Test-purpose verbs stay off every numbered board; **71** / **73** / **74** stay reserved. The self board prints **81**–**87** (local `install` and channel place are both shown). Row **82** and a typed `version` on a board run `about`. Argv `version` stays `app_version`. `uninstall` and `where-is-me` stay typed. A finished leaf redisplays the front. An empty line on the front leaves. Child Back is **0**. Off a terminal, `menu` and `self-management` stop.
+A TTY **front** board prints category rows, not the flat work list. folder-backup is **case 2**. **`sudoers` and `language` are not live dispatcher tokens.** Front rows are **1** client-side, **6** language, **7** sudoers, **8** self-management, **9** Exit. Number **2** stays reserved (no host service). Client rows are **11** backup, **12** restore, **0** Back. Language rows are **61**–**68**. The sudoers board prints **72** submit-sudoer-request and **75** remove-project-sudoers. Test-purpose verbs stay off every numbered board; **71** / **73** / **74** stay reserved. The self board prints **81**–**87** (local `install` and channel place are both shown). Row **82** and a typed `version` on a board run `about`. Argv `version` stays `app_version`. `uninstall` and `where-is-me` stay typed. A finished leaf redisplays the front. An empty line on the front leaves. Child Back is **0**. Off a terminal, `menu` and `self-management` stop.
 
 **Front:** client-side, sudoers, self-management, Exit. **Client:** backup, restore. **Sudoers board:** submit-sudoer-request, remove-project-sudoers. **Self board:** install, version, about, version-check, self-update, self-uninstall, self-install.
 

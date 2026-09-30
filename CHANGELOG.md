@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.22.0] - 2026-09-30
+
+### Added
+
+- **Menu 6 chooses the display language.** On a terminal, the front board lists client-side (**1**), language (**6**), sudoers (**7**), self-management (**8**), and Exit (**9**). Server-side stays hidden. Language rows are **61** English, **62** Traditional Chinese, **63** Spanish, **64** French, **65** German, **66** Simplified Chinese, **67** Japanese, and **68** Korean. A pick is saved at `~/.local/folder-backup/language` (mode 0600) and the front board comes back in that language. **0** returns without saving. `FOLDER_BACKUP_LANG` forces one run and does not write the file. `folder-backup language` stays unknown.
+- Human `help` translates the usage heading, the menu sentence, and the language catalog. Human `about` translates the title and the cache-used label. The rest of those screens stay English. JSON help, JSON about, and `folder-backup version` stay English.
+- **Suite.** `sh tests/run.sh`: PASS=570 FAIL=0 SKIP=2. Proof **TP-CLI-24** · **TP-CLI-13**.
+- Law: **requirement-shell-cli-language** **1.0.0**, **requirement-shell-cli-default-interaction** **1.11.0**, **requirement-shell-cli-interface** **1.12.0**, **requirement-shell-cli-storage** **1.5.0**, **requirement-shell-cli-sudoers-submenu** **1.2.1**, **requirement-domain-folder-backup** **1.6.9**, **requirement-shell-modular-function-design** **1.0.2**.
+
 ## [1.21.0] - 2026-09-30
 
 ### Changed

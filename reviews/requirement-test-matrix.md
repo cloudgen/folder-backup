@@ -1,8 +1,8 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-09-30 (1.21.0)  
-**Product VERSION:** 1.21.0  
-**Suite:** `tests/run.sh` (1.21.0: PASS=481 FAIL=0 SKIP=2)
+**Updated:** 2026-09-30 (1.22.0)  
+**Product VERSION:** 1.22.0  
+**Suite:** `tests/run.sh` (1.22.0: PASS=570 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
@@ -18,15 +18,16 @@
 | requirement-shell-script-coding | shell | (indirect) | Specialize-in home; own-or-point |
 | requirement-shell-sudo-command | shell | TP-FOLDER-BACKUP-01, 01c, 26; **27 todo** | Studied allow table; wrap Gap |
 | requirement-shell-cli-zero-arguments | shell | TP-CLI-07, **23** | **Active 1.2.1** — interactive boards; non-interactive `inst_self_install`; `--quiet` / `--json` / non-TTY `--debug` place; TTY `--debug` does not; named menu stop is default-interaction |
-| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18**, **19**, **21**, **23** | **Active 1.10.0** — interactive zero-cli-verb = numbered boards; non-interactive place is zero-arguments; named `menu` / `self-management` off a terminal stop; empty front line leaves; row **82** and typed `version` run `about`; front **1**/**7**/**8**/**9**; client **11**/**12**; self **81**–**87**; sudoers body on sudoers-submenu REQ; bold short name; finished leaf redisplays the front |
-| requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | Front **7**; printed **72**/**75**; **71**/**73**/**74** reserved; `sudoers` not dispatched; Back **0** returns to the front |
+| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18**, **19**, **21**, **23**, **24** | **Active 1.11.0** — interactive zero-cli-verb = numbered boards; non-interactive place is zero-arguments; named `menu` / `self-management` off a terminal stop; empty front line leaves; row **82** and typed `version` run `about`; front **1**/**6**/**7**/**8**/**9**; client **11**/**12**; self **81**–**87**; sudoers body on sudoers-submenu REQ; language body on language REQ; bold short name; finished leaf redisplays the front |
+| requirement-shell-cli-language | shell | TP-CLI-**24**, **04**, **13** | **Active 1.0.0** — eight codes; file mode 0600; env does not rewrite; ja/ko help and about headings; English front row **6** |
+| requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | Front **7**; printed **72**/**75**; **71**/**73**/**74** reserved; `sudoers` not dispatched; header follows `APP_LANG`; Back **0** returns to the front |
 | requirement-shell-local-self-management | shell | TP-LC-* (incl. **09/10** mode) | install/uninstall/where-is-me; **0755** multi-user; global preferred for elev |
 | requirement-shell-output-requirements | shell | TP-CLI-03,05,08,09, **18** | JSON / quiet / errors; identity token + numbered-row ink |
 | requirement-operator-readable-error | shell | TP-FOLDER-BACKUP-**25**, **25b**, **25c** | Operator-facing `[ERROR]` wording (what happened / next step / no jargon-only) |
 | requirement-shell-modular-function-design | shell | (indirect) | `fb_print_sudoers*`, `fb_remove_project_sudoers`, deposit/restore |
 | requirement-shell-idempotency | shell | TP-LC-03,07 · TP-FOLDER-BACKUP-06,08 | Re-install; next-N |
 | requirement-shell-interactive-vs-noninteractive | shell | TP-LC-05 · TP-FOLDER-BACKUP-15 · **15b** | Uninstall / remove-project-sudoers confirm; multi-draft non-interactive path required |
-| requirement-shell-cli-storage | shell | TP-CLI-06 · TP-CLI-12 · domain staging | Per-login per-process cache (law **1.4.1**); silent tier miss; leaf mode 0700; persistence `${HOME}/.local/folder-backup/` |
+| requirement-shell-cli-storage | shell | TP-CLI-06 · TP-CLI-12 · TP-CLI-**24** · domain staging | Per-login per-process cache (law **1.5.0**); silent tier miss; leaf mode 0700; persistence `${HOME}/.local/folder-backup/`; language leaf mode 0600 |
 | requirement-domain-folder-backup | domain | TP-FOLDER-BACKUP-01,02,09,14,15,19,20,**21**,**21b**,**23**,**23b**,**24** · TP-CLI-04,06 | Surface verbs/help/about; submit public inbound; generate-sudoer-request; host-probe add/update |
 
 **Checklist / mold (harness, not product suite):** **S11–S12** elev tables (when claimed); **S13** trust tier; **S14** emit; **S15** convert/inbound; **S16** independent generate dest — agent path `SK-CREATE-SUDOERS-FILE` / `CL-CREATE-SUDOERS-SECURITY`. Operator errors: `SK-OPERATOR-READABLE-ERROR` / `CL-OPERATOR-READABLE-ERROR`.

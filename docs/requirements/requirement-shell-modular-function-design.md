@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-modular-function-design.md  
-**Status**: Active (Version 1.0.1)  
+**Status**: Active (Version 1.0.2)  
 **Area**: shell  
 **Key**: `requirement-shell-modular-function-design`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -57,7 +57,7 @@ Ship unit remains a **single executable** at `src/folder-backup`.
 | `out_` | Output system | All user-facing and machine-readable output | `out_text`, `out_info`, `out_json`, `out_die` |
 | `inst_` | Installation lifecycle | Local install/uninstall detect and place/remove | `inst_local_install`, `inst_local_uninstall`, `inst_is_installed` |
 | `util_` | General utilities | Path resolve, storage, safe helpers | `util_resolve_storage`, `util_get_install_bin_path` |
-| `app_` | Cross-cutting CLI surface | Entry, dispatch, about/help/version/where-is-me | `app_main`, `app_about`, `app_help`, `app_version`, `app_where_is_me` |
+| `app_` | Cross-cutting CLI surface | Entry, dispatch, about/help/version/where-is-me, menu language | `app_main`, `app_about`, `app_help`, `app_version`, `app_where_is_me`, `app_lang_load`, `app_lang_save`, `app_menu_text`, `app_cmd_menu_language` |
 | `path_` | Shell PATH & environment | Optional PATH ensure after user install | `path_add_shell` |
 | `prompt_` | Interactive prompts | TTY-safe confirmations | `prompt_yes_no` |
 | `fb_` | Domain business logic | Folder backup + sudoers fragment | `fb_backup`, `fb_print_sudoers`, `fb_next_archive_name`, `fb_stage_archive` |
@@ -155,6 +155,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | `requirement-shell-cli-interface` | Command → handler map |
 | `requirement-shell-output-requirements` | Owns `out_*` |
 | `requirement-domain-folder-backup` | Owns `fb_*` behavior |
+| `requirement-shell-cli-language` | Owns the strings behind `app_menu_text` |
 | `docs/requirements/index.md` | Registry |
 
 ---
@@ -165,6 +166,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 |------|--------|------|
 | 2026-08-03 | Active | Modular prefixes for folder-backup |
 | 2026-09-30 | Active 1.0.1 | Bootstrap parent name is selfmanaged (`fb_` prefix unchanged) |
+| 2026-09-30 | Active 1.0.2 | Language helpers `app_lang_load`, `app_lang_save`, `app_menu_text`, `app_cmd_menu_language`. Strings stay on `requirement-shell-cli-language`. |
 
 ---
 
