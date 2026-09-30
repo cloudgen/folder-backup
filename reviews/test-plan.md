@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.22.0  
+**Product VERSION:** 1.23.0  
 **Last plan update:** 2026-09-30  
-**Last suite run:** `sh tests/run.sh` (1.22.0: PASS=570 FAIL=0 SKIP=2)
+**Last suite run:** `sh tests/run.sh` (1.23.0: PASS=596 FAIL=0 SKIP=2)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -72,7 +72,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-20 | ship unit has no `$()` of `prompt_*` helpers | test_cli | **shell-script-coding** · **shell-interactive-vs-noninteractive** AC-4 | **have** |
 | TP-CLI-21 | empty Enter on the front leaves; row **82** and a typed `version` run `about` and the front reprints. Argv `version` stays the thin line | test_cli | **shell-cli-default-interaction** AC-12 / AC-13 | **have** |
 | TP-CLI-23 | `--quiet`, `--json`, and non-TTY `--debug` with no command place the CLI; TTY `--json` places and is not the boards; TTY `--debug` shows the front and does not place; `--debug version` stays version | test_cli | **shell-cli-zero-arguments** AC-3 / AC-4 | **have** |
-| TP-CLI-24 | front **6** stores one of eight codes (mode 0600); Back does not write; next run keeps the file when `FOLDER_BACKUP_LANG` is unset; a bad first line stays English; the env overrides without rewriting; Japanese and Korean help/about headings | test_cli | **shell-cli-language** AC-1–AC-7 · **shell-cli-storage** | **have** |
+| TP-CLI-24 | front **6** stores one of eight codes (mode 0600); Back does not write; next run keeps the file when `FOLDER_BACKUP_LANG` is unset; a bad first line stays English; the env overrides without rewriting; human help and about follow the code; JSON about keeps `cache_used`; argv version stays English | test_cli | **shell-cli-language** AC-1–AC-7 · **shell-cli-storage** | **have** |
 
 ### TP-LC (local lifecycle)
 

@@ -9,7 +9,7 @@ Authoritative specialized product law for **folder-backup** lives here.
 | Field | Value |
 |-------|--------|
 | Product / `APP_NAME` | `folder-backup` |
-| Version SSOT | `1.22.0` (ship unit hard-assign) |
+| Version SSOT | `1.23.0` (ship unit hard-assign) |
 | Ship unit | `src/folder-backup` |
 | Default install | `~/.local/bin/folder-backup` |
 | Install mode | **Dual.** `install` copies this file (mode `0755`). A pipe with no command, and `self-install`, place the CLI (local `0700`, global `0755`). A terminal with no command is the boards. |

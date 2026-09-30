@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-domain-folder-backup.md  
-**Status**: Active (Version 1.6.9)  
+**Status**: Active (Version 1.6.10)  
 **Area**: domain  
 **Key**: `requirement-domain-folder-backup`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -77,7 +77,7 @@ Domain **MUST NOT** restate full operational backup rules in a second competing 
 
 ### 2.3 Pillar C — Specialized project help items
 
-`help` **MUST** show domain rows (in addition to lifecycle). **Operational** rows and **test-purpose** rows **MUST** be listed **apart** (separate heading). Ship unit `app_help` lists work under **Work commands:** and grant-emit testers under **Grant and draft setup (tests and review):** (`requirement-shell-cli-interface` AC-9).
+`help` **MUST** show domain rows (in addition to lifecycle). **Operational** rows and **test-purpose** rows **MUST** be listed **apart** (separate heading). When `APP_LANG=en`, ship unit `app_help` lists work under **Work commands:** and grant-emit testers under **Grant and draft setup (tests and review):** (`requirement-shell-cli-interface` AC-9). Other codes translate those headings and keep the split (`requirement-shell-cli-language`).
 
 **Operational:**
 
@@ -268,6 +268,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.6.7 | Test-purpose grant-emit verbs stay off every numbered board. Operational submit and remove stay on the sudoers board. |
 | 2026-09-30 | Active 1.6.8 | Reserved sudoers numbers follow the front **7** parent: **71** / **73** / **74**. |
 | 2026-09-30 | Active 1.6.9 | Front **6** is the language board. Grant verbs stay off that board. Reserved **71** / **73** / **74** unchanged. |
+| 2026-09-30 | Active 1.6.10 | English help headings stay **Work commands:** and **Grant and draft setup (tests and review):**. Other codes translate those headings. |
 
 ---
 

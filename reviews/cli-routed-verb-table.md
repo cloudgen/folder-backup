@@ -3,7 +3,7 @@
 **Product:** folder-backup  
 **Ship unit:** `src/folder-backup`  
 **Dispatcher:** `app_main`  
-**Scan date:** 2026-09-30 (menu contract re-checked for 1.22.0)  
+**Scan date:** 2026-09-30 (menu contract re-checked for 1.23.0)  
 **Mode:** full (label + purpose refresh)  
 **Copied / re-checked:** 13 live copied · 2 re-checked (`menu`/`main` now routed) · 1 not-yet-wired  
 

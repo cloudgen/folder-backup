@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.12.0)  
+**Status**: Active (Version 1.12.1)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -88,7 +88,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 | **Diagnostics** | `version`, `about`, `help` |
 | **Test-purpose** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
 
-Ship unit `app_help` lists operational work under **Work commands:** and grant-emit testers under **Grant and draft setup (tests and review):** (AC-9). Tokens are listed.
+Ship unit `app_help` lists operational work under **Work commands:** and grant-emit testers under **Grant and draft setup (tests and review):** when `APP_LANG=en` (AC-9). Other codes translate those headings and keep the same split. Tokens stay Latin.
 
 In JSON mode, help **MUST NOT** dump long human text; return a short structured success/note object.
 
@@ -227,7 +227,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | AC-6 | `submit-sudoer-request` is Type 0, routed, listed in help; does not write `/etc` or create inbound |
 | AC-7 | `generate-sudoer-request` is Type 0, routed, listed in help; independent of submit; dest is invoking-user readable; does not write `/etc` or inbound |
 | AC-8 | `menu` and `main` are routed and listed in help; interactive empty argv opens the same boards (`requirement-shell-cli-default-interaction`) |
-| AC-9 | Help lists test-purpose `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` **apart** from operational verbs; those three are **not** on any numbered board. **have** (`app_help` splits **Work commands** vs **Grant and draft setup**) |
+| AC-9 | Help lists test-purpose `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` **apart** from operational verbs; those three are **not** on any numbered board. English headings `Work commands:` and `Grant and draft setup (tests and review):` stay exact. Other codes translate the headings and keep the split. **have** |
 | AC-10 | Five grant/draft setup verbs remain routed live CLI commands; operational submit and remove are sudoers rows **72** and **75**; `sudoers` is **not** a dispatcher token |
 
 ---
@@ -281,6 +281,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.10.1 | Named `menu` and `self-management` off a terminal stop. They do not print help. |
 | 2026-09-30 | Active 1.11.0 | Sudoers board is front **7**. Printed rows **72** and **75**. Reserved **71** / **73** / **74**. |
 | 2026-09-30 | Active 1.12.0 | Front **6** is language. `language` is not dispatched. |
+| 2026-09-30 | Active 1.12.1 | English help headings in AC-9 stay exact. Other codes translate those headings and keep the split. |
 
 ---
 

@@ -699,6 +699,44 @@ run_test_cli() {
     assert_contains "TP-CLI-24 English help still says Usage" "$_out" "Usage:"
     assert_contains "TP-CLI-24 English help names Japanese" "$_out" "67 Japanese"
     assert_contains "TP-CLI-24 English help names Korean" "$_out" "68 Korean"
-    unset _out _ec _lang _mode
+    _out=$(FOLDER_BACKUP_LANG=ja sh "${SCRIPT}" help 2>&1)
+    assert_contains "TP-CLI-24 Japanese work heading" "$_out" "作業コマンド:"
+    assert_contains "TP-CLI-24 Japanese grant heading" "$_out" "認可と下書き（試験と確認）:"
+    assert_contains "TP-CLI-24 Japanese help keeps backup" "$_out" "backup"
+    assert_not_contains "TP-CLI-24 Japanese help has no Work commands" "$_out" "Work commands:"
+    assert_not_contains "TP-CLI-24 Japanese help has no Grant heading" "$_out" "Grant and draft setup (tests and review):"
+    assert_not_contains "TP-CLI-24 Japanese help has no Global Options" "$_out" "Global Options:"
+    assert_not_contains "TP-CLI-24 Japanese help has no Environment heading" "$_out" "Environment:"
+    assert_not_contains "TP-CLI-24 Japanese help has no Examples heading" "$_out" "Examples:"
+    assert_not_contains "TP-CLI-24 Japanese help has no Machine-readable JSON" "$_out" "Machine-readable JSON"
+    assert_not_contains "TP-CLI-24 Japanese help has no you can read" "$_out" "you can read without sudo"
+    _out=$(FOLDER_BACKUP_LANG=ja sh "${SCRIPT}" about 2>/dev/null)
+    assert_contains "TP-CLI-24 Japanese useful heading" "$_out" "便利なコマンド:"
+    assert_contains "TP-CLI-24 Japanese preferred cache label" "$_out" "キャッシュフォルダ（優先）"
+    assert_not_contains "TP-CLI-24 Japanese about has no Useful commands" "$_out" "Useful commands:"
+    assert_not_contains "TP-CLI-24 Japanese about has no English preferred" "$_out" "Cache folder (preferred):"
+    assert_not_contains "TP-CLI-24 Japanese about has no Machine-readable output" "$_out" "Machine-readable output"
+    _out=$(FOLDER_BACKUP_LANG=ja sh "${SCRIPT}" about --json 2>/dev/null)
+    assert_contains "TP-CLI-24 Japanese JSON about keeps cache_used" "$_out" "cache_used"
+    _out=$(FOLDER_BACKUP_LANG=ja sh "${SCRIPT}" version 2>&1)
+    assert_contains "TP-CLI-24 Japanese version stays English" "$_out" "folder-backup version "
+    _out=$(FOLDER_BACKUP_LANG=ja sh "${SCRIPT}" help --json 2>/dev/null)
+    assert_contains "TP-CLI-24 Japanese JSON help message" "$_out" "説明は人が読むモードにあります"
+    assert_not_contains "TP-CLI-24 Japanese JSON help is not the English message" "$_out" "Help text available"
+    _out=$(FOLDER_BACKUP_LANG=ko sh "${SCRIPT}" about 2>/dev/null)
+    assert_contains "TP-CLI-24 Korean useful heading" "$_out" "유용한 명령:"
+    _out=$(FOLDER_BACKUP_LANG=zh-Hant sh "${SCRIPT}" help 2>&1)
+    assert_contains "TP-CLI-24 Traditional Chinese work heading" "$_out" "工作指令："
+    _out=$(FOLDER_BACKUP_LANG=zh-Hans sh "${SCRIPT}" help 2>&1)
+    assert_contains "TP-CLI-24 Simplified Chinese work heading" "$_out" "工作命令："
+    _out=$(FOLDER_BACKUP_LANG=es sh "${SCRIPT}" help 2>&1)
+    assert_contains "TP-CLI-24 Spanish work heading" "$_out" "Comandos de trabajo:"
+    _out=$(FOLDER_BACKUP_LANG=fr sh "${SCRIPT}" help 2>&1)
+    assert_contains "TP-CLI-24 French work heading" "$_out" "Commandes de travail :"
+    _out=$(FOLDER_BACKUP_LANG=de sh "${SCRIPT}" help 2>&1)
+    assert_contains "TP-CLI-24 German work heading" "$_out" "Arbeitsbefehle:"
+    _body=$(awk '/^app_menu_text\(\)/{p=1} /^app_cmd_menu_language\(\)/{p=0} p' "${SCRIPT}" | tr '[:upper:]' '[:lower:]')
+    assert_not_contains "TP-CLI-24 app_menu_text has no read" "${_body}" "read"
+    unset _out _ec _lang _mode _body
     ci_cleanup_env
 }

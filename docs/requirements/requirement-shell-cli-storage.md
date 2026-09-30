@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-storage.md  
-**Status**: Active (Version 1.5.0)  
+**Status**: Active (Version 1.5.1)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-storage`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -159,7 +159,7 @@ tmp="${EFFECTIVE_STORAGE_DIR}/${APP_NAME}.$$"
 | Surface | Requirement |
 |---------|-------------|
 | `app_main` | Resolve once early: `EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)`; `PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)`; export `EFFECTIVE_STORAGE_DIR`, `STORAGE_DIR`, `PERSISTENT_STORAGE_DIR`, `TMPDIR` (`TMPDIR` = cache root; `STORAGE_DIR` = 1st fallback) |
-| `app_about` human | **MUST** print **`Cache folder used:`** then the live directory; **`Cache folder (preferred):`** then this host’s preferred path; **`Cache folder (1st fallback):`** then the 1st fallback; **`Cache folder (2nd fallback):`** only when this host has a 2nd fallback; **`Persistence storage:`** then `${HOME}/.local/${APP_NAME}`. Linux sample below. **MUST NOT** label cache lines **Storage (effective)**, **Storage (fallback)**, or **Cache folder (live)**. **MUST NOT** warn or error when the used directory is a fallback |
+| `app_about` human | When `APP_LANG=en`, **MUST** print **`Cache folder used:`** then the live directory; **`Cache folder (preferred):`** then this host’s preferred path; **`Cache folder (1st fallback):`** then the 1st fallback; **`Cache folder (2nd fallback):`** only when this host has a 2nd fallback; **`Persistence storage:`** then `${HOME}/.local/${APP_NAME}`. Those English labels stay exact, including trailing spaces. The other seven codes translate the human labels (`requirement-shell-cli-language`). Linux sample below is the English form. **MUST NOT** label cache lines **Storage (effective)**, **Storage (fallback)**, or **Cache folder (live)**. **MUST NOT** warn or error when the used directory is a fallback |
 | `app_about` JSON | **MUST** include `cache_used`, `cache_preferred`, `cache_fallback` (1st), `cache_fallback_2` (2nd, empty string when the host has none), `persistence_storage`, and the live chosen cache root as `effective_storage` (same value as `cache_used`; `storage_dir` = 1st fallback). **MUST NOT** include `CHECKSUM` |
 | Domain `backup` | Stage archives under the live **cache** root; clean up on exit |
 
@@ -252,7 +252,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 13. Accept a cache leaf this login does not own, or leave a chosen leaf group- or world-accessible.  
 14. Put backup staging in persistence by default.  
 15. Strip the **Under command line for normal user only** section, or enable admin privilege / a dedicated system user from the storage helpers.
-16. Put the menu-language leaf in the cache folder or under `/var/backup`. That leaf is `${HOME}/.local/${APP_NAME}/language` (mode **0600**). Codes and copy are `requirement-shell-cli-language`. English `about` still prints `Cache folder used:` when `APP_LANG=en`.
+16. Put the menu-language leaf in the cache folder or under `/var/backup`. That leaf is `${HOME}/.local/${APP_NAME}/language` (mode **0600**). Codes and copy are `requirement-shell-cli-language`. English `about` prints `Cache folder used:` when `APP_LANG=en`. The other seven codes translate that human label. JSON `cache_used` stays the English field name.
 
 **Violating this rule is a critical storage isolation regression.**
 
@@ -312,6 +312,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-27 | Active 1.4.0 | Per-login per-process cache leaves. Linux shm → tmp → `${HOME}/.cache`. Git Bash tmp → AppData Local Temp. Mac tmp → Library/Caches → `${HOME}/cache`. Silent tier miss. `about` prints used / preferred / 1st / 2nd. JSON `persistence_storage` |
 | 2026-09-30 | Active 1.4.1 | Same leaves and about lines. `FOLDER_BACKUP_CACHE_HOST` / `FOLDER_BACKUP_CACHE_SKIP` and `SELFMANAGED_CACHE_HOST` / `SELFMANAGED_CACHE_SKIP` are both accepted. |
 | 2026-09-30 | Active 1.5.0 | Persistence leaf `language` (mode 0600). Not cache. Not `/var/backup`. English about still prints `Cache folder used:` when `APP_LANG=en`. |
+| 2026-09-30 | Active 1.5.1 | The other seven codes translate the human cache and persistence labels. JSON field names stay English. |
 
 ---
 

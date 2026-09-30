@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.23.0] - 2026-09-30
+
+### Changed
+
+- **Human help and human about follow the display language.** The eight codes stay English, Traditional Chinese, Spanish, French, German, Simplified Chinese, Japanese, and Korean. Section headings and the prose after command names follow that code. Command tokens, flags, paths, and environment names stay Latin. JSON `about` and `folder-backup version` stay English. Operational command output stays English.
+- **Suite.** `sh tests/run.sh`: PASS=596 FAIL=0 SKIP=2. Proof **TP-CLI-24**.
+- Law: **requirement-shell-cli-language** **1.1.0**, **requirement-shell-cli-interface** **1.12.1**, **requirement-shell-cli-storage** **1.5.1**, **requirement-domain-folder-backup** **1.6.10**.
+
 ## [1.22.0] - 2026-09-30
 
 ### Added

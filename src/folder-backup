@@ -27,7 +27,7 @@
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.22.0"
+# VERSION: hard-assign VERSION="1.23.0"
 # SCRIPT_URL: composed from REPO_USER / REPO_NAME / SCRIPT_RELPATH (selfmanaged channel).
 #
 # =============================================================================
@@ -45,8 +45,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered boards.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.22.0"
-: "${VERSION:=1.22.0}"
+VERSION="1.23.0"
+: "${VERSION:=1.23.0}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -356,7 +356,7 @@ out_menu_choice() {
 # =============================================================================
 util_app_ident() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.22.0}"
+    : "${VERSION:=1.23.0}"
     : "${TTY:=0}"
     : "${JSON:=0}"
     if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
@@ -2952,8 +2952,9 @@ prompt_yes_no() {
 # Lessons Learned (CIAO Reflection):
 # 2026-09-27: about names Cache folder used / preferred / 1st / 2nd and
 #             Persistence storage. A fallback tier is not a warning.
+# 2026-09-30: human about follows APP_LANG. JSON fields stay English.
 #
-# Last updated: 2026-09-27
+# Last updated: 2026-09-30
 # =============================================================================
 
 # =============================================================================
@@ -3005,7 +3006,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.22.0}"
+    : "${VERSION:=1.23.0}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"
@@ -3132,78 +3133,104 @@ app_about() {
     out_info "$(util_app_ident) — $(app_menu_text about_title)"
     out_empty_line
     if [ "${_installed}" = "true" ]; then
-        out_success "${APP_NAME} is properly installed."
+        out_success "${APP_NAME} $(app_menu_text about_ok)"
     else
-        out_warn "${APP_NAME} is NOT installed in a managed bin path."
-        out_info "   Recommended: ${APP_NAME} install   (local copy → ${USER_BIN}/${APP_NAME})"
+        out_warn "${APP_NAME} $(app_menu_text about_not_ok)"
+        out_info "   $(app_menu_text about_recommend_a)${APP_NAME} $(app_menu_text about_recommend_b)${USER_BIN}/${APP_NAME})"
     fi
     out_empty_line
-    out_info "Global install  (${GLOBAL_BIN}/${APP_NAME}):   ${_global_ver}"
-    out_info "Local install   (${USER_BIN}/${APP_NAME}):    ${_local_ver}"
+    _gv_show="${_global_ver}"
+    case "${_global_ver}" in
+        "not found") _gv_show=$(app_menu_text about_word_missing) ;;
+        unknown) _gv_show=$(app_menu_text about_word_unknown) ;;
+    esac
+    _lv_show="${_local_ver}"
+    case "${_local_ver}" in
+        "not found") _lv_show=$(app_menu_text about_word_missing) ;;
+        unknown) _lv_show=$(app_menu_text about_word_unknown) ;;
+    esac
+    out_info "$(app_menu_text about_global_a)(${GLOBAL_BIN}/${APP_NAME}):   ${_gv_show}"
+    out_info "$(app_menu_text about_local_a)(${USER_BIN}/${APP_NAME}):    ${_lv_show}"
     _tier=$(fb_sudoers_trust_tier)
-    out_info "Sudoers trust tier: ${_tier}  (production requires global; local-only = test mode)"
+    out_info "$(app_menu_text about_tier_a)${_tier}  $(app_menu_text about_tier_b)"
     out_empty_line
-    out_info "Repository:        ${REPO_USER}/${REPO_NAME}"
+    out_info "$(app_menu_text about_repo)${REPO_USER}/${REPO_NAME}"
     if [ -n "${SCRIPT_URL}" ]; then
-        out_info "Install channel:   ${SCRIPT_URL}"
+        out_info "$(app_menu_text about_channel)${SCRIPT_URL}"
     else
-        out_info "Install channel:   (empty — local install only)"
+        out_info "$(app_menu_text about_channel)$(app_menu_text about_channel_empty)"
     fi
     out_empty_line
-    out_info "Current user:      ${_user}"
+    out_info "$(app_menu_text about_user)${_user}"
     if [ "$(id -u)" -eq 0 ]; then
-        out_success "Execution context: root"
+        out_success "$(app_menu_text about_exec_root)"
     else
-        out_info "Execution context: normal user (Type 0 + narrow Type 1 deposit)"
+        out_info "$(app_menu_text about_exec_user)"
     fi
     out_empty_line
-    out_info "Current shell:     ${_shell}"
+    _sh_show="${_shell}"
+    if [ "${_shell}" = "unknown" ]; then
+        _sh_show=$(app_menu_text about_word_unknown)
+    fi
+    out_info "$(app_menu_text about_shell)${_sh_show}"
     if [ "${TTY:-0}" -eq 1 ]; then
-        out_info "TTY / Interactive: yes"
+        out_info "$(app_menu_text about_tty_yes)"
     else
-        out_info "TTY / Interactive: no"
+        out_info "$(app_menu_text about_tty_no)"
     fi
     out_empty_line
     out_info "$(app_menu_text cache_used_label)${EFFECTIVE_STORAGE_DIR}"
-    out_info "Cache folder (preferred): ${_cache_pref}"
-    out_info "Cache folder (1st fallback): ${_cache_fb}"
+    out_info "$(app_menu_text about_cache_pref)${_cache_pref}"
+    out_info "$(app_menu_text about_cache_fb1)${_cache_fb}"
     if [ -n "${_cache_fb2}" ]; then
-        out_info "Cache folder (2nd fallback): ${_cache_fb2}"
+        out_info "$(app_menu_text about_cache_fb2)${_cache_fb2}"
     fi
-    out_info "Persistence storage:      ${PERSISTENT_STORAGE_DIR}"
+    out_info "$(app_menu_text about_persist)${PERSISTENT_STORAGE_DIR}"
     out_empty_line
-    out_info "Backup root:       ${BACKUP_ROOT}"
-    out_info "Backup notation:   ${BACKUP_NOTATION}"
-    out_info "Deposit directory: ${BACKUP_ROOT}/${BACKUP_NOTATION}"
-    out_info "Sudo deposit:      ${_sudo_deposit}"
-    out_info "sudoer-cli:        ${_sudoer_cli}"
-    out_info "sudoer-adm:        ${_sudoer_adm}"
+    out_info "$(app_menu_text about_backup_root)${BACKUP_ROOT}"
+    out_info "$(app_menu_text about_notation)${BACKUP_NOTATION}"
+    out_info "$(app_menu_text about_deposit)${BACKUP_ROOT}/${BACKUP_NOTATION}"
+    out_info "$(app_menu_text about_sudo_dep)${_sudo_deposit}"
+    out_info "$(app_menu_text about_scli)${_sudoer_cli}"
+    out_info "$(app_menu_text about_sadm)${_sudoer_adm}"
     if [ "${_sudoer_inbound}" = "not_found" ]; then
-        out_info "sudoer inbound:    not_found (preferred ${SUDOER_PUBLIC_ROOT:-/var/sudoer-cli}/sudoer-request)"
+        out_info "$(app_menu_text about_inbound)not_found$(app_menu_text about_pref_open)${SUDOER_PUBLIC_ROOT:-/var/sudoer-cli}/sudoer-request)"
     else
-        out_info "sudoer inbound:    ${_sudoer_inbound} (writable=${_sudoer_inbound_writable})"
+        out_info "$(app_menu_text about_inbound)${_sudoer_inbound}$(app_menu_text about_writable_open)${_sudoer_inbound_writable})"
     fi
-    out_info "Retention daily:   max $(fb_positive_int_or_default "${MAX_DAILY_BACKUPS}" 5) per basename per day (MAX_DAILY_BACKUPS)"
-    out_info "Retention total:   max $(fb_positive_int_or_default "${MAX_TOTAL_BACKUPS}" 30) per basename (MAX_TOTAL_BACKUPS)"
+    out_info "$(app_menu_text about_daily_a)$(fb_positive_int_or_default "${MAX_DAILY_BACKUPS}" 5)$(app_menu_text about_daily_b)"
+    out_info "$(app_menu_text about_total_a)$(fb_positive_int_or_default "${MAX_TOTAL_BACKUPS}" 30)$(app_menu_text about_total_b)"
     _proot=$(util_resolve_projects_root 2>/dev/null || echo "")
-    out_info "Restore default host: ${RESTORE_HOST_DEFAULT} (reverse of ram-drive-first)"
-    out_info "Projects root (hard-disk): ${_proot:-unset — set PROJECTS_ROOT}"
-    out_info "RAM root:          ${RAM_ROOT}"
+    if [ -z "${_proot}" ]; then
+        _proot=$(app_menu_text about_projects_unset)
+    fi
+    out_info "$(app_menu_text about_restore_a)${RESTORE_HOST_DEFAULT}$(app_menu_text about_restore_b)"
+    out_info "$(app_menu_text about_projects_a)${_proot}"
+    out_info "$(app_menu_text about_ram)${RAM_ROOT}"
     out_empty_line
-    out_info "Useful commands:"
-    out_info "   ${APP_NAME} help            → Full usage"
-    out_info "   ${APP_NAME} install         → Local install to ~/.local/bin"
-    out_info "   ${APP_NAME} print-sudoers   → Sudoers fragment for admin"
-    out_info "   ${APP_NAME} generate-sudoer-request → Write a local JSON grant you can verify"
-    out_info "   ${APP_NAME} submit-sudoer-request → JSON request into /var/sudoer-cli/sudoer-request"
-    out_info "   ${APP_NAME} backup <dir>    → Archive + deposit + retention prune"
-    out_info "   ${APP_NAME} restore <name>  → Restore archive (default dest: hard-disk)"
-    out_info "   ${APP_NAME} --json          → Machine-readable output"
+    out_info "$(app_menu_text about_useful)"
+    out_info "   ${APP_NAME} help            → $(app_menu_text about_cmd_help)"
+    out_info "   ${APP_NAME} install         → $(app_menu_text about_cmd_install)"
+    out_info "   ${APP_NAME} print-sudoers   → $(app_menu_text about_cmd_print)"
+    out_info "   ${APP_NAME} generate-sudoer-request → $(app_menu_text about_cmd_gen)"
+    out_info "   ${APP_NAME} submit-sudoer-request → $(app_menu_text about_cmd_submit)"
+    out_info "   ${APP_NAME} backup <dir>    → $(app_menu_text about_cmd_backup)"
+    out_info "   ${APP_NAME} restore <name>  → $(app_menu_text about_cmd_restore)"
+    case "${APP_LANG:-en}" in
+        zh-Hant) out_info "   ${APP_NAME} --json          → 機器可處理的輸出" ;;
+        es) out_info "   ${APP_NAME} --json          → salida para máquinas" ;;
+        fr) out_info "   ${APP_NAME} --json          → sortie pour les machines" ;;
+        de) out_info "   ${APP_NAME} --json          → Ausgabe für Maschinen" ;;
+        zh-Hans) out_info "   ${APP_NAME} --json          → 机器可处理的输出" ;;
+        ja) out_info "   ${APP_NAME} --json          → 機械向けの出力" ;;
+        ko) out_info "   ${APP_NAME} --json          → 기계용 출력" ;;
+        *) out_info "   ${APP_NAME} --json          → Machine-readable output" ;;
+    esac
 }
 
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.22.0}"
+    : "${VERSION:=1.23.0}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path
@@ -6182,7 +6209,7 @@ app_lang_save() {
 }
 
 # =============================================================================
-# app_menu_text() - Menu, help heading, and about label for APP_LANG
+# app_menu_text() - Menu copy and human help/about text for APP_LANG
 # =============================================================================
 #
 # Pure data. No input builtin. A missing key prints the key.
@@ -6742,6 +6769,1566 @@ app_menu_text() {
                 *) _mt_out='Cache folder used: ' ;;
             esac
             ;;
+        help_short)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='資料夾封存的備份與還原，以及 self-install、version-check、self-update、self-uninstall' ;;
+                es) _mt_out='Copia de seguridad y restauración de carpetas, con self-install, version-check, self-update y self-uninstall' ;;
+                fr) _mt_out='Sauvegarde et restauration de dossiers, avec self-install, version-check, self-update et self-uninstall' ;;
+                de) _mt_out='Ordner sichern und wiederherstellen, mit self-install, version-check, self-update und self-uninstall' ;;
+                zh-Hans) _mt_out='文件夹归档的备份与还原，以及 self-install、version-check、self-update、self-uninstall' ;;
+                ja) _mt_out='フォルダの保管と復元。self-install、version-check、self-update、self-uninstall を含む' ;;
+                ko) _mt_out='폴더 보관과 복원. self-install, version-check, self-update, self-uninstall 포함' ;;
+                *) _mt_out='Folder archive backup and restore, with self-install, version-check, self-update, and self-uninstall' ;;
+            esac
+            ;;
+        help_desc)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='POSIX /bin/sh 程式：self-install、version-check、self-update、self-uninstall、本機安裝、backup、restore，以及編號板。' ;;
+                es) _mt_out='Programa POSIX /bin/sh: self-install, version-check, self-update, self-uninstall, instalación local, backup, restore y los tableros numerados.' ;;
+                fr) _mt_out='Programme POSIX /bin/sh : self-install, version-check, self-update, self-uninstall, installation locale, backup, restore et les tableaux numérotés.' ;;
+                de) _mt_out='POSIX-/bin/sh-Programm: self-install, version-check, self-update, self-uninstall, lokale Installation, backup, restore und die nummerierten Tafeln.' ;;
+                zh-Hans) _mt_out='POSIX /bin/sh 程序：self-install、version-check、self-update、self-uninstall、本地安装、backup、restore，以及编号板。' ;;
+                ja) _mt_out='POSIX /bin/sh のプログラム：self-install、version-check、self-update、self-uninstall、ローカルなインストール、backup、restore、番号の板。' ;;
+                ko) _mt_out='POSIX /bin/sh 프로그램: self-install, version-check, self-update, self-uninstall, 로컬 설치, backup, restore, 번호판.' ;;
+                *) _mt_out='POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered boards.' ;;
+            esac
+            ;;
+        help_usage_args)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='[命令] [選項]' ;;
+                es) _mt_out='[comando] [opciones]' ;;
+                fr) _mt_out='[commande] [options]' ;;
+                de) _mt_out='[Befehl] [Optionen]' ;;
+                zh-Hans) _mt_out='[命令] [选项]' ;;
+                ja) _mt_out='[コマンド] [オプション]' ;;
+                ko) _mt_out='[명령] [옵션]' ;;
+                *) _mt_out='[command] [options]' ;;
+            esac
+            ;;
+        help_h_self)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='自我管理（完整通道，任何登入）：' ;;
+                es) _mt_out='Autogestión (canal completo, cualquier inicio):' ;;
+                fr) _mt_out='Autogestion (canal complet, toute session) :' ;;
+                de) _mt_out='Selbstverwaltung (voller Kanal, jede Anmeldung):' ;;
+                zh-Hans) _mt_out='自我管理（完整通道，任何登录）：' ;;
+                ja) _mt_out='自己管理（完全なチャネル、どのログインでも）:' ;;
+                ko) _mt_out='자기관리 (전체 채널, 어떤 로그인이든):' ;;
+                *) _mt_out='Self-management (full channel, any login):' ;;
+            esac
+            ;;
+        help_place_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='放置 ' ;;
+                es) _mt_out='Colocar ' ;;
+                fr) _mt_out='Placer ' ;;
+                de) _mt_out='Ablegen: ' ;;
+                zh-Hans) _mt_out='放置 ' ;;
+                ja) _mt_out='配置する ' ;;
+                ko) _mt_out='배치 ' ;;
+                *) _mt_out='Place ' ;;
+            esac
+            ;;
+        help_place_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（當 $0 是這個檔案時複製；管線則下載）' ;;
+                es) _mt_out=' (copiar cuando $0 es este archivo; una tubería descarga)' ;;
+                fr) _mt_out=' (copier quand $0 est ce fichier ; un tube télécharge)' ;;
+                de) _mt_out=' (kopieren, wenn $0 diese Datei ist; eine Pipe lädt herunter)' ;;
+                zh-Hans) _mt_out='（当 $0 是这个文件时复制；管道则下载）' ;;
+                ja) _mt_out='（$0 がこのファイルならコピー。パイプならダウンロード）' ;;
+                ko) _mt_out=' ($0 이 이 파일이면 복사. 파이프이면 다운로드)' ;;
+                *) _mt_out=' (copy when $0 is this file; pipe downloads)' ;;
+            esac
+            ;;
+        help_version_check)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='比較本機與遠端版本（需要 SCRIPT_URL）' ;;
+                es) _mt_out='Comparar la versión local con la remota (necesita SCRIPT_URL)' ;;
+                fr) _mt_out='Comparer la version locale et la version distante (nécessite SCRIPT_URL)' ;;
+                de) _mt_out='Lokale und entfernte Version vergleichen (braucht SCRIPT_URL)' ;;
+                zh-Hans) _mt_out='比较本机与远端版本（需要 SCRIPT_URL）' ;;
+                ja) _mt_out='ローカルと遠隔のバージョンを比べる（SCRIPT_URL が必要）' ;;
+                ko) _mt_out='로컬 버전과 원격 버전을 비교 (SCRIPT_URL 필요)' ;;
+                *) _mt_out='Compare local vs remote version (needs SCRIPT_URL)' ;;
+            esac
+            ;;
+        help_update_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='把 ' ;;
+                es) _mt_out='Actualizar ' ;;
+                fr) _mt_out='Mettre à jour ' ;;
+                de) _mt_out='Aktualisieren: ' ;;
+                zh-Hans) _mt_out='把 ' ;;
+                ja) _mt_out='更新する ' ;;
+                ko) _mt_out='업데이트 ' ;;
+                *) _mt_out='Update ' ;;
+            esac
+            ;;
+        help_update_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out=' 更新到較新的遠端版本' ;;
+                es) _mt_out=' a una versión remota más nueva' ;;
+                fr) _mt_out=' vers une version distante plus récente' ;;
+                de) _mt_out=' auf eine neuere entfernte Version' ;;
+                zh-Hans) _mt_out=' 更新到较新的远端版本' ;;
+                ja) _mt_out=' を新しい遠隔バージョンにする' ;;
+                ko) _mt_out=' 를 더 새로운 원격 버전으로' ;;
+                *) _mt_out=' to a newer remote version' ;;
+            esac
+            ;;
+        help_uninst_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='移除 ' ;;
+                es) _mt_out='Quitar ' ;;
+                fr) _mt_out='Retirer ' ;;
+                de) _mt_out='Entfernen: ' ;;
+                zh-Hans) _mt_out='移除 ' ;;
+                ja) _mt_out='削除する ' ;;
+                ko) _mt_out='제거 ' ;;
+                *) _mt_out='Remove ' ;;
+            esac
+            ;;
+        help_uninst_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（確認或 --force；清理 PATH）' ;;
+                es) _mt_out=' (confirmar o --force; limpieza de PATH)' ;;
+                fr) _mt_out=' (confirmer ou --force ; nettoyage de PATH)' ;;
+                de) _mt_out=' (bestätigen oder --force; PATH aufräumen)' ;;
+                zh-Hans) _mt_out='（确认或 --force；清理 PATH）' ;;
+                ja) _mt_out='（確認するか --force。PATH を片付ける）' ;;
+                ko) _mt_out=' (확인 또는 --force. PATH 정리)' ;;
+                *) _mt_out=' (confirm or --force; PATH cleanup)' ;;
+            esac
+            ;;
+        help_self_mgmt)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='在終端機上是編號的自我管理板（81-87）。沒有終端機就停止：self-management needs a terminal' ;;
+                es) _mt_out='En un terminal, tablero numerado de autogestión (81-87). Sin terminal, se detiene: self-management needs a terminal' ;;
+                fr) _mt_out='Sur un terminal, tableau numéroté d'\''autogestion (81-87). Sans terminal, arrêt : self-management needs a terminal' ;;
+                de) _mt_out='Am Terminal die nummerierte Selbstverwaltungs-Tafel (81-87). Ohne Terminal Stopp: self-management needs a terminal' ;;
+                zh-Hans) _mt_out='在终端上是编号的自我管理板（81-87）。没有终端就停止：self-management needs a terminal' ;;
+                ja) _mt_out='端末では番号付きの自己管理の板（81-87）。端末がなければ停止：self-management needs a terminal' ;;
+                ko) _mt_out='터미널에서는 번호가 있는 자기관리 판 (81-87). 터미널이 없으면 멈춤: self-management needs a terminal' ;;
+                *) _mt_out='On a terminal, numbered self-management board (81-87). Off a terminal, stops: self-management needs a terminal' ;;
+            esac
+            ;;
+        help_h_care)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='安裝與自我維護（你自己的登入）：' ;;
+                es) _mt_out='Instalación y cuidado propio (su propio inicio):' ;;
+                fr) _mt_out='Installation et entretien (votre propre session) :' ;;
+                de) _mt_out='Installation und eigene Pflege (Ihre eigene Anmeldung):' ;;
+                zh-Hans) _mt_out='安装与自我维护（你自己的登录）：' ;;
+                ja) _mt_out='インストールと自己手入れ（自分のログイン）:' ;;
+                ko) _mt_out='설치와 자기 정비 (자신의 로그인):' ;;
+                *) _mt_out='Install and self-care (your own login):' ;;
+            esac
+            ;;
+        help_install_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='以本機複製安裝 ' ;;
+                es) _mt_out='Instalar ' ;;
+                fr) _mt_out='Installer ' ;;
+                de) _mt_out='Installieren: ' ;;
+                zh-Hans) _mt_out='以本地复制安装 ' ;;
+                ja) _mt_out='インストールする ' ;;
+                ko) _mt_out='설치 ' ;;
+                *) _mt_out='Install ' ;;
+            esac
+            ;;
+        help_install_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（root→全域，使用者→~/.local/bin，模式 0755）' ;;
+                es) _mt_out=' por copia local (root→global, usuario→~/.local/bin, modo 0755)' ;;
+                fr) _mt_out=' par copie locale (root→global, utilisateur→~/.local/bin, mode 0755)' ;;
+                de) _mt_out=' per lokaler Kopie (root→global, Benutzer→~/.local/bin, Modus 0755)' ;;
+                zh-Hans) _mt_out='（root→全局，用户→~/.local/bin，模式 0755）' ;;
+                ja) _mt_out='（ローカルなコピー。root→グローバル、ユーザー→~/.local/bin、モード 0755）' ;;
+                ko) _mt_out=' (로컬 복사. root→전역, 사용자→~/.local/bin, 모드 0755)' ;;
+                *) _mt_out=' by local copy (root→global, user→~/.local/bin, mode 0755)' ;;
+            esac
+            ;;
+        help_global_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='強制使用全域路徑（' ;;
+                es) _mt_out='Forzar la ruta global (' ;;
+                fr) _mt_out='Forcer le chemin global (' ;;
+                de) _mt_out='Globalen Pfad erzwingen (' ;;
+                zh-Hans) _mt_out='强制使用全局路径（' ;;
+                ja) _mt_out='グローバルなパスを強制（' ;;
+                ko) _mt_out='전역 경로를 강제 (' ;;
+                *) _mt_out='Force global path (' ;;
+            esac
+            ;;
+        help_global_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='；需要寫入權或 root）' ;;
+                es) _mt_out='; necesita escritura/root)' ;;
+                fr) _mt_out=' ; il faut pouvoir écrire ou être root)' ;;
+                de) _mt_out='; braucht Schreibrecht oder root)' ;;
+                zh-Hans) _mt_out='；需要写入权或 root）' ;;
+                ja) _mt_out='。書き込み権限または root が必要）' ;;
+                ko) _mt_out='; 쓰기 권한 또는 root 필요)' ;;
+                *) _mt_out='; needs write/root)' ;;
+            esac
+            ;;
+        help_uninstall)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='移除受管理的執行檔（確認或 --force）；不是 sudoers' ;;
+                es) _mt_out='Quitar el binario gestionado (confirmar o --force); no es sudoers' ;;
+                fr) _mt_out='Retirer le binaire géré (confirmer ou --force) ; pas sudoers' ;;
+                de) _mt_out='Verwaltete Programmdatei entfernen (bestätigen oder --force); nicht sudoers' ;;
+                zh-Hans) _mt_out='移除受管理的可执行文件（确认或 --force）；不是 sudoers' ;;
+                ja) _mt_out='管理された実行ファイルを消す（確認するか --force）。sudoers ではない' ;;
+                ko) _mt_out='관리되는 실행 파일을 제거 (확인 또는 --force). sudoers 가 아님' ;;
+                *) _mt_out='Remove managed binary (confirm or --force); not sudoers' ;;
+            esac
+            ;;
+        help_where)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='顯示執行中與安裝路徑' ;;
+                es) _mt_out='Mostrar las rutas de ejecución y de instalación' ;;
+                fr) _mt_out='Afficher les chemins d'\''exécution et d'\''installation' ;;
+                de) _mt_out='Laufenden Pfad und Installationspfade zeigen' ;;
+                zh-Hans) _mt_out='显示运行中与安装路径' ;;
+                ja) _mt_out='実行中のパスとインストール先を表示する' ;;
+                ko) _mt_out='실행 중인 경로와 설치 경로를 표시' ;;
+                *) _mt_out='Show running and install paths' ;;
+            esac
+            ;;
+        help_version)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='顯示本機版本' ;;
+                es) _mt_out='Mostrar la versión local' ;;
+                fr) _mt_out='Afficher la version locale' ;;
+                de) _mt_out='Lokale Version zeigen' ;;
+                zh-Hans) _mt_out='显示本机版本' ;;
+                ja) _mt_out='ローカルのバージョンを表示する' ;;
+                ko) _mt_out='로컬 버전을 표시' ;;
+                *) _mt_out='Show local version' ;;
+            esac
+            ;;
+        help_about)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='顯示診斷（含 sudoers 信任層級）' ;;
+                es) _mt_out='Mostrar el diagnóstico (incluido el nivel de confianza sudoers)' ;;
+                fr) _mt_out='Afficher le diagnostic (y compris le niveau de confiance sudoers)' ;;
+                de) _mt_out='Diagnose zeigen (einschließlich sudoers-Vertrauensstufe)' ;;
+                zh-Hans) _mt_out='显示诊断（含 sudoers 信任层级）' ;;
+                ja) _mt_out='診断を表示する（sudoers の信頼段階を含む）' ;;
+                ko) _mt_out='진단을 표시 (sudoers 신뢰 단계 포함)' ;;
+                *) _mt_out='Show diagnostics (incl. sudoers trust tier)' ;;
+            esac
+            ;;
+        help_help)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='顯示這份說明' ;;
+                es) _mt_out='Mostrar esta ayuda' ;;
+                fr) _mt_out='Afficher cette aide' ;;
+                de) _mt_out='Diese Hilfe zeigen' ;;
+                zh-Hans) _mt_out='显示这份说明' ;;
+                ja) _mt_out='この説明を表示する' ;;
+                ko) _mt_out='이 도움말을 표시' ;;
+                *) _mt_out='Show this help' ;;
+            esac
+            ;;
+        help_main)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='與 menu 相同' ;;
+                es) _mt_out='Igual que menu' ;;
+                fr) _mt_out='Identique à menu' ;;
+                de) _mt_out='Gleich wie menu' ;;
+                zh-Hans) _mt_out='与 menu 相同' ;;
+                ja) _mt_out='menu と同じ' ;;
+                ko) _mt_out='menu 와 같음' ;;
+                *) _mt_out='Same as menu' ;;
+            esac
+            ;;
+        help_h_work)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='工作指令：' ;;
+                es) _mt_out='Comandos de trabajo:' ;;
+                fr) _mt_out='Commandes de travail :' ;;
+                de) _mt_out='Arbeitsbefehle:' ;;
+                zh-Hans) _mt_out='工作命令：' ;;
+                ja) _mt_out='作業コマンド:' ;;
+                ko) _mt_out='작업 명령:' ;;
+                *) _mt_out='Work commands:' ;;
+            esac
+            ;;
+        help_backup_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='把資料夾打成 tar.gz → ' ;;
+                es) _mt_out='carpeta tar.gz → ' ;;
+                fr) _mt_out='dossier tar.gz → ' ;;
+                de) _mt_out='Ordner als tar.gz → ' ;;
+                zh-Hans) _mt_out='把文件夹打成 tar.gz → ' ;;
+                ja) _mt_out='フォルダを tar.gz にする → ' ;;
+                ko) _mt_out='폴더를 tar.gz 로 → ' ;;
+                *) _mt_out='tar.gz folder → ' ;;
+            esac
+            ;;
+        help_backup_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='/NAME-YYYYMMDD-N.tar.gz' ;;
+                es) _mt_out='/NAME-YYYYMMDD-N.tar.gz' ;;
+                fr) _mt_out='/NAME-YYYYMMDD-N.tar.gz' ;;
+                de) _mt_out='/NAME-YYYYMMDD-N.tar.gz' ;;
+                zh-Hans) _mt_out='/NAME-YYYYMMDD-N.tar.gz' ;;
+                ja) _mt_out='/NAME-YYYYMMDD-N.tar.gz' ;;
+                ko) _mt_out='/NAME-YYYYMMDD-N.tar.gz' ;;
+                *) _mt_out='/NAME-YYYYMMDD-N.tar.gz' ;;
+            esac
+            ;;
+        help_restore)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='解開封存（預設目的地：硬碟 SSOT）' ;;
+                es) _mt_out='Extraer el archivo (destino por defecto: hard-disk SSOT)' ;;
+                fr) _mt_out='Extraire l'\''archive (destination par défaut : hard-disk SSOT)' ;;
+                de) _mt_out='Archiv auspacken (Zielvorgabe: hard-disk SSOT)' ;;
+                zh-Hans) _mt_out='解开归档（默认目的地：硬盘 SSOT）' ;;
+                ja) _mt_out='アーカイブを展開する（既定の行き先：hard-disk SSOT）' ;;
+                ko) _mt_out='아카이브를 풉니다 (기본 목적지: hard-disk SSOT)' ;;
+                *) _mt_out='Extract archive (default dest: hard-disk SSOT)' ;;
+            esac
+            ;;
+        help_remove_1)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='只移除 project-sudoers-file 草稿（不是主機提權；' ;;
+                es) _mt_out='Quitar solo el borrador project-sudoers-file (no la elevación del equipo;' ;;
+                fr) _mt_out='Retirer seulement le brouillon project-sudoers-file (pas l'\''élévation de l'\''hôte ;' ;;
+                de) _mt_out='Nur den Entwurf project-sudoers-file entfernen (nicht die Host-Erhöhung;' ;;
+                zh-Hans) _mt_out='只移除 project-sudoers-file 草稿（不是主机提权；' ;;
+                ja) _mt_out='project-sudoers-file の下書きだけを消す（ホストの権限上げではない。' ;;
+                ko) _mt_out='project-sudoers-file 초안만 제거 (호스트 권한 상승이 아님.' ;;
+                *) _mt_out='Remove project-sudoers-file draft only (not host elev;' ;;
+            esac
+            ;;
+        help_remove_2)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='有多份草稿時列出並讓你選擇；' ;;
+                es) _mt_out='lista los borradores y deja elegir cuando hay varios;' ;;
+                fr) _mt_out='liste les brouillons et laisse choisir s'\''il y en a plusieurs ;' ;;
+                de) _mt_out='listet Entwürfe und lässt wählen, wenn es mehrere gibt;' ;;
+                zh-Hans) _mt_out='有多份草稿时列出并让你选择；' ;;
+                ja) _mt_out='下書きが複数なら一覧から選ぶ。' ;;
+                ko) _mt_out='초안이 여러 개이면 목록에서 고른다.' ;;
+                *) _mt_out='lists drafts and lets you choose when multiple;' ;;
+            esac
+            ;;
+        help_remove_3)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='確認或 --force；探測 /etc/sudoers.d/，若仍生效則警告）' ;;
+                es) _mt_out='confirmar o --force; sondea /etc/sudoers.d/ y avisa si está activo)' ;;
+                fr) _mt_out='confirmer ou --force ; sonde /etc/sudoers.d/ et avertit si c'\''est actif)' ;;
+                de) _mt_out='bestätigen oder --force; prüft /etc/sudoers.d/ und warnt, wenn aktiv)' ;;
+                zh-Hans) _mt_out='确认或 --force；探测 /etc/sudoers.d/，若仍生效则警告）' ;;
+                ja) _mt_out='確認するか --force。/etc/sudoers.d/ を調べ、有効なら警告）' ;;
+                ko) _mt_out='확인 또는 --force. /etc/sudoers.d/ 를 살피고, 활성 상태이면 경고)' ;;
+                *) _mt_out='confirm or --force; probes /etc/sudoers.d/ and warns if active)' ;;
+            esac
+            ;;
+        help_submit_1)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='偵測 sudoer-cli + sudoer-adm；同層程式寫入' ;;
+                es) _mt_out='Detectar sudoer-cli + sudoer-adm; el programa hermano escribe' ;;
+                fr) _mt_out='Détecter sudoer-cli + sudoer-adm ; le programme voisin écrit' ;;
+                de) _mt_out='sudoer-cli + sudoer-adm erkennen; das Nachbarprogramm schreibt' ;;
+                zh-Hans) _mt_out='侦测 sudoer-cli + sudoer-adm；同层程序写入' ;;
+                ja) _mt_out='sudoer-cli と sudoer-adm を見つける。隣のプログラムが書く' ;;
+                ko) _mt_out='sudoer-cli 와 sudoer-adm 을 찾는다. 이웃 프로그램이 쓴다' ;;
+                *) _mt_out='Detect sudoer-cli + sudoer-adm; sibling writes' ;;
+            esac
+            ;;
+        help_submit_2)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='JSON 寫入 /var/sudoer-cli/sudoer-request' ;;
+                es) _mt_out='JSON en /var/sudoer-cli/sudoer-request' ;;
+                fr) _mt_out='JSON dans /var/sudoer-cli/sudoer-request' ;;
+                de) _mt_out='JSON nach /var/sudoer-cli/sudoer-request' ;;
+                zh-Hans) _mt_out='JSON 写入 /var/sudoer-cli/sudoer-request' ;;
+                ja) _mt_out='JSON を /var/sudoer-cli/sudoer-request へ' ;;
+                ko) _mt_out='JSON 을 /var/sudoer-cli/sudoer-request 에' ;;
+                *) _mt_out='JSON into /var/sudoer-cli/sudoer-request' ;;
+            esac
+            ;;
+        help_submit_3)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='若這個使用者的 /etc/sudoers.d/' ;;
+                es) _mt_out='action=update si existe /etc/sudoers.d/ de este usuario ' ;;
+                fr) _mt_out='action=update si /etc/sudoers.d/ de cet utilisateur ' ;;
+                de) _mt_out='action=update, wenn /etc/sudoers.d/ dieses Benutzers ' ;;
+                zh-Hans) _mt_out='若这个用户的 /etc/sudoers.d/' ;;
+                ja) _mt_out='このユーザーの /etc/sudoers.d/' ;;
+                ko) _mt_out='이 사용자의 /etc/sudoers.d/' ;;
+                *) _mt_out='action=update if this user'\''s /etc/sudoers.d/' ;;
+            esac
+            ;;
+        help_submit_4a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（或舊名 ' ;;
+                es) _mt_out='(o el nombre antiguo ' ;;
+                fr) _mt_out='(ou l'\''ancien nom ' ;;
+                de) _mt_out='(oder der alte Name ' ;;
+                zh-Hans) _mt_out='（或旧名 ' ;;
+                ja) _mt_out='（または古い名前 ' ;;
+                ko) _mt_out='(또는 예전 이름 ' ;;
+                *) _mt_out='(or legacy ' ;;
+            esac
+            ;;
+        help_submit_4b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='）存在則 action=update；否則 add' ;;
+                es) _mt_out=') existe; si no, add' ;;
+                fr) _mt_out=') existe ; sinon add' ;;
+                de) _mt_out=') existiert; sonst add' ;;
+                zh-Hans) _mt_out='）存在则 action=update；否则 add' ;;
+                ja) _mt_out=' があれば action=update。なければ add' ;;
+                ko) _mt_out=' 이 있으면 action=update. 없으면 add' ;;
+                *) _mt_out=') exists; else add' ;;
+            esac
+            ;;
+        help_submit_5)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（不寫入 /etc；不建立 inbound 目錄）' ;;
+                es) _mt_out='(no escribe /etc; no crea el directorio inbound)' ;;
+                fr) _mt_out='(n'\''écrit pas /etc ; ne crée pas le répertoire inbound)' ;;
+                de) _mt_out='(schreibt nicht nach /etc; legt inbound nicht an)' ;;
+                zh-Hans) _mt_out='（不写入 /etc；不建立 inbound 目录）' ;;
+                ja) _mt_out='（/etc には書かない。inbound のディレクトリも作らない）' ;;
+                ko) _mt_out='(/etc 에 쓰지 않음. inbound 디렉터리도 만들지 않음)' ;;
+                *) _mt_out='(does not write /etc; does not mkdir inbound)' ;;
+            esac
+            ;;
+        help_submit_6)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='建議：先 generate-sudoer-request，檢視，再送出檔案' ;;
+                es) _mt_out='Preferible: generate-sudoer-request, revisar, luego enviar el archivo' ;;
+                fr) _mt_out='Préférer : generate-sudoer-request, relire, puis envoyer le fichier' ;;
+                de) _mt_out='Besser: generate-sudoer-request, prüfen, dann die Datei abgeben' ;;
+                zh-Hans) _mt_out='建议：先 generate-sudoer-request，查看，再送出文件' ;;
+                ja) _mt_out='推奨：generate-sudoer-request、確認、その後ファイルを提出' ;;
+                ko) _mt_out='권함: generate-sudoer-request, 확인, 그다음 파일 제출' ;;
+                *) _mt_out='Prefer: generate-sudoer-request, review, then submit file' ;;
+            esac
+            ;;
+        help_h_grant)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='授權與草稿設定（測試與檢視）：' ;;
+                es) _mt_out='Concesión y borradores (pruebas y revisión):' ;;
+                fr) _mt_out='Autorisation et brouillons (essais et relecture) :' ;;
+                de) _mt_out='Freigabe und Entwürfe (Tests und Prüfung):' ;;
+                zh-Hans) _mt_out='授权与草稿设置（测试与查看）：' ;;
+                ja) _mt_out='認可と下書き（試験と確認）:' ;;
+                ko) _mt_out='허가와 초안 (시험과 검토):' ;;
+                *) _mt_out='Grant and draft setup (tests and review):' ;;
+            esac
+            ;;
+        help_print_1)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='為管理員產生 project-sudoers-file（草稿）' ;;
+                es) _mt_out='Emitir project-sudoers-file (borrador) para el administrador' ;;
+                fr) _mt_out='Émettre project-sudoers-file (brouillon) pour l'\''administrateur' ;;
+                de) _mt_out='project-sudoers-file (Entwurf) für die Verwaltung ausgeben' ;;
+                zh-Hans) _mt_out='为管理员产生 project-sudoers-file（草稿）' ;;
+                ja) _mt_out='管理者向けに project-sudoers-file（下書き）を出す' ;;
+                ko) _mt_out='관리자용 project-sudoers-file (초안) 을 출력' ;;
+                *) _mt_out='Emit project-sudoers-file (draft) for admin' ;;
+            esac
+            ;;
+        help_print_2)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（test_local/unmanaged 需要 --allow-test-local）；' ;;
+                es) _mt_out='(test_local/unmanaged necesita --allow-test-local);' ;;
+                fr) _mt_out='(test_local/unmanaged exige --allow-test-local) ;' ;;
+                de) _mt_out='(test_local/unmanaged braucht --allow-test-local);' ;;
+                zh-Hans) _mt_out='（test_local/unmanaged 需要 --allow-test-local）；' ;;
+                ja) _mt_out='（test_local/unmanaged は --allow-test-local が必要）。' ;;
+                ko) _mt_out='(test_local/unmanaged 는 --allow-test-local 필요);' ;;
+                *) _mt_out='(test_local/unmanaged needs --allow-test-local);' ;;
+            esac
+            ;;
+        help_print_3a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='預設：~/.config/' ;;
+                es) _mt_out='predeterminado: ~/.config/' ;;
+                fr) _mt_out='défaut : ~/.config/' ;;
+                de) _mt_out='Vorgabe: ~/.config/' ;;
+                zh-Hans) _mt_out='默认：~/.config/' ;;
+                ja) _mt_out='既定：~/.config/' ;;
+                ko) _mt_out='기본값: ~/.config/' ;;
+                *) _mt_out='default: ~/.config/' ;;
+            esac
+            ;;
+        help_print_3b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='/sudoers.fragment-<user>' ;;
+                es) _mt_out='/sudoers.fragment-<user>' ;;
+                fr) _mt_out='/sudoers.fragment-<user>' ;;
+                de) _mt_out='/sudoers.fragment-<user>' ;;
+                zh-Hans) _mt_out='/sudoers.fragment-<user>' ;;
+                ja) _mt_out='/sudoers.fragment-<user>' ;;
+                ko) _mt_out='/sudoers.fragment-<user>' ;;
+                *) _mt_out='/sudoers.fragment-<user>' ;;
+            esac
+            ;;
+        help_script_1)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='寫出管理員腳本（/dev/shm 或暫存）以 install|uninstall|replace' ;;
+                es) _mt_out='Escribir un script de administración (/dev/shm o temp) para install|uninstall|replace' ;;
+                fr) _mt_out='Écrire un script d'\''administration (/dev/shm ou temp) pour install|uninstall|replace' ;;
+                de) _mt_out='Verwaltungsskript schreiben (/dev/shm oder temp) für install|uninstall|replace' ;;
+                zh-Hans) _mt_out='写出管理员脚本（/dev/shm 或临时）以 install|uninstall|replace' ;;
+                ja) _mt_out='管理者スクリプトを書く（/dev/shm または一時）。install|uninstall|replace' ;;
+                ko) _mt_out='관리자 스크립트를 씀 (/dev/shm 또는 임시). install|uninstall|replace' ;;
+                *) _mt_out='Write admin script (/dev/shm or temp) to install|uninstall|replace' ;;
+            esac
+            ;;
+        help_script_2a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='每位使用者的片段 /etc/sudoers.d/' ;;
+                es) _mt_out='fragmento por usuario /etc/sudoers.d/' ;;
+                fr) _mt_out='fragment par utilisateur /etc/sudoers.d/' ;;
+                de) _mt_out='Fragment je Benutzer /etc/sudoers.d/' ;;
+                zh-Hans) _mt_out='每位用户的片段 /etc/sudoers.d/' ;;
+                ja) _mt_out='ユーザーごとの断片 /etc/sudoers.d/' ;;
+                ko) _mt_out='사용자별 조각 /etc/sudoers.d/' ;;
+                *) _mt_out='per-user fragment /etc/sudoers.d/' ;;
+            esac
+            ;;
+        help_script_2b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='-<user>（以 sudo 執行）' ;;
+                es) _mt_out='-<user> (ejecutar con sudo)' ;;
+                fr) _mt_out='-<user> (lancer avec sudo)' ;;
+                de) _mt_out='-<user> (mit sudo starten)' ;;
+                zh-Hans) _mt_out='-<user>（以 sudo 运行）' ;;
+                ja) _mt_out='-<user>（sudo で実行）' ;;
+                ko) _mt_out='-<user> (sudo 로 실행)' ;;
+                *) _mt_out='-<user> (run with sudo)' ;;
+            esac
+            ;;
+        help_gen_1)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='把 JSON sudoer 檔（精簡，兩個動詞）寫到目的地' ;;
+                es) _mt_out='Escribir un archivo JSON sudoer (compacto, ambos verbos) en un destino' ;;
+                fr) _mt_out='Écrire un fichier JSON sudoer (compact, les deux verbes) vers une destination' ;;
+                de) _mt_out='Eine JSON-sudoer-Datei schreiben (kompakt, beide Verben) an ein Ziel' ;;
+                zh-Hans) _mt_out='把 JSON sudoer 文件（精简，两个动词）写到目的地' ;;
+                ja) _mt_out='JSON の sudoer ファイル（コンパクト、両方の動詞）を行き先に書く' ;;
+                ko) _mt_out='JSON sudoer 파일 (짧게, 두 동사) 을 목적지에 씀' ;;
+                *) _mt_out='Write a JSON sudoer file (compact, both verbs) to a dest' ;;
+            esac
+            ;;
+        help_gen_3a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='預設：~/.config/' ;;
+                es) _mt_out='predeterminado: ~/.config/' ;;
+                fr) _mt_out='défaut : ~/.config/' ;;
+                de) _mt_out='Vorgabe: ~/.config/' ;;
+                zh-Hans) _mt_out='默认：~/.config/' ;;
+                ja) _mt_out='既定：~/.config/' ;;
+                ko) _mt_out='기본값: ~/.config/' ;;
+                *) _mt_out='default: ~/.config/' ;;
+            esac
+            ;;
+        help_gen_3b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='/sudoer-request-<user>.json' ;;
+                es) _mt_out='/sudoer-request-<user>.json' ;;
+                fr) _mt_out='/sudoer-request-<user>.json' ;;
+                de) _mt_out='/sudoer-request-<user>.json' ;;
+                zh-Hans) _mt_out='/sudoer-request-<user>.json' ;;
+                ja) _mt_out='/sudoer-request-<user>.json' ;;
+                ko) _mt_out='/sudoer-request-<user>.json' ;;
+                *) _mt_out='/sudoer-request-<user>.json' ;;
+            esac
+            ;;
+        help_h_options)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='全域選項：' ;;
+                es) _mt_out='Opciones globales:' ;;
+                fr) _mt_out='Options globales :' ;;
+                de) _mt_out='Globale Optionen:' ;;
+                zh-Hans) _mt_out='全局选项：' ;;
+                ja) _mt_out='全体オプション:' ;;
+                ko) _mt_out='전역 옵션:' ;;
+                *) _mt_out='Global Options:' ;;
+            esac
+            ;;
+        help_quiet)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='不顯示 info/success（錯誤與警告仍顯示）' ;;
+                es) _mt_out='Ocultar info/success (los errores y avisos siguen visibles)' ;;
+                fr) _mt_out='Masquer info/success (les erreurs et avertissements restent visibles)' ;;
+                de) _mt_out='info/success unterdrücken (Fehler und Warnungen bleiben sichtbar)' ;;
+                zh-Hans) _mt_out='不显示 info/success（错误与警告仍显示）' ;;
+                ja) _mt_out='info/success を出さない（エラーと警告は出る）' ;;
+                ko) _mt_out='info/success 를 숨김 (오류와 경고는 그대로)' ;;
+                *) _mt_out='Suppress info/success (errors and warnings still shown)' ;;
+            esac
+            ;;
+        help_force)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='強制重裝／跳過移除確認／允許降版／還原到非空目的地' ;;
+                es) _mt_out='Forzar reinstalación / omitir la confirmación de desinstalación / permitir bajar de versión / restaurar en un destino no vacío' ;;
+                fr) _mt_out='Forcer la réinstallation / sauter la confirmation de retrait / permettre une version plus ancienne / restaurer dans une destination non vide' ;;
+                de) _mt_out='Neuinstallation erzwingen / Bestätigung beim Entfernen überspringen / ältere Version erlauben / in ein nicht leeres Ziel wiederherstellen' ;;
+                zh-Hans) _mt_out='强制重装／跳过移除确认／允许降版／还原到非空目的地' ;;
+                ja) _mt_out='再インストールを強制／削除の確認を飛ばす／古いバージョンを許す／空でない行き先へ復元' ;;
+                ko) _mt_out='재설치 강제 / 제거 확인 생략 / 낮은 버전 허용 / 비어 있지 않은 목적지로 복원' ;;
+                *) _mt_out='Force reinstall / skip uninstall confirm / allow downgrade / restore into non-empty dest' ;;
+            esac
+            ;;
+        help_opt_global)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='安裝到 GLOBAL_BIN（正式提權路徑）' ;;
+                es) _mt_out='Instalar en GLOBAL_BIN (ruta de elevación de producción)' ;;
+                fr) _mt_out='Installer dans GLOBAL_BIN (chemin d'\''élévation de production)' ;;
+                de) _mt_out='Nach GLOBAL_BIN installieren (Produktionspfad für die Erhöhung)' ;;
+                zh-Hans) _mt_out='安装到 GLOBAL_BIN（正式提权路径）' ;;
+                ja) _mt_out='GLOBAL_BIN にインストール（本番の権限上げのパス）' ;;
+                ko) _mt_out='GLOBAL_BIN 에 설치 (운영 권한 상승 경로)' ;;
+                *) _mt_out='Install to GLOBAL_BIN (production elevation path)' ;;
+            esac
+            ;;
+        help_allow)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='僅有本機或未管理時仍允許 print-sudoers / generate-sudoer-request / submit（TEST MODE）' ;;
+                es) _mt_out='Permitir print-sudoers / generate-sudoer-request / submit cuando solo hay local/unmanaged (TEST MODE)' ;;
+                fr) _mt_out='Autoriser print-sudoers / generate-sudoer-request / submit si seulement local/unmanaged (TEST MODE)' ;;
+                de) _mt_out='print-sudoers / generate-sudoer-request / submit erlauben, wenn nur local/unmanaged (TEST MODE)' ;;
+                zh-Hans) _mt_out='仅有本地或未管理时仍允许 print-sudoers / generate-sudoer-request / submit（TEST MODE）' ;;
+                ja) _mt_out='local/unmanaged だけのときも print-sudoers / generate-sudoer-request / submit を許す（TEST MODE）' ;;
+                ko) _mt_out='local/unmanaged 만 있을 때도 print-sudoers / generate-sudoer-request / submit 을 허용 (TEST MODE)' ;;
+                *) _mt_out='Allow print-sudoers / generate-sudoer-request / submit when only local/unmanaged (TEST MODE)' ;;
+            esac
+            ;;
+        help_opt_update)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='強制 submit-sudoer-request 的 action=update' ;;
+                es) _mt_out='Forzar submit-sudoer-request action=update' ;;
+                fr) _mt_out='Forcer submit-sudoer-request action=update' ;;
+                de) _mt_out='submit-sudoer-request action=update erzwingen' ;;
+                zh-Hans) _mt_out='强制 submit-sudoer-request 的 action=update' ;;
+                ja) _mt_out='submit-sudoer-request の action=update を強制' ;;
+                ko) _mt_out='submit-sudoer-request 의 action=update 를 강제' ;;
+                *) _mt_out='Force submit-sudoer-request action=update' ;;
+            esac
+            ;;
+        help_opt_add)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='強制 submit-sudoer-request 的 action=add' ;;
+                es) _mt_out='Forzar submit-sudoer-request action=add' ;;
+                fr) _mt_out='Forcer submit-sudoer-request action=add' ;;
+                de) _mt_out='submit-sudoer-request action=add erzwingen' ;;
+                zh-Hans) _mt_out='强制 submit-sudoer-request 的 action=add' ;;
+                ja) _mt_out='submit-sudoer-request の action=add を強制' ;;
+                ko) _mt_out='submit-sudoer-request 의 action=add 를 강제' ;;
+                *) _mt_out='Force submit-sudoer-request action=add' ;;
+            esac
+            ;;
+        help_disk)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='還原主機：hard-disk（預設；與 ram-drive-first 相反）' ;;
+                es) _mt_out='Host de restauración: hard-disk (predeterminado; inverso de ram-drive-first)' ;;
+                fr) _mt_out='Hôte de restauration : hard-disk (défaut ; inverse de ram-drive-first)' ;;
+                de) _mt_out='Wiederherstellungs-Host: hard-disk (Vorgabe; Gegenteil von ram-drive-first)' ;;
+                zh-Hans) _mt_out='还原主机：hard-disk（默认；与 ram-drive-first 相反）' ;;
+                ja) _mt_out='復元先ホスト：hard-disk（既定。ram-drive-first の逆）' ;;
+                ko) _mt_out='복원 호스트: hard-disk (기본. ram-drive-first 의 반대)' ;;
+                *) _mt_out='Restore host: hard-disk (default; reverse of ram-drive-first)' ;;
+            esac
+            ;;
+        help_ram)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='還原主機：RAM-drive（/dev/shm/<project>）' ;;
+                es) _mt_out='Host de restauración: RAM-drive (/dev/shm/<project>)' ;;
+                fr) _mt_out='Hôte de restauration : RAM-drive (/dev/shm/<project>)' ;;
+                de) _mt_out='Wiederherstellungs-Host: RAM-drive (/dev/shm/<project>)' ;;
+                zh-Hans) _mt_out='还原主机：RAM-drive（/dev/shm/<project>）' ;;
+                ja) _mt_out='復元先ホスト：RAM-drive（/dev/shm/<project>）' ;;
+                ko) _mt_out='복원 호스트: RAM-drive (/dev/shm/<project>)' ;;
+                *) _mt_out='Restore host: RAM-drive (/dev/shm/<project>)' ;;
+            esac
+            ;;
+        help_debug)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='偵錯診斷寫到 stderr' ;;
+                es) _mt_out='Diagnóstico de depuración en stderr' ;;
+                fr) _mt_out='Diagnostic de débogage sur stderr' ;;
+                de) _mt_out='Debug-Diagnose auf stderr' ;;
+                zh-Hans) _mt_out='调试诊断写到 stderr' ;;
+                ja) _mt_out='デバッグ診断を stderr に出す' ;;
+                ko) _mt_out='디버그 진단을 stderr 에' ;;
+                *) _mt_out='Debug diagnostics on stderr' ;;
+            esac
+            ;;
+        help_h_env)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='環境：' ;;
+                es) _mt_out='Entorno:' ;;
+                fr) _mt_out='Environnement :' ;;
+                de) _mt_out='Umgebung:' ;;
+                zh-Hans) _mt_out='环境：' ;;
+                ja) _mt_out='環境:' ;;
+                ko) _mt_out='환경:' ;;
+                *) _mt_out='Environment:' ;;
+            esac
+            ;;
+        help_lang_env)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='僅這次執行：en、zh-Hant、es、fr、de、zh-Hans、ja 或 ko。不寫入語言檔' ;;
+                es) _mt_out='Solo esta ejecución: en, zh-Hant, es, fr, de, zh-Hans, ja o ko. No escribe el archivo de idioma' ;;
+                fr) _mt_out='Cette exécution seulement : en, zh-Hant, es, fr, de, zh-Hans, ja ou ko. N'\''écrit pas le fichier de langue' ;;
+                de) _mt_out='Nur dieser Lauf: en, zh-Hant, es, fr, de, zh-Hans, ja oder ko. Schreibt die Sprachdatei nicht' ;;
+                zh-Hans) _mt_out='仅这次运行：en、zh-Hant、es、fr、de、zh-Hans、ja 或 ko。不写入语言文件' ;;
+                ja) _mt_out='この実行だけ：en、zh-Hant、es、fr、de、zh-Hans、ja、ko。言語ファイルは書かない' ;;
+                ko) _mt_out='이번 실행만: en, zh-Hant, es, fr, de, zh-Hans, ja 또는 ko. 언어 파일은 쓰지 않음' ;;
+                *) _mt_out='This run only: en, zh-Hant, es, fr, de, zh-Hans, ja, or ko. Does not write the language file' ;;
+            esac
+            ;;
+        help_url_unset)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（未設定）' ;;
+                es) _mt_out='(sin definir)' ;;
+                fr) _mt_out='(non défini)' ;;
+                de) _mt_out='(nicht gesetzt)' ;;
+                zh-Hans) _mt_out='（未设置）' ;;
+                ja) _mt_out='（未設定）' ;;
+                ko) _mt_out='(설정 안 됨)' ;;
+                *) _mt_out='(not set)' ;;
+            esac
+            ;;
+        help_url_desc)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='正式安裝通道（可用環境變數覆寫；version-check/self-update 需要）' ;;
+                es) _mt_out='Canal de instalación canónico (se puede sustituir por el entorno; hace falta para version-check/self-update)' ;;
+                fr) _mt_out='Canal d'\''installation canonique (remplaçable par l'\''environnement ; requis pour version-check/self-update)' ;;
+                de) _mt_out='Kanonischer Installationskanal (per Umgebung ersetzbar; nötig für version-check/self-update)' ;;
+                zh-Hans) _mt_out='正式安装通道（可用环境变量覆盖；version-check/self-update 需要）' ;;
+                ja) _mt_out='正式なインストールチャネル（環境変数で上書き可。version-check/self-update に必要）' ;;
+                ko) _mt_out='정식 설치 채널 (환경 변수로 바꿀 수 있음. version-check/self-update 에 필요)' ;;
+                *) _mt_out='Canonical install channel (override via env; needed for version-check/self-update)' ;;
+            esac
+            ;;
+        help_daily)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='5（每個基本名稱每天；刪除同一天最舊的 N）' ;;
+                es) _mt_out='5  (por nombre base y día; poda el N más antiguo del mismo día)' ;;
+                fr) _mt_out='5  (par nom de base et par jour ; enlève le plus ancien N du même jour)' ;;
+                de) _mt_out='5  (je Basisname und Tag; ältestes N desselben Tages entfernen)' ;;
+                zh-Hans) _mt_out='5（每个基本名称每天；删除同一天最旧的 N）' ;;
+                ja) _mt_out='5（ベース名ごと、1 日ごと。同じ日の古い N を削る）' ;;
+                ko) _mt_out='5  (기준 이름마다 하루. 같은 날의 오래된 N 을 지움)' ;;
+                *) _mt_out='5  (per basename per day; prune oldest same-day N)' ;;
+            esac
+            ;;
+        help_total)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='30（每個基本名稱；跨日刪除最舊的）' ;;
+                es) _mt_out='30 (por nombre base; poda el más antiguo entre días)' ;;
+                fr) _mt_out='30 (par nom de base ; enlève le plus ancien sur plusieurs jours)' ;;
+                de) _mt_out='30 (je Basisname; ältestes über Tage entfernen)' ;;
+                zh-Hans) _mt_out='30（每个基本名称；跨日删除最旧的）' ;;
+                ja) _mt_out='30（ベース名ごと。日をまたいで古いものを削る）' ;;
+                ko) _mt_out='30 (기준 이름마다. 여러 날에 걸쳐 오래된 것을 지움)' ;;
+                *) _mt_out='30 (per basename; prune oldest across days)' ;;
+            esac
+            ;;
+        help_projects)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='硬碟上的專案樹（能偵測就自動偵測）' ;;
+                es) _mt_out='árbol de proyectos en hard-disk (detección automática cuando se puede)' ;;
+                fr) _mt_out='arbre de projets sur hard-disk (détection automatique si possible)' ;;
+                de) _mt_out='Projektbaum auf hard-disk (automatisch erkennen, wenn möglich)' ;;
+                zh-Hans) _mt_out='硬盘上的项目树（能探测就自动探测）' ;;
+                ja) _mt_out='hard-disk 上のプロジェクトツリー（可能なら自動で見つける）' ;;
+                ko) _mt_out='hard-disk 의 프로젝트 트리 (가능하면 자동 탐지)' ;;
+                *) _mt_out='hard-disk projects tree (auto-detect when possible)' ;;
+            esac
+            ;;
+        help_bins)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='安裝目的地' ;;
+                es) _mt_out='destinos de instalación' ;;
+                fr) _mt_out='destinations d'\''installation' ;;
+                de) _mt_out='Installationsziele' ;;
+                zh-Hans) _mt_out='安装目的地' ;;
+                ja) _mt_out='インストール先' ;;
+                ko) _mt_out='설치 목적지' ;;
+                *) _mt_out='install destinations' ;;
+            esac
+            ;;
+        help_allow_env)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='1 = 允許測試模式的 print-sudoers / generate / submit' ;;
+                es) _mt_out='1 = permitir print-sudoers / generate / submit en modo de prueba' ;;
+                fr) _mt_out='1 = autoriser print-sudoers / generate / submit en mode d'\''essai' ;;
+                de) _mt_out='1 = print-sudoers / generate / submit im Testmodus erlauben' ;;
+                zh-Hans) _mt_out='1 = 允许测试模式的 print-sudoers / generate / submit' ;;
+                ja) _mt_out='1 = 試験モードの print-sudoers / generate / submit を許す' ;;
+                ko) _mt_out='1 = 시험 모드의 print-sudoers / generate / submit 을 허용' ;;
+                *) _mt_out='1 = allow test-mode print-sudoers / generate / submit' ;;
+            esac
+            ;;
+        help_sudoer_cli)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='覆寫 sudoer-cli 的路徑' ;;
+                es) _mt_out='sustituir la ruta de sudoer-cli' ;;
+                fr) _mt_out='remplacer le chemin de sudoer-cli' ;;
+                de) _mt_out='Pfad zu sudoer-cli ersetzen' ;;
+                zh-Hans) _mt_out='覆盖 sudoer-cli 的路径' ;;
+                ja) _mt_out='sudoer-cli のパスを上書き' ;;
+                ko) _mt_out='sudoer-cli 경로를 바꿈' ;;
+                *) _mt_out='override path to sudoer-cli' ;;
+            esac
+            ;;
+        help_sudoer_adm)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='核准者登入名稱（預設 sudoer-adm）' ;;
+                es) _mt_out='inicio del aprobador (predeterminado sudoer-adm)' ;;
+                fr) _mt_out='identifiant de l'\''approbateur (défaut sudoer-adm)' ;;
+                de) _mt_out='Anmeldename der Freigabe (Vorgabe sudoer-adm)' ;;
+                zh-Hans) _mt_out='核准者登录名（默认 sudoer-adm）' ;;
+                ja) _mt_out='承認者のログイン名（既定 sudoer-adm）' ;;
+                ko) _mt_out='승인자 로그인 (기본 sudoer-adm)' ;;
+                *) _mt_out='approver login (default sudoer-adm)' ;;
+            esac
+            ;;
+        help_inbound)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='覆寫 inbound 核准目錄' ;;
+                es) _mt_out='sustituir el directorio inbound de aprobación' ;;
+                fr) _mt_out='remplacer le répertoire inbound d'\''approbation' ;;
+                de) _mt_out='inbound-Freigabeverzeichnis ersetzen' ;;
+                zh-Hans) _mt_out='覆盖 inbound 核准目录' ;;
+                ja) _mt_out='inbound の承認ディレクトリを上書き' ;;
+                ko) _mt_out='inbound 승인 디렉터리를 바꿈' ;;
+                *) _mt_out='override inbound approval dir' ;;
+            esac
+            ;;
+        help_public)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='公開佇列根目錄（預設 /var/sudoer-cli）' ;;
+                es) _mt_out='raíz de la cola pública (predeterminado /var/sudoer-cli)' ;;
+                fr) _mt_out='racine de la file publique (défaut /var/sudoer-cli)' ;;
+                de) _mt_out='Wurzel der öffentlichen Warteschlange (Vorgabe /var/sudoer-cli)' ;;
+                zh-Hans) _mt_out='公开队列根目录（默认 /var/sudoer-cli）' ;;
+                ja) _mt_out='公開待ち行列のルート（既定 /var/sudoer-cli）' ;;
+                ko) _mt_out='공개 대기열 루트 (기본 /var/sudoer-cli)' ;;
+                *) _mt_out='public queue root (default /var/sudoer-cli)' ;;
+            esac
+            ;;
+        help_sudoers_d)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='主機 sudoers.d 目錄（預設 /etc/sudoers.d；測試用）' ;;
+                es) _mt_out='directorio sudoers.d del equipo (predeterminado /etc/sudoers.d; pruebas)' ;;
+                fr) _mt_out='répertoire sudoers.d de l'\''hôte (défaut /etc/sudoers.d ; essais)' ;;
+                de) _mt_out='sudoers.d-Verzeichnis des Hosts (Vorgabe /etc/sudoers.d; Tests)' ;;
+                zh-Hans) _mt_out='主机 sudoers.d 目录（默认 /etc/sudoers.d；测试用）' ;;
+                ja) _mt_out='ホストの sudoers.d ディレクトリ（既定 /etc/sudoers.d。試験）' ;;
+                ko) _mt_out='호스트 sudoers.d 디렉터리 (기본 /etc/sudoers.d. 시험)' ;;
+                *) _mt_out='host sudoers.d dir (default /etc/sudoers.d; tests)' ;;
+            esac
+            ;;
+        help_h_examples)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='範例：' ;;
+                es) _mt_out='Ejemplos:' ;;
+                fr) _mt_out='Exemples :' ;;
+                de) _mt_out='Beispiele:' ;;
+                zh-Hans) _mt_out='示例：' ;;
+                ja) _mt_out='例:' ;;
+                ko) _mt_out='예:' ;;
+                *) _mt_out='Examples:' ;;
+            esac
+            ;;
+        help_ex_empty)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='# 終端機為編號板；管線則放置這個程式' ;;
+                es) _mt_out='# tableros numerados en TTY; una tubería coloca este programa' ;;
+                fr) _mt_out='# tableaux numérotés sur un TTY ; un tube place ce programme' ;;
+                de) _mt_out='# nummerierte Tafeln am TTY; eine Pipe legt dieses Programm ab' ;;
+                zh-Hans) _mt_out='# 终端为编号板；管道则放置这个程序' ;;
+                ja) _mt_out='# TTY では番号の板。パイプはこのプログラムを配置する' ;;
+                ko) _mt_out='# TTY 는 번호판. 파이프는 이 프로그램을 배치' ;;
+                *) _mt_out='# TTY numbered boards; a pipe places this program' ;;
+            esac
+            ;;
+        help_ex_self)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='# 複製這個檔案；若是管線則下載' ;;
+                es) _mt_out='# copiar este archivo, o descargar cuando va por una tubería' ;;
+                fr) _mt_out='# copier ce fichier, ou télécharger dans un tube' ;;
+                de) _mt_out='# diese Datei kopieren, oder herunterladen wenn sie in einer Pipe liegt' ;;
+                zh-Hans) _mt_out='# 复制这个文件；若是管道则下载' ;;
+                ja) _mt_out='# このファイルをコピー。パイプならダウンロード' ;;
+                ko) _mt_out='# 이 파일을 복사. 파이프이면 다운로드' ;;
+                *) _mt_out='# copy this file, or download when piped' ;;
+            esac
+            ;;
+        help_ex_sudo)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='# 全域（正式 sudoers 信任）' ;;
+                es) _mt_out='# global (confianza sudoers de producción)' ;;
+                fr) _mt_out='# global (confiance sudoers de production)' ;;
+                de) _mt_out='# global (sudoers-Vertrauen der Produktion)' ;;
+                zh-Hans) _mt_out='# 全局（正式 sudoers 信任）' ;;
+                ja) _mt_out='# グローバル（本番の sudoers 信頼）' ;;
+                ko) _mt_out='# 전역 (운영 sudoers 신뢰)' ;;
+                *) _mt_out='# global (production sudoers trust)' ;;
+            esac
+            ;;
+        help_foot_1)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='在真正的終端機上，沒有命令會顯示編號板。管線，或沒有命令的 --quiet / --json，會放置這個程式。在沒有終端機時指名 menu 會停止：menu needs a terminal。' ;;
+                es) _mt_out='En un terminal real, ningún comando muestra los tableros numerados. Una tubería, o --quiet / --json sin comando, coloca este programa. Nombrar menu sin terminal se detiene: menu needs a terminal.' ;;
+                fr) _mt_out='Sur un vrai terminal, aucune commande affiche les tableaux numérotés. Un tube, ou --quiet / --json sans commande, place ce programme. Nommer menu sans terminal s'\''arrête : menu needs a terminal.' ;;
+                de) _mt_out='An einem echten Terminal zeigt kein Befehl die nummerierten Tafeln. Eine Pipe, oder --quiet / --json ohne Befehl, legt dieses Programm ab. menu ohne Terminal stoppt: menu needs a terminal.' ;;
+                zh-Hans) _mt_out='在真正的终端上，没有命令会显示编号板。管道，或没有命令的 --quiet / --json，会放置这个程序。在没有终端时指名 menu 会停止：menu needs a terminal。' ;;
+                ja) _mt_out='本物の端末では、コマンドがないと番号の板を表示する。パイプ、またはコマンドなしの --quiet / --json は、このプログラムを配置する。端末なしで menu と指名すると停止：menu needs a terminal。' ;;
+                ko) _mt_out='실제 터미널에서는 명령이 없으면 번호판을 표시한다. 파이프, 또는 명령 없는 --quiet / --json 은 이 프로그램을 배치한다. 터미널 없이 menu 를 부르면 멈춤: menu needs a terminal.' ;;
+                *) _mt_out='On a real terminal, no command shows the numbered boards. A pipe, or --quiet / --json with no command, places this program. Naming menu off a terminal stops: menu needs a terminal.' ;;
+            esac
+            ;;
+        help_foot_2)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='本機安裝仍是動詞 install。通道更新仍是 version-check、self-update 與 self-uninstall。' ;;
+                es) _mt_out='La instalación local sigue siendo el verbo install. La actualización del canal sigue siendo version-check, self-update y self-uninstall.' ;;
+                fr) _mt_out='L'\''installation locale reste le verbe install. La mise à jour du canal reste version-check, self-update et self-uninstall.' ;;
+                de) _mt_out='Die lokale Installation bleibt das Verb install. Die Kanalaktualisierung bleibt version-check, self-update und self-uninstall.' ;;
+                zh-Hans) _mt_out='本地安装仍是动词 install。通道更新仍是 version-check、self-update 与 self-uninstall。' ;;
+                ja) _mt_out='ローカルなインストールは動詞 install のまま。チャネルの更新は version-check、self-update、self-uninstall のまま。' ;;
+                ko) _mt_out='로컬 설치는 동사 install 로 남는다. 채널 업데이트는 version-check, self-update, self-uninstall 로 남는다.' ;;
+                *) _mt_out='Local install stays the verb install. Channel update stays version-check, self-update, and self-uninstall.' ;;
+            esac
+            ;;
+        help_foot_3)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='還原的預設目的地是 hard-disk（不是 RAM），除非設定 --ram 或目的地。' ;;
+                es) _mt_out='El destino por defecto de la restauración es hard-disk (no RAM) salvo que se use --ram o un destino.' ;;
+                fr) _mt_out='La destination par défaut de la restauration est hard-disk (pas la RAM) sauf avec --ram ou une destination.' ;;
+                de) _mt_out='Das Wiederherstellungsziel ist hard-disk (nicht RAM), außer --ram oder ein Ziel ist gesetzt.' ;;
+                zh-Hans) _mt_out='还原的默认目的地是 hard-disk（不是 RAM），除非设置 --ram 或目的地。' ;;
+                ja) _mt_out='復元の既定の行き先は hard-disk（RAM ではない）。--ram または行き先を指定した場合を除く。' ;;
+                ko) _mt_out='복원의 기본 목적지는 hard-disk (RAM 이 아님). --ram 또는 목적지를 지정한 경우는 예외.' ;;
+                *) _mt_out='Restore default destination is hard-disk (not RAM) unless --ram or dest is set.' ;;
+            esac
+            ;;
+        help_foot_4)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='本機安裝加上 sudoers 只屬於 TEST MODE；持久提權請用全域。' ;;
+                es) _mt_out='Instalación local + sudoers es solo TEST MODE; para una elevación duradera, preferir global.' ;;
+                fr) _mt_out='Installation locale + sudoers est seulement TEST MODE ; pour une élévation durable, préférer global.' ;;
+                de) _mt_out='Lokale Installation + sudoers ist nur TEST MODE; für dauerhafte Erhöhung global vorziehen.' ;;
+                zh-Hans) _mt_out='本地安装加上 sudoers 只属于 TEST MODE；持久提权请用全局。' ;;
+                ja) _mt_out='ローカルなインストールと sudoers は TEST MODE だけ。長く使う権限上げはグローバルを優先。' ;;
+                ko) _mt_out='로컬 설치와 sudoers 는 TEST MODE 만. 오래 가는 권한 상승은 전역을 우선.' ;;
+                *) _mt_out='Local install + sudoers is TEST MODE ONLY; prefer global for durable elevation.' ;;
+            esac
+            ;;
+        help_json_note)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='請把 --json 用在 version、about、install、uninstall、where-is-me、self-install、version-check、self-update、self-uninstall、backup、restore。沒有命令的非互動列會放置這個程式。沒有終端機時的 menu 會停止：menu needs a terminal。' ;;
+                es) _mt_out='Use --json con version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore. Una línea no interactiva sin comando coloca este programa. menu sin terminal se detiene: menu needs a terminal.' ;;
+                fr) _mt_out='Utilisez --json avec version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore. Une ligne non interactive sans commande place ce programme. menu sans terminal s'\''arrête : menu needs a terminal.' ;;
+                de) _mt_out='--json mit version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore verwenden. Eine nicht interaktive Zeile ohne Befehl legt dieses Programm ab. menu ohne Terminal stoppt: menu needs a terminal.' ;;
+                zh-Hans) _mt_out='请把 --json 用在 version、about、install、uninstall、where-is-me、self-install、version-check、self-update、self-uninstall、backup、restore。没有命令的非交互行会放置这个程序。没有终端时的 menu 会停止：menu needs a terminal。' ;;
+                ja) _mt_out='--json は version、about、install、uninstall、where-is-me、self-install、version-check、self-update、self-uninstall、backup、restore と一緒に使う。コマンドのない非対話の行は、このプログラムを配置する。端末がない menu は停止：menu needs a terminal。' ;;
+                ko) _mt_out='--json 은 version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore 와 함께 쓴다. 명령이 없는 비대화 줄은 이 프로그램을 배치한다. 터미널이 없는 menu 는 멈춤: menu needs a terminal.' ;;
+                *) _mt_out='Use --json with version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore. A non-interactive line with no command places this program. menu off a terminal stops: menu needs a terminal.' ;;
+            esac
+            ;;
+        about_ok)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='已正確安裝。' ;;
+                es) _mt_out='está instalado correctamente.' ;;
+                fr) _mt_out='est correctement installé.' ;;
+                de) _mt_out='ist ordnungsgemäß installiert.' ;;
+                zh-Hans) _mt_out='已正确安装。' ;;
+                ja) _mt_out='は正しくインストールされています。' ;;
+                ko) _mt_out='은(는) 올바르게 설치되어 있습니다.' ;;
+                *) _mt_out='is properly installed.' ;;
+            esac
+            ;;
+        about_not_ok)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='尚未安裝到受管理的 bin 路徑。' ;;
+                es) _mt_out='NO está instalado en una ruta bin gestionada.' ;;
+                fr) _mt_out='n'\''est PAS installé dans un chemin bin géré.' ;;
+                de) _mt_out='ist NICHT in einem verwalteten bin-Pfad installiert.' ;;
+                zh-Hans) _mt_out='尚未安装到受管理的 bin 路径。' ;;
+                ja) _mt_out='は管理された bin パスにインストールされていません。' ;;
+                ko) _mt_out='은(는) 관리되는 bin 경로에 설치되어 있지 않습니다.' ;;
+                *) _mt_out='is NOT installed in a managed bin path.' ;;
+            esac
+            ;;
+        about_recommend_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='建議：' ;;
+                es) _mt_out='Recomendado: ' ;;
+                fr) _mt_out='Recommandé : ' ;;
+                de) _mt_out='Empfohlen: ' ;;
+                zh-Hans) _mt_out='建议：' ;;
+                ja) _mt_out='推奨：' ;;
+                ko) _mt_out='권함: ' ;;
+                *) _mt_out='Recommended: ' ;;
+            esac
+            ;;
+        about_recommend_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='install   （本機複製 → ' ;;
+                es) _mt_out='install   (copia local → ' ;;
+                fr) _mt_out='install   (copie locale → ' ;;
+                de) _mt_out='install   (lokale Kopie → ' ;;
+                zh-Hans) _mt_out='install   （本地复制 → ' ;;
+                ja) _mt_out='install   （ローカルなコピー → ' ;;
+                ko) _mt_out='install   (로컬 복사 → ' ;;
+                *) _mt_out='install   (local copy → ' ;;
+            esac
+            ;;
+        about_global_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='全域安裝  ' ;;
+                es) _mt_out='Instalación global  ' ;;
+                fr) _mt_out='Installation globale  ' ;;
+                de) _mt_out='Globale Installation  ' ;;
+                zh-Hans) _mt_out='全局安装  ' ;;
+                ja) _mt_out='グローバルなインストール  ' ;;
+                ko) _mt_out='전역 설치  ' ;;
+                *) _mt_out='Global install  ' ;;
+            esac
+            ;;
+        about_local_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='本機安裝   ' ;;
+                es) _mt_out='Instalación local   ' ;;
+                fr) _mt_out='Installation locale   ' ;;
+                de) _mt_out='Lokale Installation   ' ;;
+                zh-Hans) _mt_out='本地安装   ' ;;
+                ja) _mt_out='ローカルなインストール   ' ;;
+                ko) _mt_out='로컬 설치   ' ;;
+                *) _mt_out='Local install   ' ;;
+            esac
+            ;;
+        about_word_missing)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='找不到' ;;
+                es) _mt_out='no encontrado' ;;
+                fr) _mt_out='introuvable' ;;
+                de) _mt_out='nicht gefunden' ;;
+                zh-Hans) _mt_out='找不到' ;;
+                ja) _mt_out='見つかりません' ;;
+                ko) _mt_out='없음' ;;
+                *) _mt_out='not found' ;;
+            esac
+            ;;
+        about_word_unknown)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='未知' ;;
+                es) _mt_out='desconocido' ;;
+                fr) _mt_out='inconnu' ;;
+                de) _mt_out='unbekannt' ;;
+                zh-Hans) _mt_out='未知' ;;
+                ja) _mt_out='不明' ;;
+                ko) _mt_out='알 수 없음' ;;
+                *) _mt_out='unknown' ;;
+            esac
+            ;;
+        about_tier_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='sudoers 信任層級：' ;;
+                es) _mt_out='Nivel de confianza sudoers: ' ;;
+                fr) _mt_out='Niveau de confiance sudoers : ' ;;
+                de) _mt_out='sudoers-Vertrauensstufe: ' ;;
+                zh-Hans) _mt_out='sudoers 信任层级：' ;;
+                ja) _mt_out='sudoers の信頼段階: ' ;;
+                ko) _mt_out='sudoers 신뢰 단계: ' ;;
+                *) _mt_out='Sudoers trust tier: ' ;;
+            esac
+            ;;
+        about_tier_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（production 需要全域；只有本機 = 測試模式）' ;;
+                es) _mt_out='(production exige global; solo local = modo de prueba)' ;;
+                fr) _mt_out='(production exige global ; seulement local = mode d'\''essai)' ;;
+                de) _mt_out='(production verlangt global; nur lokal = Testmodus)' ;;
+                zh-Hans) _mt_out='（production 需要全局；只有本地 = 测试模式）' ;;
+                ja) _mt_out='（production はグローバルが必要。ローカルだけ = 試験モード）' ;;
+                ko) _mt_out='(production 은 전역이 필요. 로컬만 = 시험 모드)' ;;
+                *) _mt_out='(production requires global; local-only = test mode)' ;;
+            esac
+            ;;
+        about_repo)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='儲存庫：' ;;
+                es) _mt_out='Repositorio: ' ;;
+                fr) _mt_out='Dépôt : ' ;;
+                de) _mt_out='Depot: ' ;;
+                zh-Hans) _mt_out='仓库：' ;;
+                ja) _mt_out='リポジトリ: ' ;;
+                ko) _mt_out='저장소: ' ;;
+                *) _mt_out='Repository:        ' ;;
+            esac
+            ;;
+        about_channel)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='安裝通道：' ;;
+                es) _mt_out='Canal de instalación: ' ;;
+                fr) _mt_out='Canal d'\''installation : ' ;;
+                de) _mt_out='Installationskanal: ' ;;
+                zh-Hans) _mt_out='安装通道：' ;;
+                ja) _mt_out='インストールチャネル: ' ;;
+                ko) _mt_out='설치 채널: ' ;;
+                *) _mt_out='Install channel:   ' ;;
+            esac
+            ;;
+        about_channel_empty)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（空白 — 僅本機安裝）' ;;
+                es) _mt_out='(vacío — solo instalación local)' ;;
+                fr) _mt_out='(vide — installation locale seulement)' ;;
+                de) _mt_out='(leer — nur lokale Installation)' ;;
+                zh-Hans) _mt_out='（空白 — 仅本地安装）' ;;
+                ja) _mt_out='（空 — ローカルなインストールだけ）' ;;
+                ko) _mt_out='(비어 있음 — 로컬 설치만)' ;;
+                *) _mt_out='(empty — local install only)' ;;
+            esac
+            ;;
+        about_user)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='目前的使用者：' ;;
+                es) _mt_out='Usuario actual: ' ;;
+                fr) _mt_out='Utilisateur actuel : ' ;;
+                de) _mt_out='Aktueller Benutzer: ' ;;
+                zh-Hans) _mt_out='当前用户：' ;;
+                ja) _mt_out='現在のユーザー: ' ;;
+                ko) _mt_out='현재 사용자: ' ;;
+                *) _mt_out='Current user:      ' ;;
+            esac
+            ;;
+        about_exec_root)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='執行情境：root' ;;
+                es) _mt_out='Contexto de ejecución: root' ;;
+                fr) _mt_out='Contexte d'\''exécution : root' ;;
+                de) _mt_out='Ausführungskontext: root' ;;
+                zh-Hans) _mt_out='执行情境：root' ;;
+                ja) _mt_out='実行の文脈: root' ;;
+                ko) _mt_out='실행 맥락: root' ;;
+                *) _mt_out='Execution context: root' ;;
+            esac
+            ;;
+        about_exec_user)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='執行情境：一般使用者（Type 0 + 窄的 Type 1 存放）' ;;
+                es) _mt_out='Contexto de ejecución: usuario normal (Type 0 + depósito estrecho Type 1)' ;;
+                fr) _mt_out='Contexte d'\''exécution : utilisateur normal (Type 0 + dépôt étroit Type 1)' ;;
+                de) _mt_out='Ausführungskontext: normaler Benutzer (Type 0 + schmale Type-1-Ablage)' ;;
+                zh-Hans) _mt_out='执行情境：一般用户（Type 0 + 窄的 Type 1 存放）' ;;
+                ja) _mt_out='実行の文脈: 通常のユーザー（Type 0 + 狭い Type 1 の保管）' ;;
+                ko) _mt_out='실행 맥락: 일반 사용자 (Type 0 + 좁은 Type 1 보관)' ;;
+                *) _mt_out='Execution context: normal user (Type 0 + narrow Type 1 deposit)' ;;
+            esac
+            ;;
+        about_shell)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='目前的殼層：' ;;
+                es) _mt_out='Shell actual: ' ;;
+                fr) _mt_out='Shell actuel : ' ;;
+                de) _mt_out='Aktuelle Shell: ' ;;
+                zh-Hans) _mt_out='当前的外壳：' ;;
+                ja) _mt_out='現在のシェル: ' ;;
+                ko) _mt_out='현재 셸: ' ;;
+                *) _mt_out='Current shell:     ' ;;
+            esac
+            ;;
+        about_tty_yes)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='TTY／互動：是' ;;
+                es) _mt_out='TTY / interactivo: sí' ;;
+                fr) _mt_out='TTY / interactif : oui' ;;
+                de) _mt_out='TTY / interaktiv: ja' ;;
+                zh-Hans) _mt_out='TTY／交互：是' ;;
+                ja) _mt_out='TTY／対話: はい' ;;
+                ko) _mt_out='TTY / 대화형: 예' ;;
+                *) _mt_out='TTY / Interactive: yes' ;;
+            esac
+            ;;
+        about_tty_no)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='TTY／互動：否' ;;
+                es) _mt_out='TTY / interactivo: no' ;;
+                fr) _mt_out='TTY / interactif : non' ;;
+                de) _mt_out='TTY / interaktiv: nein' ;;
+                zh-Hans) _mt_out='TTY／交互：否' ;;
+                ja) _mt_out='TTY／対話: いいえ' ;;
+                ko) _mt_out='TTY / 대화형: 아니오' ;;
+                *) _mt_out='TTY / Interactive: no' ;;
+            esac
+            ;;
+        about_cache_pref)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='快取資料夾（偏好）：' ;;
+                es) _mt_out='Carpeta de caché (preferida): ' ;;
+                fr) _mt_out='Dossier de cache (préféré) : ' ;;
+                de) _mt_out='Cache-Ordner (bevorzugt): ' ;;
+                zh-Hans) _mt_out='缓存文件夹（首选）：' ;;
+                ja) _mt_out='キャッシュフォルダ（優先）: ' ;;
+                ko) _mt_out='캐시 폴더(우선): ' ;;
+                *) _mt_out='Cache folder (preferred): ' ;;
+            esac
+            ;;
+        about_cache_fb1)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='快取資料夾（第 1 後援）：' ;;
+                es) _mt_out='Carpeta de caché (1.er respaldo): ' ;;
+                fr) _mt_out='Dossier de cache (1er repli) : ' ;;
+                de) _mt_out='Cache-Ordner (1. Ausweich): ' ;;
+                zh-Hans) _mt_out='缓存文件夹（第 1 后备）：' ;;
+                ja) _mt_out='キャッシュフォルダ（第1候補）: ' ;;
+                ko) _mt_out='캐시 폴더(1차 대체): ' ;;
+                *) _mt_out='Cache folder (1st fallback): ' ;;
+            esac
+            ;;
+        about_cache_fb2)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='快取資料夾（第 2 後援）：' ;;
+                es) _mt_out='Carpeta de caché (2.º respaldo): ' ;;
+                fr) _mt_out='Dossier de cache (2e repli) : ' ;;
+                de) _mt_out='Cache-Ordner (2. Ausweich): ' ;;
+                zh-Hans) _mt_out='缓存文件夹（第 2 后备）：' ;;
+                ja) _mt_out='キャッシュフォルダ（第2候補）: ' ;;
+                ko) _mt_out='캐시 폴더(2차 대체): ' ;;
+                *) _mt_out='Cache folder (2nd fallback): ' ;;
+            esac
+            ;;
+        about_persist)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='持久儲存：' ;;
+                es) _mt_out='Almacenamiento persistente: ' ;;
+                fr) _mt_out='Stockage persistant : ' ;;
+                de) _mt_out='Dauerhafter Speicher: ' ;;
+                zh-Hans) _mt_out='持久存储：' ;;
+                ja) _mt_out='永続ストレージ: ' ;;
+                ko) _mt_out='지속 저장소: ' ;;
+                *) _mt_out='Persistence storage:      ' ;;
+            esac
+            ;;
+        about_backup_root)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='備份根目錄：' ;;
+                es) _mt_out='Raíz de copias: ' ;;
+                fr) _mt_out='Racine des sauvegardes : ' ;;
+                de) _mt_out='Sicherungs-Wurzel: ' ;;
+                zh-Hans) _mt_out='备份根目录：' ;;
+                ja) _mt_out='バックアップのルート: ' ;;
+                ko) _mt_out='백업 루트: ' ;;
+                *) _mt_out='Backup root:       ' ;;
+            esac
+            ;;
+        about_notation)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='備份記號：' ;;
+                es) _mt_out='Notación de copia: ' ;;
+                fr) _mt_out='Notation de sauvegarde : ' ;;
+                de) _mt_out='Sicherungs-Notation: ' ;;
+                zh-Hans) _mt_out='备份记号：' ;;
+                ja) _mt_out='バックアップの表記: ' ;;
+                ko) _mt_out='백업 표기: ' ;;
+                *) _mt_out='Backup notation:   ' ;;
+            esac
+            ;;
+        about_deposit)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='存放目錄：' ;;
+                es) _mt_out='Directorio de depósito: ' ;;
+                fr) _mt_out='Répertoire de dépôt : ' ;;
+                de) _mt_out='Ablageverzeichnis: ' ;;
+                zh-Hans) _mt_out='存放目录：' ;;
+                ja) _mt_out='保管ディレクトリ: ' ;;
+                ko) _mt_out='보관 디렉터리: ' ;;
+                *) _mt_out='Deposit directory: ' ;;
+            esac
+            ;;
+        about_sudo_dep)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='sudo 存放：' ;;
+                es) _mt_out='Depósito sudo: ' ;;
+                fr) _mt_out='Dépôt sudo : ' ;;
+                de) _mt_out='sudo-Ablage: ' ;;
+                zh-Hans) _mt_out='sudo 存放：' ;;
+                ja) _mt_out='sudo の保管: ' ;;
+                ko) _mt_out='sudo 보관: ' ;;
+                *) _mt_out='Sudo deposit:      ' ;;
+            esac
+            ;;
+        about_scli)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='sudoer-cli：' ;;
+                es) _mt_out='sudoer-cli: ' ;;
+                fr) _mt_out='sudoer-cli : ' ;;
+                de) _mt_out='sudoer-cli: ' ;;
+                zh-Hans) _mt_out='sudoer-cli：' ;;
+                ja) _mt_out='sudoer-cli: ' ;;
+                ko) _mt_out='sudoer-cli: ' ;;
+                *) _mt_out='sudoer-cli:        ' ;;
+            esac
+            ;;
+        about_sadm)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='sudoer-adm：' ;;
+                es) _mt_out='sudoer-adm: ' ;;
+                fr) _mt_out='sudoer-adm : ' ;;
+                de) _mt_out='sudoer-adm: ' ;;
+                zh-Hans) _mt_out='sudoer-adm：' ;;
+                ja) _mt_out='sudoer-adm: ' ;;
+                ko) _mt_out='sudoer-adm: ' ;;
+                *) _mt_out='sudoer-adm:        ' ;;
+            esac
+            ;;
+        about_inbound)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='sudoer inbound：' ;;
+                es) _mt_out='sudoer inbound: ' ;;
+                fr) _mt_out='sudoer inbound : ' ;;
+                de) _mt_out='sudoer inbound: ' ;;
+                zh-Hans) _mt_out='sudoer inbound：' ;;
+                ja) _mt_out='sudoer inbound: ' ;;
+                ko) _mt_out='sudoer inbound: ' ;;
+                *) _mt_out='sudoer inbound:    ' ;;
+            esac
+            ;;
+        about_pref_open)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（偏好 ' ;;
+                es) _mt_out=' (preferida ' ;;
+                fr) _mt_out=' (préféré ' ;;
+                de) _mt_out=' (bevorzugt ' ;;
+                zh-Hans) _mt_out='（首选 ' ;;
+                ja) _mt_out='（優先 ' ;;
+                ko) _mt_out=' (우선 ' ;;
+                *) _mt_out=' (preferred ' ;;
+            esac
+            ;;
+        about_writable_open)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（可寫=' ;;
+                es) _mt_out=' (escribible=' ;;
+                fr) _mt_out=' (inscriptible=' ;;
+                de) _mt_out=' (schreibbar=' ;;
+                zh-Hans) _mt_out='（可写=' ;;
+                ja) _mt_out='（書き込み可=' ;;
+                ko) _mt_out=' (쓰기=' ;;
+                *) _mt_out=' (writable=' ;;
+            esac
+            ;;
+        about_daily_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='每日保留：最多 ' ;;
+                es) _mt_out='Retención diaria:   máx ' ;;
+                fr) _mt_out='Rétention par jour :   max ' ;;
+                de) _mt_out='Tägliche Aufbewahrung:   max ' ;;
+                zh-Hans) _mt_out='每日保留：最多 ' ;;
+                ja) _mt_out='1 日の保持：最大 ' ;;
+                ko) _mt_out='하루 보존: 최대 ' ;;
+                *) _mt_out='Retention daily:   max ' ;;
+            esac
+            ;;
+        about_daily_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out=' 每個基本名稱每天（MAX_DAILY_BACKUPS）' ;;
+                es) _mt_out=' por nombre base y día (MAX_DAILY_BACKUPS)' ;;
+                fr) _mt_out=' par nom de base et par jour (MAX_DAILY_BACKUPS)' ;;
+                de) _mt_out=' je Basisname und Tag (MAX_DAILY_BACKUPS)' ;;
+                zh-Hans) _mt_out=' 每个基本名称每天（MAX_DAILY_BACKUPS）' ;;
+                ja) _mt_out=' ベース名ごと、1 日ごと（MAX_DAILY_BACKUPS）' ;;
+                ko) _mt_out=' 기준 이름마다 하루 (MAX_DAILY_BACKUPS)' ;;
+                *) _mt_out=' per basename per day (MAX_DAILY_BACKUPS)' ;;
+            esac
+            ;;
+        about_total_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='總保留：最多 ' ;;
+                es) _mt_out='Retención total:   máx ' ;;
+                fr) _mt_out='Rétention totale :   max ' ;;
+                de) _mt_out='Gesamtaufbewahrung:   max ' ;;
+                zh-Hans) _mt_out='总保留：最多 ' ;;
+                ja) _mt_out='合計の保持：最大 ' ;;
+                ko) _mt_out='전체 보존: 최대 ' ;;
+                *) _mt_out='Retention total:   max ' ;;
+            esac
+            ;;
+        about_total_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out=' 每個基本名稱（MAX_TOTAL_BACKUPS）' ;;
+                es) _mt_out=' por nombre base (MAX_TOTAL_BACKUPS)' ;;
+                fr) _mt_out=' par nom de base (MAX_TOTAL_BACKUPS)' ;;
+                de) _mt_out=' je Basisname (MAX_TOTAL_BACKUPS)' ;;
+                zh-Hans) _mt_out=' 每个基本名称（MAX_TOTAL_BACKUPS）' ;;
+                ja) _mt_out=' ベース名ごと（MAX_TOTAL_BACKUPS）' ;;
+                ko) _mt_out=' 기준 이름마다 (MAX_TOTAL_BACKUPS)' ;;
+                *) _mt_out=' per basename (MAX_TOTAL_BACKUPS)' ;;
+            esac
+            ;;
+        about_restore_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='還原預設主機：' ;;
+                es) _mt_out='Host por defecto de la restauración: ' ;;
+                fr) _mt_out='Hôte par défaut de la restauration : ' ;;
+                de) _mt_out='Standard-Host der Wiederherstellung: ' ;;
+                zh-Hans) _mt_out='还原默认主机：' ;;
+                ja) _mt_out='復元の既定ホスト: ' ;;
+                ko) _mt_out='복원 기본 호스트: ' ;;
+                *) _mt_out='Restore default host: ' ;;
+            esac
+            ;;
+        about_restore_b)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='（與 ram-drive-first 相反）' ;;
+                es) _mt_out=' (inverso de ram-drive-first)' ;;
+                fr) _mt_out=' (inverse de ram-drive-first)' ;;
+                de) _mt_out=' (Gegenteil von ram-drive-first)' ;;
+                zh-Hans) _mt_out='（与 ram-drive-first 相反）' ;;
+                ja) _mt_out='（ram-drive-first の逆）' ;;
+                ko) _mt_out=' (ram-drive-first 의 반대)' ;;
+                *) _mt_out=' (reverse of ram-drive-first)' ;;
+            esac
+            ;;
+        about_projects_a)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='專案根目錄（hard-disk）：' ;;
+                es) _mt_out='Raíz de proyectos (hard-disk): ' ;;
+                fr) _mt_out='Racine des projets (hard-disk) : ' ;;
+                de) _mt_out='Projektwurzel (hard-disk): ' ;;
+                zh-Hans) _mt_out='项目根目录（hard-disk）：' ;;
+                ja) _mt_out='プロジェクトのルート（hard-disk）: ' ;;
+                ko) _mt_out='프로젝트 루트 (hard-disk): ' ;;
+                *) _mt_out='Projects root (hard-disk): ' ;;
+            esac
+            ;;
+        about_projects_unset)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='未設定 — 請設定 PROJECTS_ROOT' ;;
+                es) _mt_out='sin definir — defina PROJECTS_ROOT' ;;
+                fr) _mt_out='non défini — définissez PROJECTS_ROOT' ;;
+                de) _mt_out='nicht gesetzt — PROJECTS_ROOT setzen' ;;
+                zh-Hans) _mt_out='未设置 — 请设置 PROJECTS_ROOT' ;;
+                ja) _mt_out='未設定 — PROJECTS_ROOT を設定' ;;
+                ko) _mt_out='설정 안 됨 — PROJECTS_ROOT 를 설정' ;;
+                *) _mt_out='unset — set PROJECTS_ROOT' ;;
+            esac
+            ;;
+        about_ram)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='RAM 根目錄：' ;;
+                es) _mt_out='Raíz RAM: ' ;;
+                fr) _mt_out='Racine RAM : ' ;;
+                de) _mt_out='RAM-Wurzel: ' ;;
+                zh-Hans) _mt_out='RAM 根目录：' ;;
+                ja) _mt_out='RAM のルート: ' ;;
+                ko) _mt_out='RAM 루트: ' ;;
+                *) _mt_out='RAM root:          ' ;;
+            esac
+            ;;
+        about_useful)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='常用指令：' ;;
+                es) _mt_out='Comandos útiles:' ;;
+                fr) _mt_out='Commandes utiles :' ;;
+                de) _mt_out='Nützliche Befehle:' ;;
+                zh-Hans) _mt_out='常用命令：' ;;
+                ja) _mt_out='便利なコマンド:' ;;
+                ko) _mt_out='유용한 명령:' ;;
+                *) _mt_out='Useful commands:' ;;
+            esac
+            ;;
+        about_cmd_help)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='完整用法' ;;
+                es) _mt_out='Uso completo' ;;
+                fr) _mt_out='Utilisation complète' ;;
+                de) _mt_out='Vollständige Verwendung' ;;
+                zh-Hans) _mt_out='完整用法' ;;
+                ja) _mt_out='使い方の全文' ;;
+                ko) _mt_out='전체 사용법' ;;
+                *) _mt_out='Full usage' ;;
+            esac
+            ;;
+        about_cmd_install)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='本機安裝到 ~/.local/bin' ;;
+                es) _mt_out='Instalación local en ~/.local/bin' ;;
+                fr) _mt_out='Installation locale dans ~/.local/bin' ;;
+                de) _mt_out='Lokale Installation nach ~/.local/bin' ;;
+                zh-Hans) _mt_out='本地安装到 ~/.local/bin' ;;
+                ja) _mt_out='~/.local/bin へのローカルなインストール' ;;
+                ko) _mt_out='~/.local/bin 에 로컬 설치' ;;
+                *) _mt_out='Local install to ~/.local/bin' ;;
+            esac
+            ;;
+        about_cmd_print)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='給管理員的 sudoers 片段' ;;
+                es) _mt_out='Fragmento sudoers para el administrador' ;;
+                fr) _mt_out='Fragment sudoers pour l'\''administrateur' ;;
+                de) _mt_out='sudoers-Fragment für die Verwaltung' ;;
+                zh-Hans) _mt_out='给管理员的 sudoers 片段' ;;
+                ja) _mt_out='管理者向けの sudoers 断片' ;;
+                ko) _mt_out='관리자용 sudoers 조각' ;;
+                *) _mt_out='Sudoers fragment for admin' ;;
+            esac
+            ;;
+        about_cmd_gen)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='寫一份你能核對的本機 JSON 授權' ;;
+                es) _mt_out='Escribir una concesión JSON local que puede verificar' ;;
+                fr) _mt_out='Écrire une autorisation JSON locale que vous pouvez vérifier' ;;
+                de) _mt_out='Eine lokale JSON-Freigabe schreiben, die Sie prüfen können' ;;
+                zh-Hans) _mt_out='写一份你能核对的本地 JSON 授权' ;;
+                ja) _mt_out='自分で確認できるローカルな JSON 認可を書く' ;;
+                ko) _mt_out='직접 확인할 수 있는 로컬 JSON 허가를 작성' ;;
+                *) _mt_out='Write a local JSON grant you can verify' ;;
+            esac
+            ;;
+        about_cmd_submit)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='JSON 請求寫入 /var/sudoer-cli/sudoer-request' ;;
+                es) _mt_out='Solicitud JSON en /var/sudoer-cli/sudoer-request' ;;
+                fr) _mt_out='Demande JSON dans /var/sudoer-cli/sudoer-request' ;;
+                de) _mt_out='JSON-Anfrage nach /var/sudoer-cli/sudoer-request' ;;
+                zh-Hans) _mt_out='JSON 请求写入 /var/sudoer-cli/sudoer-request' ;;
+                ja) _mt_out='JSON の依頼を /var/sudoer-cli/sudoer-request へ' ;;
+                ko) _mt_out='JSON 요청을 /var/sudoer-cli/sudoer-request 에' ;;
+                *) _mt_out='JSON request into /var/sudoer-cli/sudoer-request' ;;
+            esac
+            ;;
+        about_cmd_backup)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='封存 + 存放 + 依保留規則刪除' ;;
+                es) _mt_out='Archivo + depósito + poda de retención' ;;
+                fr) _mt_out='Archive + dépôt + élagage de rétention' ;;
+                de) _mt_out='Archiv + Ablage + Aufbewahrung kürzen' ;;
+                zh-Hans) _mt_out='归档 + 存放 + 按保留规则删除' ;;
+                ja) _mt_out='アーカイブ + 保管 + 保持ルールで削る' ;;
+                ko) _mt_out='아카이브 + 보관 + 보존 규칙으로 삭제' ;;
+                *) _mt_out='Archive + deposit + retention prune' ;;
+            esac
+            ;;
+        about_cmd_restore)
+            case "${_mt_lang}" in
+                zh-Hant) _mt_out='還原封存（預設目的地：hard-disk）' ;;
+                es) _mt_out='Restaurar el archivo (destino por defecto: hard-disk)' ;;
+                fr) _mt_out='Restaurer l'\''archive (destination par défaut : hard-disk)' ;;
+                de) _mt_out='Archiv wiederherstellen (Zielvorgabe: hard-disk)' ;;
+                zh-Hans) _mt_out='还原归档（默认目的地：hard-disk）' ;;
+                ja) _mt_out='アーカイブを復元（既定の行き先：hard-disk）' ;;
+                ko) _mt_out='아카이브 복원 (기본 목적지: hard-disk)' ;;
+                *) _mt_out='Restore archive (default dest: hard-disk)' ;;
+            esac
+            ;;
         *)
             _mt_out="${_mt_key}"
             ;;
@@ -7127,121 +8714,150 @@ app_help() {
     : "${SCRIPT_URL:=}"
 
     if [ "${JSON}" -eq 1 ]; then
-        out_json "success" "Help text available in human-readable mode. Run without --json." \
+        case "${APP_LANG:-en}" in
+            zh-Hant) _help_note="說明文字在人類可讀模式。請不要加 --json。" ;;
+            es) _help_note="El texto de ayuda está en el modo para personas. Ejecute sin --json." ;;
+            fr) _help_note="Le texte d'aide est dans le mode pour les personnes. Lancez sans --json." ;;
+            de) _help_note="Der Hilfetext steht im Modus für Menschen. Starten Sie ohne --json." ;;
+            zh-Hans) _help_note="说明文字在人可读模式。请不要加 --json。" ;;
+            ja) _help_note="説明は人が読むモードにあります。--json を付けずに実行してください。" ;;
+            ko) _help_note="도움말 문장은 사람이 읽는 모드에 있습니다. --json 없이 실행하세요." ;;
+            *) _help_note="Help text available in human-readable mode. Run without --json." ;;
+        esac
+        out_json "success" "${_help_note}" \
             "command" "help" \
-            "note" "Use --json with version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore. A non-interactive line with no command places this program. menu off a terminal stops: menu needs a terminal."
+            "note" "$(app_menu_text help_json_note)"
+        unset _help_note
         return 0
     fi
     if [ "${QUIET}" -eq 1 ]; then
         return 0
     fi
 
-    out_info "${APP_NAME} — ${SHORT_DESCRIPTION}"
-    out_plain "${DESCRIPTION}"
+    out_info "${APP_NAME} — $(app_menu_text help_short)"
+    out_plain "$(app_menu_text help_desc)"
     out_empty_line
     out_info "$(app_menu_text help_usage)"
-    out_plain "  ${APP_NAME} [command] [options]"
+    out_plain "  ${APP_NAME} $(app_menu_text help_usage_args)"
     out_empty_line
-    out_info "Self-management (full channel, any login):"
-    out_plain "  self-install         Place ${APP_NAME} (copy when \$0 is this file; pipe downloads)"
-    out_plain "  version-check        Compare local vs remote version (needs SCRIPT_URL)"
-    out_plain "  self-update          Update ${APP_NAME} to a newer remote version"
-    out_plain "  self-uninstall       Remove ${APP_NAME} (confirm or --force; PATH cleanup)"
-    out_plain "  self-management      On a terminal, numbered self-management board (81-87). Off a terminal, stops: self-management needs a terminal"
+    out_info "$(app_menu_text help_h_self)"
+    out_plain "  self-install         $(app_menu_text help_place_a)${APP_NAME}$(app_menu_text help_place_b)"
+    out_plain "  version-check        $(app_menu_text help_version_check)"
+    out_plain "  self-update          $(app_menu_text help_update_a)${APP_NAME}$(app_menu_text help_update_b)"
+    out_plain "  self-uninstall       $(app_menu_text help_uninst_a)${APP_NAME}$(app_menu_text help_uninst_b)"
+    out_plain "  self-management      $(app_menu_text help_self_mgmt)"
     out_empty_line
-    out_info "Install and self-care (your own login):"
-    out_plain "  install              Install ${APP_NAME} by local copy (root→global, user→~/.local/bin, mode 0755)"
-    out_plain "  install --global     Force global path (${GLOBAL_BIN}; needs write/root)"
-    out_plain "  uninstall            Remove managed binary (confirm or --force); not sudoers"
-    out_plain "  where-is-me          Show running and install paths"
-    out_plain "  version              Show local version"
-    out_plain "  about                Show diagnostics (incl. sudoers trust tier)"
-    out_plain "  help                 Show this help"
+    out_info "$(app_menu_text help_h_care)"
+    out_plain "  install              $(app_menu_text help_install_a)${APP_NAME}$(app_menu_text help_install_b)"
+    out_plain "  install --global     $(app_menu_text help_global_a)${GLOBAL_BIN}$(app_menu_text help_global_b)"
+    out_plain "  uninstall            $(app_menu_text help_uninstall)"
+    out_plain "  where-is-me          $(app_menu_text help_where)"
+    out_plain "  version              $(app_menu_text help_version)"
+    out_plain "  about                $(app_menu_text help_about)"
+    out_plain "  help                 $(app_menu_text help_help)"
     out_plain "  menu                 $(app_menu_text help_menu_line)"
     out_plain "  $(app_menu_text help_lang_line)"
-    out_plain "  main                 Same as menu"
+    out_plain "  main                 $(app_menu_text help_main)"
     out_empty_line
-    out_info "Work commands:"
-    out_plain "  backup <folder>      tar.gz folder → ${BACKUP_ROOT}/${BACKUP_NOTATION}/NAME-YYYYMMDD-N.tar.gz"
-    out_plain "  restore <archive|prefix> [dest]  Extract archive (default dest: hard-disk SSOT)"
+    out_info "$(app_menu_text help_h_work)"
+    out_plain "  backup <folder>      $(app_menu_text help_backup_a)${BACKUP_ROOT}/${BACKUP_NOTATION}$(app_menu_text help_backup_b)"
+    out_plain "  restore <archive|prefix> [dest]  $(app_menu_text help_restore)"
     out_plain "  remove-project-sudoers [path]"
-    out_plain "                       Remove project-sudoers-file draft only (not host elev;"
-    out_plain "                       lists drafts and lets you choose when multiple;"
-    out_plain "                       confirm or --force; probes /etc/sudoers.d/ and warns if active)"
+    out_plain "                       $(app_menu_text help_remove_1)"
+    out_plain "                       $(app_menu_text help_remove_2)"
+    out_plain "                       $(app_menu_text help_remove_3)"
     out_plain "  submit-sudoer-request [file]"
-    out_plain "                       Detect sudoer-cli + sudoer-adm; sibling writes"
-    out_plain "                       JSON into /var/sudoer-cli/sudoer-request"
-    out_plain "                       action=update if this user's /etc/sudoers.d/${APP_NAME}-<user>"
-    out_plain "                       (or legacy ${APP_NAME}) exists; else add"
-    out_plain "                       (does not write /etc; does not mkdir inbound)"
-    out_plain "                       Prefer: generate-sudoer-request, review, then submit file"
+    out_plain "                       $(app_menu_text help_submit_1)"
+    out_plain "                       $(app_menu_text help_submit_2)"
+    out_plain "                       $(app_menu_text help_submit_3)${APP_NAME}-<user>"
+    out_plain "                       $(app_menu_text help_submit_4a)${APP_NAME}$(app_menu_text help_submit_4b)"
+    out_plain "                       $(app_menu_text help_submit_5)"
+    out_plain "                       $(app_menu_text help_submit_6)"
     out_empty_line
-    out_info "Grant and draft setup (tests and review):"
-    out_plain "  print-sudoers [path] Emit project-sudoers-file (draft) for admin"
-    out_plain "                       (test_local/unmanaged needs --allow-test-local);"
-    out_plain "                       default: ~/.config/${APP_NAME}/sudoers.fragment-<user>"
+    out_info "$(app_menu_text help_h_grant)"
+    out_plain "  print-sudoers [path] $(app_menu_text help_print_1)"
+    out_plain "                       $(app_menu_text help_print_2)"
+    out_plain "                       $(app_menu_text help_print_3a)${APP_NAME}$(app_menu_text help_print_3b)"
     out_plain "  print-sudoers-install-script [path]"
-    out_plain "                       Write admin script (/dev/shm or temp) to install|uninstall|replace"
-    out_plain "                       per-user fragment /etc/sudoers.d/${APP_NAME}-<user> (run with sudo)"
+    out_plain "                       $(app_menu_text help_script_1)"
+    out_plain "                       $(app_menu_text help_script_2a)${APP_NAME}$(app_menu_text help_script_2b)"
     out_plain "  generate-sudoer-request [path]"
-    out_plain "                       Write a JSON sudoer file (compact, both verbs) to a dest"
-    out_plain "                       you can read without sudo. Does not write /etc or inbound."
-    out_plain "                       default: ~/.config/${APP_NAME}/sudoer-request-<user>.json"
+    out_plain "                       $(app_menu_text help_gen_1)"
+    case "${APP_LANG:-en}" in
+        zh-Hant) out_plain "                       不必用 sudo 就能查看。不會寫入 /etc 或 inbound。" ;;
+        es) out_plain "                       se puede ver sin sudo. No escribe /etc ni inbound." ;;
+        fr) out_plain "                       visible sans sudo. N'écrit pas /etc ni inbound." ;;
+        de) out_plain "                       ohne sudo sichtbar. Schreibt nicht nach /etc oder inbound." ;;
+        zh-Hans) out_plain "                       不必用 sudo 就能查看。不会写入 /etc 或 inbound。" ;;
+        ja) out_plain "                       sudo なしで内容を見られます。/etc と inbound には書きません。" ;;
+        ko) out_plain "                       sudo 없이 내용을 볼 수 있습니다. /etc 나 inbound 에는 쓰지 않습니다." ;;
+        *) out_plain "                       you can read without sudo. Does not write /etc or inbound." ;;
+    esac
+    out_plain "                       $(app_menu_text help_gen_3a)${APP_NAME}$(app_menu_text help_gen_3b)"
     out_empty_line
-    out_info "Global Options:"
-    out_plain "  --quiet, -q          Suppress info/success (errors and warnings still shown)"
-    out_plain "  --json               Machine-readable JSON (implies --quiet)"
-    out_plain "  --force              Force reinstall / skip uninstall confirm / allow downgrade / restore into non-empty dest"
-    out_plain "  --global             Install to GLOBAL_BIN (production elevation path)"
-    out_plain "  --allow-test-local   Allow print-sudoers / generate-sudoer-request / submit when only local/unmanaged (TEST MODE)"
-    out_plain "  --update             Force submit-sudoer-request action=update"
-    out_plain "  --add                Force submit-sudoer-request action=add"
-    out_plain "  --disk               Restore host: hard-disk (default; reverse of ram-drive-first)"
-    out_plain "  --ram                Restore host: RAM-drive (/dev/shm/<project>)"
-    out_plain "  --debug              Debug diagnostics on stderr"
+    out_info "$(app_menu_text help_h_options)"
+    out_plain "  --quiet, -q          $(app_menu_text help_quiet)"
+    case "${APP_LANG:-en}" in
+        zh-Hant) out_plain "  --json               機器可處理的 JSON（同時視為 --quiet）" ;;
+        es) out_plain "  --json               JSON para máquinas (implica --quiet)" ;;
+        fr) out_plain "  --json               JSON pour les machines (implique --quiet)" ;;
+        de) out_plain "  --json               JSON für Maschinen (schließt --quiet ein)" ;;
+        zh-Hans) out_plain "  --json               机器可处理的 JSON（同时视为 --quiet）" ;;
+        ja) out_plain "  --json               機械向け JSON（--quiet を含む）" ;;
+        ko) out_plain "  --json               기계용 JSON(--quiet 포함)" ;;
+        *) out_plain "  --json               Machine-readable JSON (implies --quiet)" ;;
+    esac
+    out_plain "  --force              $(app_menu_text help_force)"
+    out_plain "  --global             $(app_menu_text help_opt_global)"
+    out_plain "  --allow-test-local   $(app_menu_text help_allow)"
+    out_plain "  --update             $(app_menu_text help_opt_update)"
+    out_plain "  --add                $(app_menu_text help_opt_add)"
+    out_plain "  --disk               $(app_menu_text help_disk)"
+    out_plain "  --ram                $(app_menu_text help_ram)"
+    out_plain "  --debug              $(app_menu_text help_debug)"
     out_empty_line
-    out_info "Environment:"
-    out_plain "  FOLDER_BACKUP_LANG   This run only: en, zh-Hant, es, fr, de, zh-Hans, ja, or ko. Does not write the language file"
+    out_info "$(app_menu_text help_h_env)"
+    out_plain "  FOLDER_BACKUP_LANG   $(app_menu_text help_lang_env)"
     out_plain "  REPO_USER            ${REPO_USER}"
     out_plain "  REPO_NAME            ${REPO_NAME}"
     out_plain "  SCRIPT_RELPATH       ${SCRIPT_RELPATH}"
     if [ -n "${SCRIPT_URL}" ]; then
         out_plain "  SCRIPT_URL           ${SCRIPT_URL}"
     else
-        out_plain "  SCRIPT_URL           (not set)"
+        out_plain "  SCRIPT_URL           $(app_menu_text help_url_unset)"
     fi
-    out_plain "                       Canonical install channel (override via env; needed for version-check/self-update)"
+    out_plain "                       $(app_menu_text help_url_desc)"
     out_plain "  BACKUP_ROOT          ${BACKUP_ROOT}"
     out_plain "  BACKUP_NOTATION      ${BACKUP_NOTATION}"
-    out_plain "  MAX_DAILY_BACKUPS    5  (per basename per day; prune oldest same-day N)"
-    out_plain "  MAX_TOTAL_BACKUPS    30 (per basename; prune oldest across days)"
-    out_plain "  PROJECTS_ROOT        hard-disk projects tree (auto-detect when possible)"
+    out_plain "  MAX_DAILY_BACKUPS    $(app_menu_text help_daily)"
+    out_plain "  MAX_TOTAL_BACKUPS    $(app_menu_text help_total)"
+    out_plain "  PROJECTS_ROOT        $(app_menu_text help_projects)"
     out_plain "  RAM_ROOT             ${RAM_ROOT}"
     out_plain "  RESTORE_HOST_DEFAULT ${RESTORE_HOST_DEFAULT}  (hard-disk|ram-drive)"
-    out_plain "  USER_BIN / GLOBAL_BIN  install destinations"
-    out_plain "  ALLOW_TEST_LOCAL_SUDOERS  1 = allow test-mode print-sudoers / generate / submit"
-    out_plain "  SUDOER_CLI              override path to sudoer-cli"
-    out_plain "  SUDOER_ADM_USER         approver login (default sudoer-adm)"
-    out_plain "  SUDOER_QUEUE_INBOUND    override inbound approval dir"
-    out_plain "  SUDOER_PUBLIC_ROOT      public queue root (default /var/sudoer-cli)"
-    out_plain "  SUDOERS_D_DIR           host sudoers.d dir (default /etc/sudoers.d; tests)"
+    out_plain "  USER_BIN / GLOBAL_BIN  $(app_menu_text help_bins)"
+    out_plain "  ALLOW_TEST_LOCAL_SUDOERS  $(app_menu_text help_allow_env)"
+    out_plain "  SUDOER_CLI              $(app_menu_text help_sudoer_cli)"
+    out_plain "  SUDOER_ADM_USER         $(app_menu_text help_sudoer_adm)"
+    out_plain "  SUDOER_QUEUE_INBOUND    $(app_menu_text help_inbound)"
+    out_plain "  SUDOER_PUBLIC_ROOT      $(app_menu_text help_public)"
+    out_plain "  SUDOERS_D_DIR           $(app_menu_text help_sudoers_d)"
     out_empty_line
-    out_info "Examples:"
-    out_plain "  ${APP_NAME}                    # TTY numbered boards; a pipe places this program"
+    out_info "$(app_menu_text help_h_examples)"
+    out_plain "  ${APP_NAME}                    $(app_menu_text help_ex_empty)"
     out_plain "  ${APP_NAME} menu"
     out_plain "  ${APP_NAME} install"
-    out_plain "  ${APP_NAME} self-install           # copy this file, or download when piped"
+    out_plain "  ${APP_NAME} self-install           $(app_menu_text help_ex_self)"
     out_plain "  ${APP_NAME} version-check"
     out_plain "  ${APP_NAME} self-update"
-    out_plain "  sudo ${APP_NAME} install          # global (production sudoers trust)"
+    out_plain "  sudo ${APP_NAME} install          $(app_menu_text help_ex_sudo)"
     out_plain "  ${APP_NAME} backup /path/to/project"
     out_plain "  ${APP_NAME} restore genesis-template"
     out_plain "  ${APP_NAME} restore genesis-template --ram"
     out_empty_line
-    out_info "On a real terminal, no command shows the numbered boards. A pipe, or --quiet / --json with no command, places this program. Naming menu off a terminal stops: menu needs a terminal."
-    out_info "Local install stays the verb install. Channel update stays version-check, self-update, and self-uninstall."
-    out_info "Restore default destination is hard-disk (not RAM) unless --ram or dest is set."
-    out_info "Local install + sudoers is TEST MODE ONLY; prefer global for durable elevation."
+    out_info "$(app_menu_text help_foot_1)"
+    out_info "$(app_menu_text help_foot_2)"
+    out_info "$(app_menu_text help_foot_3)"
+    out_info "$(app_menu_text help_foot_4)"
 }
 
 # =============================================================================

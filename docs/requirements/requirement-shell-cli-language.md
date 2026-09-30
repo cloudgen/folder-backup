@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-language.md  
-**Status**: Active (Version 1.0.0)  
+**Status**: Active (Version 1.1.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-language`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-LANGUAGE`  
@@ -7,7 +7,7 @@
 
 ## 1. Purpose
 
-This requirement is the **product Single Source of Truth** for the **display language** of folder-backup’s numbered boards and for the human help heading, the help menu sentence, the language catalog, the about title, and the cache-used label.
+This requirement is the **product Single Source of Truth** for the **display language** of folder-backup’s numbered boards and for human `help` and human `about`.
 
 The eight codes, the child numbers **61**–**68**, the saved-language lines, the failed-write lines, the choose-prompt, Back, Exit, and the language-board longs follow the sibling **sshd-cli** language law **1.3.1**, adapted to this menu. This product has no server board. Sudoers prints only **72** and **75**. English explains stay this product’s sentences (`requirement-shell-cli-default-interaction`, `requirement-shell-cli-sudoers-submenu`).
 
@@ -30,8 +30,8 @@ The eight codes, the child numbers **61**–**68**, the saved-language lines, th
 | Surface | What you open | What for |
 |---------|---------------|----------|
 | Front row **6** | language board | store one code |
-| `folder-backup help` | command | usage heading follows the code |
-| `folder-backup about` | command | title and cache-used label follow the code |
+| `folder-backup help` | command | human help follows the code |
+| `folder-backup about` | command | human about follows the code |
 
 | You do… | What it means | What you type |
 |---------|---------------|---------------|
@@ -96,11 +96,39 @@ The front board also accepts the displayed category short: `client-side`, `用�
 
 English board sentences stay the tables in `requirement-shell-cli-default-interaction` and `requirement-shell-cli-sudoers-submenu`. When `APP_LANG=en` those sentences are exact, including `Grant and drafts` and `sudoers (grant and drafts)`. Other codes translate those sentences and keep command names, flags, paths, and numbers in Latin spelling.
 
-**This version’s help and about scope.** Human help translates the usage heading, the menu sentence, and the **61**–**68** catalog line. Human about translates the title and the cache-used label. The rest of the help body and the other about field labels stay English. JSON help, JSON about, argv `version`, operational command output, data-picker prompts, and `out_die` lines that are not a menu unknown-choice stay English.
+**MUST** follow `APP_LANG` for human `help` and human `about`: section headings and the prose after command tokens, flags, paths, and environment names. When `APP_LANG=en` that prose is exact. When `APP_LANG` is one of the other seven codes, that prose is that language. **MUST NOT** leave a human help or about sentence in English for those seven codes, except the Latin tokens, flags, paths, and environment names, and the machine status tokens below.
 
-The JSON help string stays in the JSON branch of `app_help`. It does **not** go through `app_menu_text`.
+JSON `about` field names and values stay English. Argv `version` stays English (`folder-backup version VERSION`). Operational command output, data-picker prompts, and `out_die` lines that are not a menu unknown-choice stay English.
 
-English usage heading stays `Usage:`. Other headings: `用法：` (zh-Hant and zh-Hans), `Uso:`, `Utilisation :`, `Verwendung:`, `使い方:`, `사용법:`. English about title stays `About / Diagnostics`. Japanese about title is `概要 / 診断`. Korean about title is `개요 / 진단`. English cache label stays `Cache folder used: ` (the source ends with one space). Japanese cache label is `使用中のキャッシュフォルダ: `. Korean cache label is `사용 중인 캐시 폴더: `. The two Chinese cache labels end on the fullwidth colon and have no trailing space.
+JSON `help` user-facing strings follow the code. The message contains the four letters r, e, a, d in a row, so it is a `case` arm in `app_help`. The note does not, so it is `app_menu_text` key `help_json_note`.
+
+Any other sentence that contains those four letters (a lowercase scan; `already`, `thread`, `spread`, `ready`, and `readable` count) stays a `case` arm in `app_help` or `app_about`. Every other human help or about sentence is the matching `help_*` or `about_*` arm of `app_menu_text`. This requirement does not paste that function.
+
+Machine status tokens stay Latin in about values: `production`, `test_local`, `unmanaged`, `sudo_n_ok`, `sudo_needs_auth_or_denied`, `no_sudo`, `not_found`, `true`, `false`. When a stored version or shell value equals the English words `not found` or `unknown`, the printed word follows `APP_LANG`. The installed sentence, the yes/no sentence, and the execution-context sentence are full translated sentences.
+
+English usage heading stays `Usage:`. Other usage headings: `用法：` (zh-Hant and zh-Hans), `Uso:`, `Utilisation :`, `Verwendung:`, `使い方:`, `사용법:`. English about title stays `About / Diagnostics`. Japanese about title is `概要 / 診断`. Korean about title is `개요 / 진단`. English cache label stays `Cache folder used: ` (the source ends with one space). Japanese cache label is `使用中のキャッシュフォルダ: `. Korean cache label is `사용 중인 캐시 폴더: `. The two Chinese cache labels end on the fullwidth colon and have no trailing space. English cache preferred, 1st fallback, 2nd fallback, and persistence labels stay `Cache folder (preferred): `, `Cache folder (1st fallback): `, `Cache folder (2nd fallback): `, and `Persistence storage:` with the English spacing. The other seven codes translate those labels. JSON names `cache_used`, `cache_preferred`, `cache_fallback`, `cache_fallback_2`, and `persistence_storage` stay English.
+
+Help and about section headings:
+
+| Heading | en | zh-Hant | zh-Hans | es | fr | de | ja | ko |
+|---------|----|---------|----------|----|----|----|----|-----|
+| Self-management | `Self-management (full channel, any login):` | `自我管理（完整通道，任何登入）：` | `自我管理（完整通道，任何登录）：` | `Autogestión (canal completo, cualquier inicio):` | `Autogestion (canal complet, toute session) :` | `Selbstverwaltung (voller Kanal, jede Anmeldung):` | `自己管理（完全なチャネル、どのログインでも）:` | `자기관리 (전체 채널, 어떤 로그인이든):` |
+| Install and self-care | `Install and self-care (your own login):` | `安裝與自我維護（你自己的登入）：` | `安装与自我维护（你自己的登录）：` | `Instalación y cuidado propio (su propio inicio):` | `Installation et entretien (votre propre session) :` | `Installation und eigene Pflege (Ihre eigene Anmeldung):` | `インストールと自己手入れ（自分のログイン）:` | `설치와 자기 정비 (자신의 로그인):` |
+| Work | `Work commands:` | `工作指令：` | `工作命令：` | `Comandos de trabajo:` | `Commandes de travail :` | `Arbeitsbefehle:` | `作業コマンド:` | `작업 명령:` |
+| Grant | `Grant and draft setup (tests and review):` | `授權與草稿設定（測試與檢視）：` | `授权与草稿设置（测试与查看）：` | `Concesión y borradores (pruebas y revisión):` | `Autorisation et brouillons (essais et relecture) :` | `Freigabe und Entwürfe (Tests und Prüfung):` | `認可と下書き（試験と確認）:` | `허가와 초안 (시험과 검토):` |
+| Options | `Global Options:` | `全域選項：` | `全局选项：` | `Opciones globales:` | `Options globales :` | `Globale Optionen:` | `全体オプション:` | `전역 옵션:` |
+| Environment | `Environment:` | `環境：` | `环境：` | `Entorno:` | `Environnement :` | `Umgebung:` | `環境:` | `환경:` |
+| Examples | `Examples:` | `範例：` | `示例：` | `Ejemplos:` | `Exemples :` | `Beispiele:` | `例:` | `예:` |
+| About useful | `Useful commands:` | `常用指令：` | `常用命令：` | `Comandos útiles:` | `Commandes utiles :` | `Nützliche Befehle:` | `便利なコマンド:` | `유용한 명령:` |
+
+Sentences kept as `case` arms because they contain those four letters:
+
+| Arm | en | zh-Hant | zh-Hans | es | fr | de | ja | ko |
+|-----|----|---------|----------|----|----|----|----|-----|
+| JSON help message | `Help text available in human-readable mode. Run without --json.` | `說明文字在人類可讀模式。請不要加 --json。` | `说明文字在人可读模式。请不要加 --json。` | `El texto de ayuda está en el modo para personas. Ejecute sin --json.` | `Le texte d'aide est dans le mode pour les personnes. Lancez sans --json.` | `Der Hilfetext steht im Modus für Menschen. Starten Sie ohne --json.` | `説明は人が読むモードにあります。--json を付けずに実行してください。` | `도움말 문장은 사람이 읽는 모드에 있습니다. --json 없이 실행하세요.` |
+| `--json` flag | `Machine-readable JSON (implies --quiet)` | `機器可處理的 JSON（同時視為 --quiet）` | `机器可处理的 JSON（同时视为 --quiet）` | `JSON para máquinas (implica --quiet)` | `JSON pour les machines (implique --quiet)` | `JSON für Maschinen (schließt --quiet ein)` | `機械向け JSON（--quiet を含む）` | `기계용 JSON(--quiet 포함)` |
+| Generate continuation | `you can read without sudo. Does not write /etc or inbound.` | `不必用 sudo 就能查看。不會寫入 /etc 或 inbound。` | `不必用 sudo 就能查看。不会写入 /etc 或 inbound。` | `se puede ver sin sudo. No escribe /etc ni inbound.` | `visible sans sudo. N'écrit pas /etc ni inbound.` | `ohne sudo sichtbar. Schreibt nicht nach /etc oder inbound.` | `sudo なしで内容を見られます。/etc と inbound には書きません。` | `sudo 없이 내용을 볼 수 있습니다. /etc 나 inbound 에는 쓰지 않습니다.` |
+| About `--json` blurb | `Machine-readable output` | `機器可處理的輸出` | `机器可处理的输出` | `salida para máquinas` | `sortie pour les machines` | `Ausgabe für Maschinen` | `機械向けの出力` | `기계용 출력` |
 
 English help **MUST** name `67 Japanese` and `68 Korean`.
 
@@ -231,7 +259,7 @@ Front language long: `display language for this menu` (en), `這個選單的顯�
 
 ### 2.5 Call shape
 
-`app_lang_load`, `app_lang_save`, and `app_menu_text` do not contain `read`. A command substitution around them is allowed. `app_cmd_menu_language` contains `read -r` and **MUST** be called in the current shell from the front board’s language arm. **MUST NOT** wrap that function in `$()` or backticks.
+`app_lang_load`, `app_lang_save`, and `app_menu_text` do not contain `read` (a lowercase scan of those four letters in a row). A command substitution around them is allowed. `app_cmd_menu_language` contains `read -r` and **MUST** be called in the current shell from the front board’s language arm. **MUST NOT** wrap that function in `$()` or backticks.
 
 `app_menu_text` prints the chosen string on stdout with no newline. A missing key prints the key. An unknown `APP_LANG` falls back to English. The caller passes the string to `out_*`.
 
@@ -263,7 +291,7 @@ Traditional Chinese front after **62**:
 請輸入編號，或輸入指令名稱：
 ```
 
-Japanese help opens with `使い方:` and does not print `Usage:`. Korean about opens with `개요 / 진단`.
+Japanese help opens with `使い方:` and the work heading `作業コマンド:`. It does not print `Usage:` or `Work commands:`. Korean about opens with `개요 / 診断` and the useful heading `유용한 명령:`.
 
 ---
 
@@ -289,7 +317,7 @@ Japanese help opens with `使い方:` and does not print `Usage:`. Korean about 
 7. Pass the menu choose-prompt through `prompt_line`.
 8. Change English `Grant and drafts` or `sudoers (grant and drafts)` while translating other codes.
 9. Translate leaf shorts (`backup`, `install`, `submit-sudoer-request`, and the rest).
-10. Claim the whole help body and every about label are translated in this version.
+10. Leave human help or about prose in English when `APP_LANG` is one of the other seven codes, except Latin tokens, flags, paths, environment names, and the machine status tokens in §2.4.
 
 **Violating this rule is a critical menu-language regression.**
 
@@ -304,7 +332,7 @@ Japanese help opens with `使い方:` and does not print `Usage:`. Korean about 
 | AC-3 | **61** restores `en`. **63**–**68** store `es`, `fr`, `de`, `zh-Hans`, `ja`, `ko` and print that code’s saved line and Exit word |
 | AC-4 | A first line other than the eight codes stays English and is left as written |
 | AC-5 | `FOLDER_BACKUP_LANG` overrides the file for that process and does not rewrite the file |
-| AC-6 | Japanese and Korean `help` use their usage heading. Japanese and Korean `about` use their title and cache label. English `help` still says `Usage:` and names **67** and **68** |
+| AC-6 | Human `help` and human `about` follow `APP_LANG`. Japanese help uses `使い方:` and `作業コマンド:`. Korean about uses `개요 / 診断` and `유용한 명령:`. English help still says `Usage:`, `Work commands:`, and `Grant and draft setup (tests and review):`, and names **67** and **68**. JSON about keeps `cache_used`. Argv `version` stays `folder-backup version` |
 | AC-7 | `folder-backup language` is unknown. English front text stays the default-interaction table, plus row **6** |
 
 ---
@@ -326,7 +354,7 @@ Japanese help opens with `使い方:` and does not print `Usage:`. Korean about 
 
 | TP family / ID | Suite | Status |
 |----------------|-------|--------|
-| **TP-CLI-24** | `tests/test_cli.sh` | **have** — eight codes, file mode, env override, ja/ko help and about (AC-1–AC-7) |
+| **TP-CLI-24** | `tests/test_cli.sh` | **have** — eight codes, file mode, env override, human help and about in each code (AC-1–AC-7) |
 | **TP-CLI-04** / **TP-CLI-15** | same | **have** — English help names language and **67** / **68** |
 | **TP-CLI-13** | same | **have** — English front includes row **6** and no server row |
 
@@ -338,6 +366,7 @@ Japanese help opens with `使い方:` and does not print `Usage:`. Korean about 
 | Date | Status | Note |
 |------|--------|------|
 | 2026-09-30 | Active 1.0.0 | Front **6**, eight codes, persistence leaf, `FOLDER_BACKUP_LANG`. Help and about translate the heading, menu sentence, catalog, title, and cache-used label. |
+| 2026-09-30 | Active 1.1.0 | Human `help` and human `about` follow `APP_LANG`. JSON about and argv `version` stay English. Sentences that contain `read` stay `case` arms. |
 
 ---
 
