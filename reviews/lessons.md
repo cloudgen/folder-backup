@@ -7,7 +7,7 @@ Durable failure modes. **Always re-check on product review.**
 | L-MENU-SUDOERS-01 | Family token `sudoers` wired as a live command, or grant/draft setup verbs dropped from the dispatcher | Family row is menu-only; five setup verbs stay live CLI commands; TP-CLI-13 | open watch |
 | L-TYPE-N-01 | Empty argv becomes install-ensure (parent Type O leak) | case 2 off-TTY help + never ensure; TP-CLI-07 | open watch |
 | L-CASE2-01 | Empty argv on TTY stays help after case 2 (always-help leak) | `requirement-shell-cli-default-interaction` 1.3.0; TP-CLI-13 empty argv | open watch |
-| L-ONLINE-01 | Online verbs reintroduced (self-update / SCRIPT_URL UX) | A=cli-template already absent + TP-CLI-04/10 | open watch |
+| L-ONLINE-01 | Channel verbs dropped, or empty argv turned into install-ensure | User order 2026-09-30 keeps self-install / version-check / self-update / self-uninstall. Empty argv stays case 2. TP-CLI-04/07/10 | closed by that order; watch the empty-argv split |
 | L-UNIN-01 | Non-interactive uninstall succeeds without force | TP-LC-05 confirm fail-closed | open watch |
 | L-INST-MODE-01 | Install leaves `0711`/`0700` (chmod +x after mktemp) so non-owners cannot run shell ship unit | absolute `chmod 0755` + heal on reinstall; TP-LC-09/10; local-self-management §2.3.1 | open watch |
 | L-DEPOSIT-01 | Unprivileged write to `/var/backup` or silent deposit success without sudo | fail-closed + print-sudoers; TP-FOLDER-BACKUP-05 | open watch |
@@ -27,5 +27,6 @@ Durable failure modes. **Always re-check on product review.**
 | L-SUDOERS-08 | Submit of JSON `"*"` lands as cwd listing in inbound/`/etc` (unquoted sibling encode glob) | Fail closed unless inbound args stay `["backup","*"]`; convert ≠ submit re-encode; do not approve `ls` names; INC-20260823-002 | open watch |
 | L-OUTPUT-01 | Submit fail-closed `[ERROR]` uses inbound/verb/sibling-re-encode jargon; operator cannot act | Fatal submit errors must name the missing grant, do-not-approve request id, and next command (`generate-sudoer-request`); **requirement-operator-readable-error**; TP-25*; incomplete inbound JSON is **not** a standing expected class (owner); INC-20260817-002 | open watch |
 | L-TEST-REVIEW-01 | Green emit TP-22 + stub TP-20 + S14 Pass miss sibling decode drop | Assert inbound after **real** sudoer-cli; pretty + compact fixtures; do not treat `tests/run.sh` PASS as grant fidelity; INC-20260817-001 | open watch |
+| L-SAFE-RM-01 | Host `safe-rm` success text lands inside sudoer-cli `$(sr_render_sudoers)` and visudo rejects line 4 | Tests that call real sudoer-cli put a quiet `rm` first on `PATH`. The guard still runs. Production submit on this host fails the same way until sudoer-cli stops capturing `rm` stdout. | open watch |
 
-**Bootstrap parent lessons (cli-template) still relevant for kept surfaces:** output SSOT, no basename gate on entry, storage isolation, local-only install (empty argv never Type O). Historical Type N always-help is withdrawn (case 2 TTY menu). Historical selfmanaged lessons apply only as retired-hop context.
+**Bootstrap parent is selfmanaged (2026-09-30).** Keep its output SSOT, no basename gate, storage leaf, and channel verbs. Empty argv stays the folder-backup work list (case 2), not the parent’s off-TTY install. `install` stays the local copy (mode 0755).

@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-bootstrap-chain.md  
-**Status**: Active (Version 2.1.0)  
+**Status**: Active (Version 2.2.0)  
 **Area**: architecture  
 **Key**: `requirement-bootstrap-chain`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -12,18 +12,18 @@ Declare the **bootstrap chain** for this product: ordered lineage, direction, ar
 
 ### 1.1 Human-facing
 
-**In one sentence:** folder-backup grew from the sibling **cli-template** CLI; copy architecture **from** that parent **to** this product, never the reverse.
+**In one sentence:** folder-backup is rebuilt from the sibling **selfmanaged** CLI; copy architecture **from** that parent **to** this product, never the reverse.
 
 | Box | Meaning | Example |
 |-----|---------|---------|
 | You / this login | Work in this tree (`src/folder-backup`) | `sh src/folder-backup version` |
-| The parent | Sibling `cli-template` — install-for-yourself CLI, no download-and-run channel | Keep that tree as the origin |
+| The parent | Sibling `selfmanaged` — self-install, version-check, self-update, self-uninstall | Keep that tree as the origin |
 | Not this file | Backup/restore verbs, sudoers grant body | `requirement-domain-folder-backup` |
 
 | Includes | Excludes |
 |----------|----------|
-| Ancestor → descendant only | Copying this product onto cli-template “to share fixes” |
-| Local-only install inherited from the parent | Reintroducing online `curl\|sh` because a sibling has it |
+| Ancestor → descendant only | Copying this product onto selfmanaged “to share fixes” |
+| Parent channel verbs kept, plus this product’s local `install` | Empty argv as download-and-run (this product stays case 2) |
 
 | Surface | What you open | What for |
 |---------|---------------|----------|
@@ -33,7 +33,7 @@ Declare the **bootstrap chain** for this product: ordered lineage, direction, ar
 | You do… | What it means | What you type |
 |---------|---------------|---------------|
 | Change this product | Edits stay here. Do not overwrite the parent CLI. | work under this workspace root |
-| Check install mode | Both products are local-only. | `folder-backup help` — no `SCRIPT_URL` |
+| Check install mode | Channel verbs are explicit. A bare run on a terminal is the work list. | `folder-backup help` lists `self-install` and `SCRIPT_URL` |
 
 ---
 
@@ -49,17 +49,17 @@ Declare the **bootstrap chain** for this product: ordered lineage, direction, ar
 
 | Field | Value |
 |-------|--------|
-| **Root / hop 0 (A)** | `cli-template` — Type 0 local-only template (sibling workspace `{{PROJECTS_ROOT}}/cli-template`) |
+| **Root / hop 0 (A)** | `selfmanaged` — Type 0 self-managed CLI with channel verbs (sibling workspace `{{PROJECTS_ROOT}}/selfmanaged`) |
 | **Leaf / hop 1 (B)** | `folder-backup` — this workspace product |
-| **Immediate origin of leaf** | `cli-template` |
-| **Specialize mode** | **Domain extend** (folder archive backup + sudoers-elevated deposit). Online / Type O already **absent on A** — not a second online trim. |
-| **A ship unit** | Sibling: `{{PROJECTS_ROOT}}/cli-template/src/cli-template` (not in this tree) |
+| **Immediate origin of leaf** | `selfmanaged` |
+| **Specialize mode** | **Domain extend** (folder archive backup + sudoers-elevated deposit) **and keep** A’s channel verbs. Not a trim. |
+| **A ship unit** | Sibling: `{{PROJECTS_ROOT}}/selfmanaged/src/selfmanaged` (not in this tree; do not write it from here) |
 | **B ship unit** | `src/folder-backup` |
-| **A channel ownership** | **None** — local-only install |
-| **B channel ownership** | **None** — local-only install (inherited) |
-| **A domain** | none (Type 0 lifecycle template) |
+| **A channel ownership** | `self-install`, `version-check`, `self-update`, `self-uninstall`; composed `SCRIPT_URL` |
+| **B channel ownership** | Same verbs, retargeted to `REPO_USER` / `REPO_NAME` = this product. Empty argv is **not** A’s off-TTY install. |
+| **A domain** | none (Type 0 lifecycle) |
 | **B domain** | folder tar.gz backup + sudoers-elevated deposit (see `requirement-domain-folder-backup`) |
-| **Retired names (not live hops)** | `selfmanaged` — historical 2026-08-03 origin declaration. **Not** the live parent. |
+| **Retired names (not live hops)** | `cli-template` — live parent from 2026-08-13 through 2026-09-29. **Not** the live parent after 2.2.0. |
 
 ### 2.3 Architecture inheritance (B from A)
 
@@ -72,10 +72,10 @@ B **MUST** inherit A’s structural contracts:
 | Modular prefixes | `out_`, `inst_`, `util_`, `app_`, `path_`, `prompt_`; domain uses dedicated `fb_` prefix |
 | Entry / dispatch | Single `app_main`; always call `app_main "$@"` at end |
 | Global flags | `--quiet` / `--json` / `--debug` / `--force` / `--global` |
-| Integrity companion | **Absent** (A has none) |
-| Online lifecycle | **Absent** (`version-check`, `self-update`, `self-uninstall`, Type O, `SCRIPT_URL` UX) |
-| Local lifecycle | **Keep** local `install` / `uninstall` / `where-is-me` |
-| Empty argv | **Extend** case 2 TTY menu / off-TTY help |
+| Integrity companion | **Keep** A’s `CHECKSUM` download check when set. No separate checksum requirement file. |
+| Online lifecycle | **Keep** `self-install`, `version-check`, `self-update`, `self-uninstall`, `self-management` |
+| Local lifecycle | **Keep** folder-backup `install` / `uninstall` / `where-is-me` (`inst_local_*`, mode **0755**) |
+| Empty argv | **Extend** case 2 TTY menu / off-TTY help — **not** A’s off-TTY install-ensure |
 | Domain | **Add** on B only |
 
 ### 2.4 Keep / extend matrix (normative for this product)
@@ -87,11 +87,12 @@ B **MUST** inherit A’s structural contracts:
 | Global flags + `app_main` | **Keep** | Same contracts; domain flags added on B |
 | Storage resolve | **Keep / adapt** | Staging for tar.gz |
 | Idempotency / interactive modes | **Keep / retarget** | Domain confirm paths stay fail-closed |
-| Online channel (`SCRIPT_URL`, `REPO_*` as channel) | **Absent (inherited)** | Not install source; not help/about product UX |
-| Type O empty argv | **Absent (inherited)** | Empty argv never install-ensure; TTY numbered list (case 2) |
-| Remote `version-check` / `self-update` / `self-uninstall` | **Absent (inherited)** | Unknown commands |
-| Companion `.sha256` product law | **Absent (inherited)** | No channel integrity package |
-| Local `install` / `uninstall` / `where-is-me` | **Keep** | Local self-managed package |
+| Online channel (`SCRIPT_URL`, `REPO_*`) | **Keep** | Composed for this product. Help lists the URL. `install` does not download. |
+| Type O empty argv | **Do not take** | Empty argv stays case 2 (TTY work list / off-TTY help), even though A installs off-TTY |
+| `self-install` / `version-check` / `self-update` / `self-uninstall` | **Keep** | Explicit verbs. `self-install` is `inst_self_install` (script copy or download). |
+| `self-management` | **Keep** | TTY opens the parent self-care board. Off-TTY help. **Not** a main-menu row. |
+| Companion `CHECKSUM` | **Keep code path** | Optional env. Not a second requirement file. |
+| Local `install` / `uninstall` / `where-is-me` | **Keep** | `install` stays `inst_local_install` (mode **0755**). Do not alias it to `self-install`. |
 | Domain backup + sudoers fragment | **Add** | Domain SSOT |
 | Domain / out Protection Zones | **Keep spirit** | Do not “simplify away” defensive layers for style |
 
@@ -100,25 +101,27 @@ B **MUST** inherit A’s structural contracts:
 | Concern | B value |
 |---------|---------|
 | `APP_NAME` | `folder-backup` |
-| `VERSION` | `1.6.1` (product version SSOT in ship unit) |
-| Primary install story | Local copy from running ship unit → `${USER_BIN}` (default `~/.local/bin`) |
-| README one-liner | **No** `curl \| sh` channel claim |
+| `VERSION` | `1.17.0` (product version SSOT in the ship unit) |
+| Primary day-to-day install | Local copy `install` → `${USER_BIN}` (default `~/.local/bin`), mode **0755** |
+| Channel place | Explicit `self-install` / `self-update` (copy when `$0` is a file; download when piped) |
+| README | Names both the local `install` and the explicit channel verbs |
 
 ### 2.6 Implementation Notes (this project)
 
 | Item | Value |
 |------|--------|
-| **A (bootstrap)** | `cli-template` at `{{PROJECTS_ROOT}}/cli-template` (do not reverse-copy) |
+| **A (bootstrap)** | `selfmanaged` at `{{PROJECTS_ROOT}}/selfmanaged` (do not reverse-copy; do not edit A from this tree) |
 | **B (this product)** | folder-backup |
-| **Specialize intent** | Same Type 0 local architecture as A + folder-backup domain |
-| **Install mode** | **local-only** (not dual-mode) |
+| **Specialize intent** | A’s architecture and channel verbs, plus folder-backup domain and the folder-backup main menu |
+| **Install mode** | **Dual, explicit.** `install` copies the running file (mode 0755). `self-install` is the channel verb. Empty argv is the work list, not either install. |
+| **Cache host knob** | `SELFMANAGED_CACHE_HOST` stays that name (inherited). Do not rename it. |
 | **Domain after specialize** | Active `requirement-domain-folder-backup` |
-| **Historical origin** | 2026-08-03 named `selfmanaged` with online trim. Retired 2026-08-13. |
+| **Historical origin** | 2026-08-03 first named `selfmanaged` then trimmed online. 2026-08-13 retargeted A to `cli-template` and dropped the channel. 2026-09-30 user ordered A=`selfmanaged` again and **kept** the channel. |
 
 ### 2.7 Why This Requirement Exists (CIAO)
 
 - **Principle 2 – Intentional**: Lineage and domain extend are explicit.  
-- **Principle 1 – Caution**: No half-live channel; A already has none.  
+- **Principle 1 – Caution**: Channel verbs are explicit. Empty argv does not download.  
 - **Principle 18 / Over-protect**: Reverse-copy is forbidden pollution.  
 - **Principle 21 – Dual policies**: Complete B law; portable cores elsewhere.
 
@@ -127,9 +130,9 @@ B **MUST** inherit A’s structural contracts:
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - **Caution**: Matrix before delete; verify no half-live install.  
-- **Intentional**: Explicit keep/extend; registry names absences.  
+- **Intentional**: Explicit keep/extend; the registry names the live parent.  
 - **Anti-fragile**: Keep battle-tested `out_*` / modular patterns from A.  
-- **Over-protect**: Never reverse-copy; no silent channel reintro.
+- **Over-protect**: Never reverse-copy; do not hide the channel or alias `install` to it.
 
 ---
 
@@ -137,12 +140,13 @@ B **MUST** inherit A’s structural contracts:
 
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
-1. Reverse-copy `folder-backup` onto `cli-template` or treat reverse as “cleanup.”  
-2. Name `selfmanaged` as this product’s live origin without updating this file.  
-3. Claim bootstrap trim of online while reintroducing Type O install-ensure or `SCRIPT_URL` as product UX.  
-4. Leave dual-mode online+local install without an explicit dual-mode matrix and user order.  
+1. Reverse-copy `folder-backup` onto `selfmanaged` or treat reverse as “cleanup.”  
+2. Name `cli-template` as this product’s live origin without updating this file.  
+3. Point empty argv at install-ensure. The work list (case 2) owns empty argv.  
+4. Alias `install` to `inst_self_install`, or drop `self-install` while claiming A’s lifecycle.  
 5. Drop `out_*` / modular Protection Zones as “part of specialize.”  
-6. Invent a second bootstrap origin that contradicts this declaration without updating this file.
+6. Invent a second bootstrap origin that contradicts this declaration without updating this file.  
+7. Rename `SELFMANAGED_CACHE_HOST`.
 
 **Violating this rule is a critical bootstrap-direction regression.**
 
@@ -152,11 +156,11 @@ B **MUST** inherit A’s structural contracts:
 
 | ID | Criterion |
 |----|-----------|
-| AC-1 | Hop table names A=cli-template, B=folder-backup, direction A→B |
-| AC-2 | Keep/extend matrix matches Active registry (online package absent; domain present) |
-| AC-3 | B identity retarget complete (`APP_NAME`, `VERSION`, local install) |
+| AC-1 | Hop table names A=selfmanaged, B=folder-backup, direction A→B |
+| AC-2 | Keep/extend matrix matches the registry (channel verbs kept; domain present; empty argv case 2) |
+| AC-3 | B identity retarget complete (`APP_NAME=folder-backup`, `VERSION` 1.17.0, this product’s `SCRIPT_URL`) |
 | AC-4 | Domain SSOT present for backup surface |
-| AC-5 | `selfmanaged` is retired history, not a live hop |
+| AC-5 | `install` is local copy mode 0755; `self-install` is the channel verb |
 
 ---
 
@@ -165,7 +169,7 @@ B **MUST** inherit A’s structural contracts:
 | Key | Relationship |
 |-----|--------------|
 | `requirement-class-software-dev` | Class gate |
-| `requirement-shell-local-self-management` | Local lifecycle inherited from A |
+| `requirement-shell-local-self-management` | Local `install` / `uninstall` / `where-is-me` (not the channel verbs) |
 | `requirement-shell-cli-zero-arguments` | **Withdrawn** — Type N always-help retired |
 | `requirement-shell-cli-default-interaction` | Case 2 empty argv (TTY menu / off-TTY help) |
 | `requirement-domain-folder-backup` | Domain extend |
@@ -177,7 +181,7 @@ B **MUST** inherit A’s structural contracts:
 
 | TP family / ID | Suite | Status | Note |
 |----------------|-------|--------|------|
-| **TP-CLI-04,10** | `tests/test_cli.sh` | have | online verbs absent |
+| **TP-CLI-04,10** | `tests/test_cli.sh` | have | help lists channel verbs; offline `version-check` / `self-update` fail closed |
 | **TP-CLI-07** | `tests/test_cli.sh` | have | Off-TTY empty argv is help, not install |
 | **TP-CLI-13** | `tests/test_cli.sh` | have | TTY empty argv numbered list (case 2) |
 | **TP-FOLDER-BACKUP-*** | `tests/test_domain_folder_backup.sh` | have | domain extend |
@@ -192,9 +196,10 @@ B **MUST** inherit A’s structural contracts:
 | 2026-08-03 | Active 1.0.0 | Declared A=selfmanaged → B=folder-backup (trim online) |
 | 2026-08-13 | Active 2.0.0 | Re-specialize: A=cli-template → B=folder-backup (domain extend). selfmanaged retired. |
 | 2026-08-28 | Active 2.1.0 | Empty argv **extend**: case 2 TTY menu; Type O still absent |
+| 2026-09-30 | Active 2.2.0 | User ordered A=`selfmanaged` again. Channel verbs kept. Empty argv stays case 2. `install` stays the local copy. |
 
 ---
 
-**Last Updated**: 2026-08-28  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

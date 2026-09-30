@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-modular-function-design.md  
-**Status**: Active (Version 1.0.0)  
+**Status**: Active (Version 1.0.1)  
 **Area**: shell  
 **Key**: `requirement-shell-modular-function-design`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -91,7 +91,7 @@ Critical sections (output SSOT, install place/remove, storage resolve, domain ar
 |------|--------|
 | **Ship unit** | `src/folder-backup` |
 | **Domain prefix** | `fb_` |
-| **Bootstrap inheritance** | Prefix discipline from cli-template; domain prefix `fb_` added |
+| **Bootstrap inheritance** | Prefix discipline from selfmanaged; domain prefix `fb_` added |
 | **Multi-file authoring** | Optional later only if pack still yields one installable artifact and this requirement is updated |
 
 ### 2.6 Why This Requirement Exists (CIAO)
@@ -164,9 +164,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | Date | Status | Note |
 |------|--------|------|
 | 2026-08-03 | Active | Modular prefixes for folder-backup |
+| 2026-09-30 | Active 1.0.1 | Bootstrap parent name is selfmanaged (`fb_` prefix unchanged) |
 
 ---
 
-**Last Updated**: 2026-08-03  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

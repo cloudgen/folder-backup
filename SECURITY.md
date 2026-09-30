@@ -4,7 +4,9 @@
 
 | Version | Supported |
 |---------|-----------|
-| 1.16.3 (current) | Yes |
+| 1.17.0 (current) | Yes |
+| 1.16.4 | Yes |
+| 1.16.3 | Yes |
 | 1.16.2 | Yes |
 | 1.15.0 | Yes |
 | 1.14.0 | Yes |
@@ -41,11 +43,27 @@ This project follows **[CIAO](https://github.com/cloudgen/ciao)** / **[CIAO-Lite
 | **C** | **Caution** | Fail closed without working allowlisted sudo for deposit; restore dest **whitelist** (W-ETC-USER `/etc/{{username}}`; never `/etc/passwd`); validate sources and archives. |
 | **I** | **Intentional** | Type 0 archive create vs Type 1 deposit/restore-stage copy are separate; `print-sudoers` never writes `/etc`. |
 | **A** | **Anti-fragile** | Staging + traps; clear admin install path; hard-disk default restore dest avoids accidental RAM-only recovery assumptions. |
-| **O** | **Over-protect** | Narrow Cmnds only (no `NOPASSWD: ALL`); Protection Zones; count/size verification before success. |
+| **O** | **Over-protect** | Narrow Cmnds only (no `NOPASSWD: ALL`); Protection Zones; count/size verification before success. A companion digest that does not match aborts the download. |
 
 Full principles: [CIAO](https://github.com/cloudgen/ciao) · [CIAO-Lite](https://github.com/cloudgen/ciao-lite).
 
 This section is **design posture**, not a third-party certification claim.
+
+## Install integrity and trust
+
+`self-install` and `self-update` download from the channel in [`README.md`](./README.md). When `CHECKSUM` is unset, the program fetches the companion `${SCRIPT_URL}.sha256` (published as `src/folder-backup.sha256`).
+
+| Fact | Honest statement |
+|------|------------------|
+| **Default path** | Automatic companion verification. No env pin is required for a normal channel install or self-update. |
+| **Algorithm** | SHA-256. Human mode shows the companion link, the expected value, and the result. |
+| **Match** | Install continues. |
+| **Mismatch** | Install aborts. Mismatched bytes are not placed. |
+| **Missing sidecar** | Warn and continue. This is not “always verified.” |
+| **Optional pin** | `CHECKSUM` is a secondary pin for one run (CI or an out-of-band freeze). It is not listed in `help` or `about`. A pin taken from the same URL is not stronger than the automatic companion. |
+| **Trust bound** | Same-channel SHA-256 proves the downloaded file matches the companion. It does not prove a separate signature or a different trust root. |
+
+Operator steps stay in the README. Local `install` copies the file you are running and does not use this check.
 
 ## Scope notes
 

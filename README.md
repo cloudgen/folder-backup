@@ -1,6 +1,6 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.16.3-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.17.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
@@ -9,11 +9,11 @@
 
 | You (your own login) | Admin / already root | Not this |
 |----------------------|----------------------|----------|
-| Install to `~/.local/bin`, write a grant you can read, submit it, then run backup/restore after an admin has installed the grant | Install into `/usr/local/bin` and install the sudoers fragment | No download-and-run install; a normal login does not write `/etc` |
+| Install to `~/.local/bin`, write a grant you can read, submit it, then run backup/restore after an admin has installed the grant | Install into `/usr/local/bin` and install the sudoers fragment | A normal login does not write `/etc`. A bare run does not download. |
 
 | Includes | Excludes |
 |----------|----------|
-| Local install, numbered work list, backup/restore, grant draft | Online `curl\|sh` install |
+| Local install, numbered work list, backup/restore, grant draft, explicit self-install / self-update | A bare run that downloads |
 | Admin-installed narrow grant for `/var/backup` | A normal login writing `/etc` |
 
 | You do… | What it means | What you type |
@@ -26,6 +26,7 @@
 ## Features
 
 - **Install for yourself**: copy this program into `~/.local/bin` (`install`); remove it (`uninstall`); ask where it lives (`where-is-me`)
+- **Channel, when you ask**: `self-install` places a copy or a download; `version-check` and `self-update` use the GitHub raw URL for this repository; `self-uninstall` removes that placed binary. A bare `folder-backup` does not do this.
 - **Numbered work list**: on a real terminal, a bare `folder-backup` (or `menu` / `main`) shows backup, restore, grant/drafts, then Exit
 - **Backup a folder**: pack it to a dated gzip under `/var/backup/folder-backup/`, check counts, then keep at most **5** same-day and **30** total copies per project name
 - **Restore**: put an archive back onto the hard-disk projects tree (or a path you name)
@@ -79,16 +80,41 @@ sudo sh /dev/shm/folder-backup-<user>-sudoers-admin.sh status
 
 **Security note:** Local `~/.local/bin` install is **not** production-secure for host elevation — the user can change the binary and stage trees. Prefer global install for any host that keeps `/etc/sudoers.d/folder-backup-<user>`. Multi-user hosts get **one fragment file per user** (no shared overwrite). See [`SECURITY.md`](./SECURITY.md).
 
-This product is **local-only** for its install *channel* (no default `SCRIPT_URL` online install). Global vs local here means install *location*, not an online channel.
+**Channel place (only when you name the verb).** Day-to-day place stays `install` (a copy of the file you are running, mode `0755`, no download). `self-install`, `version-check`, `self-update`, and `self-uninstall` are the channel. A pipe with no verb prints help and does not install:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/cloudgen/folder-backup/main/src/folder-backup | sh
+```
+
+To place from that URL, pass the verb. Your own login lands in `~/.local/bin/folder-backup` (mode `0700`). Root lands in `/usr/local/bin/folder-backup` (mode `0755`):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/cloudgen/folder-backup/main/src/folder-backup | sh -s -- self-install
+curl -fsSL https://raw.githubusercontent.com/cloudgen/folder-backup/main/src/folder-backup | sudo sh -s -- self-install
+```
 
 **Source repository:** [cloudgen/folder-backup](https://github.com/cloudgen/folder-backup)  
-Config identity: `REPO_USER=cloudgen`, `REPO_NAME=folder-backup` (override with env if needed; does not enable online install while `SCRIPT_URL` is empty).
+Config identity: `REPO_USER=cloudgen`, `REPO_NAME=folder-backup`. The default channel is `https://raw.githubusercontent.com/cloudgen/folder-backup/main/src/folder-backup`. Override `SCRIPT_URL` or `REPO_*` before those verbs if you use a fork. An empty `SCRIPT_URL` does not turn the channel off (`:=` fills it). Set a non-empty unreachable URL when you need the verbs to fail closed offline.
+
+**Automatic SHA-256 check** (download path of `self-install` and `self-update` when `CHECKSUM` is unset). The program fetches the companion next to the script:
+
+`https://raw.githubusercontent.com/cloudgen/folder-backup/main/src/folder-backup.sha256`
+
+The file in this repository is `src/folder-backup.sha256` (one line, 64 hex digits). A `sha256sum` line is also accepted; the first field is the digest.
+
+| Outcome | What happens |
+|---------|----------------|
+| **Match** | HTTP 200 and the digest equals the downloaded file. Install continues. Human output shows the companion link, the expected value, the actual value, and `Automatic checksum result: PASS`. |
+| **Mismatch** | The companion arrived and the digest does not match (or is empty). Install stops. The new file is not placed. |
+| **Missing** | The companion is not HTTP 200. Human output warns and the install continues without that check. |
+
+`CHECKSUM` set to a 64-hex digest is a strict pin for that one run: a match installs, a mismatch stops. It is not listed in `help` or `about`. A pin taken from the same URL is the same trust as the automatic companion: the bytes match each other. It is not a separate signature. Local `install` does not download and does not use this check.
 
 After install, on a terminal:
 
 ```text
 $ folder-backup
-[INFO] **folder-backup**(*1.16.3*) — numbered list of live work commands
+[INFO] **folder-backup**(*1.17.0*) — numbered list of live work commands
 1. backup: *Pack a named folder into a dated gzip archive under /var/backup/folder-backup*
 2. restore: *Put an archive back onto the hard-disk projects tree*
 3. sudoers: *Grant and drafts*
@@ -127,7 +153,7 @@ folder-backup uninstall --force
 |----------|------|
 | `REPO_USER` | Git host owner (default `cloudgen`) |
 | `REPO_NAME` | Git repository name (default `folder-backup`) |
-| `SCRIPT_URL` | Online install channel (default **empty** — local only) |
+| `SCRIPT_URL` | Channel for `self-install` / `version-check` / `self-update` (default `https://raw.githubusercontent.com/cloudgen/folder-backup/main/src/folder-backup`). Empty does not turn it off. |
 | `BACKUP_ROOT` | Durable root (default `/var/backup`) |
 | `BACKUP_NOTATION` | Subdir (default `folder-backup`) |
 | `PROJECTS_ROOT` | Hard-disk projects tree for restore default |
@@ -164,7 +190,7 @@ folder-backup restore genesis-template-20260803-3.tar.gz /tmp/genesis-restore
 - [folder-backup](https://github.com/cloudgen/folder-backup) — this product
 - [CIAO Defensive Programming](https://github.com/cloudgen/ciao)
 - [CIAO-Lite](https://github.com/cloudgen/ciao-lite)
-- [cli-template](https://github.com/cloudgen/cli-template) — parent CLI you install for yourself (no download-and-run channel)
+- [selfmanaged](https://github.com/cloudgen/selfmanaged) — bootstrap parent. This product keeps that channel and adds backup, restore, and the numbered work list.
 
 ## Contributing
 
@@ -176,6 +202,8 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
+2026-09-30 — version **1.17.0** (rebuilt from selfmanaged; channel verbs explicit; empty argv stays the work list; `install` stays the local copy; automatic SHA-256 companion on download).
+2026-09-23 — version **1.16.4** (private cache leaf mode 0700; live cache line in about; multi-draft remove reads the choice in this shell).
 2026-09-06 — version **1.16.3** (help lists grant-emit testers apart; README people-and-folders voice; requirement human-facing + coverage).
 2026-09-03 — version **1.16.2** (suite no longer queues live sudoer inbound; TP-CLI-13 / L-INBOUND-02).
 2026-09-03 — version **1.16.1** (dedicated sudoers-submenu requirement; five grant/draft setup verbs stay live CLI commands; TP-CLI-13/16/18).

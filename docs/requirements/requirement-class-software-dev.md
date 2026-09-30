@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-class-software-dev.md  
-**Status**: Active (Version 1.1.2 – coding-style + sudo-command residual pointers)  
+**Status**: Active (Version 1.1.3 – origin selfmanaged; channel verbs kept)  
 **Area**: class  
 **Key**: `requirement-class-software-dev`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -16,7 +16,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 
 | You | Another role | Not this |
 |-----|--------------|----------|
-| Read this file to learn the project nature and leftover stack (language, tools, “no dest approver”) | Peer requirements own backup ops, install, sudoers grant body, and CLI verbs | A dest approval machine, a second class file, or online-install law |
+| Read this file to learn the project nature and leftover stack (language, tools, “no dest approver”) | Peer requirements own backup ops, install, channel verbs, sudoers grant body, and CLI verbs | A dest approval machine, or a second class file |
 
 **Includes:** class membership, residual stack, honest “none” for dest approver and dest fences.  
 **Excludes:** inventing an approver account; inventing dest fence rows; duplicating peer backup/install tables.
@@ -100,9 +100,9 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | **Primary runtime / OS family** | POSIX Linux (and compatible UNIX where `/bin/sh` + `tar` + `gzip`/`tar -z` + `mktemp` exist) |
 | **Architectures supported** | any arch with POSIX sh and the external tools the script invokes |
 | **Git surface** | used when product is published |
-| **Ship unit / install** | yes — `src/folder-backup` → `${USER_BIN}/folder-backup` (default `~/.local/bin/folder-backup`); **local-only** install (no online channel) |
-| **Product version SSOT** | `VERSION="1.16.2"` hard-assign in `src/folder-backup` |
-| **Bootstrap origin** | sibling product **cli-template** (`{{PROJECTS_ROOT}}/cli-template`) — Type 0 local-only template; domain extend only |
+| **Ship unit / install** | yes — `src/folder-backup`. Day-to-day `install` copies to `${USER_BIN}/folder-backup` (default `~/.local/bin`, mode 0755). Channel place is explicit `self-install`. |
+| **Product version SSOT** | `VERSION="1.17.0"` hard-assign in `src/folder-backup` |
+| **Bootstrap origin** | sibling product **selfmanaged** (`{{PROJECTS_ROOT}}/selfmanaged`) — channel verbs kept; domain extend on B; empty argv stays case 2 |
 
 **Residual ownership table:**
 
@@ -111,10 +111,10 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | Project class membership | **this file** | Fixed |
 | Primary language + toolchain policy | **this file** | posix-sh, unconstrained |
 | Package/build tool + lockfile | **this file** | none / not used |
-| Bootstrap lineage / keep-extend | `requirement-bootstrap-chain` | A=cli-template → B + domain extend |
+| Bootstrap lineage / keep-extend | `requirement-bootstrap-chain` | A=selfmanaged → B; channel kept; domain extend |
 | Project layout / ship path | `requirement-project-folder` | `src/` + bin targets |
 | Type 0 CLI surface / flags / dispatch | `requirement-shell-cli-interface` | Do not duplicate |
-| Empty argv TTY numbered list / off-TTY help | `requirement-shell-cli-default-interaction` | Case 2; local-only |
+| Empty argv TTY numbered list / off-TTY help | `requirement-shell-cli-default-interaction` | Case 2; not channel install |
 | Local self-managed lifecycle | `requirement-shell-local-self-management` | install / uninstall / where-is-me |
 | Output SSOT (`out_*`) | `requirement-shell-output-requirements` | Do not duplicate |
 | Operator-readable error wording | `requirement-operator-readable-error` | Human-intro-style `[ERROR]` copy; do not duplicate |
@@ -130,7 +130,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | Domain surface (verbs, help, about) | `requirement-domain-folder-backup` | Four pillars only; ops pointer |
 | Actor / role / subject / approver | **this file** (residual) | **considered — no dest approver and no approval subject**. This product has no dest approval machine. **MUST NOT** invent an approver. |
 | Dest fence conditions | **this file** (residual) | **considered — no dest fence conditions**. No dest Fence table. **MUST NOT** invent a dest fence. |
-| Online install / remote self-management / companion checksum | **intentionally absent** | Absent on A; remain absent on B |
+| Channel verbs / `SCRIPT_URL` | `requirement-bootstrap-chain` and `requirement-shell-cli-interface` | Kept from selfmanaged. Empty argv is not install. |
 
 ---
 
@@ -162,7 +162,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 3. Hard-code secrets, personal owner identity, or production host FQDNs into core rules as universal law.  
 4. Duplicate full peer requirement bodies into this residual section.  
 5. Leave Implementation Notes as hollow stubs when Status claims Active.  
-6. Reintroduce Active **online-install** / remote **self-update** / **self-uninstall** / channel **checksum** law without explicit user order (product is **local-only** by design).  
+6. Drop the channel verbs, or point empty argv at install-ensure, without an explicit user order and a bootstrap-chain update.  
 7. Treat this file as server-maintenance allowlist law, or register an Active server-maintenance class file in parallel.  
 8. Invent a second primary language SSOT that contradicts peer modular/CLI requirements.
 
@@ -180,7 +180,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | AC-4 | Core rules remain free of frozen secret/host hardcodes |
 | AC-5 | No class file conflict with `requirement-class-server-maintenance` |
 | AC-6 | Ship unit identity (posix-sh single-file, local install) consistent with peer shell REQs |
-| AC-7 | Online install package **absent** from Active registry by design |
+| AC-7 | Channel verbs are recorded on the bootstrap chain and the CLI interface; empty argv stays case 2 |
 
 ---
 
@@ -188,7 +188,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 
 | Key | Relationship |
 |-----|--------------|
-| `requirement-bootstrap-chain` | Lineage A=cli-template → B=folder-backup (domain extend) |
+| `requirement-bootstrap-chain` | Lineage A=selfmanaged → B=folder-backup (channel kept, domain extend) |
 | `requirement-project-folder` | Layout and install locations |
 | `requirement-shell-cli-interface` | Command surface, flags, dispatch |
 | `requirement-shell-cli-default-interaction` | Case 2 empty argv (TTY menu / off-TTY help) |
@@ -219,9 +219,10 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | 2026-08-19 | Active (1.1.0) | Residual: **considered — no dest approver and no approval subject**; **considered — no dest fence conditions**. §1.1 Human-facing. Version SSOT note 1.9.0. |
 | 2026-08-28 | Active (1.1.1) | Residual pointer: empty argv → default-interaction case 2 (zero-arguments Withdrawn) |
 | 2026-09-06 | Active (1.1.2) | Residual pointers: `requirement-shell-script-coding` · `requirement-shell-sudo-command`. §1.1 says **project nature**. |
+| 2026-09-30 | Active (1.1.3) | Origin is selfmanaged again. Channel verbs kept. Empty argv stays case 2. |
 
 ---
 
-**Last Updated**: 2026-09-06  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

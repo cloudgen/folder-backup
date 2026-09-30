@@ -1,5 +1,7 @@
 # =============================================================================
-# tests/test_cli.sh — CLI surface (local-only; no network)
+# tests/test_cli.sh — CLI surface
+# Channel verbs are listed. version-check / self-update use a non-empty
+# unreachable URL (127.0.0.1 only). Empty argv is not install. No live GitHub fetch.
 # =============================================================================
 # Primary REQs: requirement-shell-cli-interface, requirement-shell-cli-default-interaction,
 # requirement-shell-output-requirements, requirement-shell-cli-storage
@@ -38,7 +40,7 @@ run_test_cli() {
     assert_contains "TP-CLI-03 app field" "$_out" "\"app\":\"${APP_NAME}\""
     assert_contains "TP-CLI-03 version field" "$_out" "\"version\":\"${PRODUCT_VERSION}\""
 
-    # TP-CLI-04 help lists local lifecycle + domain; not online verbs
+    # TP-CLI-04 help lists local lifecycle, selfmanaged channel verbs, and domain
     _out=$(sh "${SCRIPT}" help 2>/dev/null)
     _ec=$?
     assert_eq "TP-CLI-04 help exit 0" 0 "$_ec"
@@ -60,10 +62,11 @@ run_test_cli() {
     assert_contains "TP-CLI-04 help --json" "$_out" "--json"
     assert_contains "TP-CLI-04 help menu" "$_out" "Numbered list of live work commands"
     assert_contains "TP-CLI-04 help main" "$_out" "Same as menu"
-    assert_not_contains "TP-CLI-04 no self-update" "$_out" "self-update"
-    assert_not_contains "TP-CLI-04 no self-uninstall" "$_out" "self-uninstall"
-    assert_not_contains "TP-CLI-04 no version-check" "$_out" "version-check"
-    assert_not_contains "TP-CLI-04 no SCRIPT_URL channel" "$_out" "SCRIPT_URL"
+    assert_contains "TP-CLI-04 help self-install" "$_out" "self-install"
+    assert_contains "TP-CLI-04 help self-update" "$_out" "self-update"
+    assert_contains "TP-CLI-04 help self-uninstall" "$_out" "self-uninstall"
+    assert_contains "TP-CLI-04 help version-check" "$_out" "version-check"
+    assert_contains "TP-CLI-04 help SCRIPT_URL channel" "$_out" "SCRIPT_URL"
     assert_not_contains "TP-CLI-04 no CHECKSUM" "$_out" "CHECKSUM"
 
     # TP-CLI-17 help lists test-purpose grant-emit under a heading apart
@@ -96,7 +99,7 @@ run_test_cli() {
     assert_eq "TP-CLI-06 about --json exit 0" 0 "$_ec"
     assert_contains "TP-CLI-06 type about" "$_out" '"type":"about"'
     assert_contains "TP-CLI-06 cache_preferred field" "$_out" '"cache_preferred"'
-    assert_contains "TP-CLI-06 cache_preferred path" "$_out" '"cache_preferred":"/dev/shm/cache/cache-'"${APP_NAME}"'"'
+    assert_contains "TP-CLI-06 cache_preferred path" "$_out" '"cache_preferred":"/dev/shm/cache/cache-'"${APP_NAME}"'-'
     assert_contains "TP-CLI-06 cache_fallback field" "$_out" '"cache_fallback"'
     assert_contains "TP-CLI-06 cache_fallback leaf" "$_out" "cache-${APP_NAME}"
     assert_contains "TP-CLI-06 effective_storage" "$_out" '"effective_storage"'
@@ -115,6 +118,8 @@ run_test_cli() {
     _hout=$(sh "${SCRIPT}" about 2>/dev/null)
     assert_contains "TP-CLI-06 human Cache folder preferred" "$_hout" "Cache folder (preferred): /dev/shm/cache/cache-${APP_NAME}"
     assert_contains "TP-CLI-06 human Cache folder fallback" "$_hout" "Cache folder (fallback):"
+    assert_contains "TP-CLI-06 human Cache folder live" "$_hout" "Cache folder (live):"
+    assert_contains "TP-CLI-06 human Cache folder live leaf" "$_hout" "cache-${APP_NAME}"
     assert_contains "TP-CLI-06 human Persistence storage" "$_hout" "Persistence storage:"
     assert_contains "TP-CLI-06 human Persistence path leaf" "$_hout" "/.local/${APP_NAME}"
     assert_not_contains "TP-CLI-06 no Storage (effective) label" "$_hout" "Storage (effective)"
@@ -150,17 +155,29 @@ run_test_cli() {
         t_fail "TP-CLI-09 quiet expected empty stdout, got '$(_trunc "$_out")'"
     fi
 
-    # TP-CLI-10 online verbs rejected
-    _err=$(sh "${SCRIPT}" self-update 2>&1 >/dev/null)
+    # TP-CLI-10 selfmanaged channel verbs are routed. Offline URL must not install.
+    _offurl="http://127.0.0.1:9/folder-backup-offline"
+    _err=$(SCRIPT_URL="${_offurl}" sh "${SCRIPT}" self-update 2>&1 >/dev/null)
     assert_eq "TP-CLI-10 self-update exit 1" 1 "$?"
-    assert_contains "TP-CLI-10 self-update unknown" "$_err" "Unknown command"
+    assert_not_contains "TP-CLI-10 self-update is routed" "$_err" "Unknown command"
+    assert_contains "TP-CLI-10 self-update fetch failure" "$_err" "Failed to fetch"
 
-    _err=$(sh "${SCRIPT}" version-check 2>&1 >/dev/null)
+    _err=$(SCRIPT_URL="${_offurl}" sh "${SCRIPT}" version-check 2>&1 >/dev/null)
     assert_eq "TP-CLI-10 version-check exit 1" 1 "$?"
+    assert_not_contains "TP-CLI-10 version-check is routed" "$_err" "Unknown command"
+    assert_contains "TP-CLI-10 version-check fetch failure" "$_err" "Failed to fetch"
 
     _err=$(sh "${SCRIPT}" self-uninstall 2>&1 >/dev/null)
-    assert_eq "TP-CLI-10 self-uninstall exit 1" 1 "$?"
-    assert_contains "TP-CLI-10 self-uninstall unknown" "$_err" "Unknown command"
+    assert_eq "TP-CLI-10 self-uninstall absent exit 0" 0 "$?"
+    assert_not_contains "TP-CLI-10 self-uninstall is routed" "$_err" "Unknown command"
+
+    # TP-CLI-20 do-not-capture-read: no $() of a prompt helper in the ship unit
+    _cap=$(grep -n '$(prompt_' "${SCRIPT}" | grep -v ':[[:space:]]*#' || true)
+    if [ -z "${_cap}" ]; then
+        t_pass "TP-CLI-20 no command substitution of prompt helpers"
+    else
+        t_fail "TP-CLI-20 captured prompt helper: ${_cap}"
+    fi
 
     # TP-CLI-11 set -u HOME unset still works for version
     _out=$(env -u HOME sh "${SCRIPT}" version 2>/dev/null)
@@ -168,19 +185,26 @@ run_test_cli() {
     assert_eq "TP-CLI-11 env -u HOME version exit 0" 0 "$_ec"
     assert_contains "TP-CLI-11 env -u HOME version text" "$_out" "${PRODUCT_VERSION}"
 
-    # TP-CLI-12 cache folder exists; preferred is /dev/shm/cache/cache-${APP_NAME}
+    # TP-CLI-12 cache folder exists; preferred leaf is cache-${APP_NAME}-<login>-<pid>
     ci_isolated_env
     _out=$(HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" sh "${SCRIPT}" --json about 2>/dev/null)
     assert_contains "TP-CLI-12 isolated about has app in cache" "$_out" "${APP_NAME}"
-    assert_contains "TP-CLI-12 cache_preferred path" "$_out" '"cache_preferred":"/dev/shm/cache/cache-'"${APP_NAME}"'"'
+    assert_contains "TP-CLI-12 cache_preferred path" "$_out" '"cache_preferred":"/dev/shm/cache/cache-'"${APP_NAME}"'-'
     _eff=$(printf '%s' "$_out" | sed -n 's/.*"effective_storage":"\([^"]*\)".*/\1/p' | head -n1)
-    if [ -n "$_eff" ] && [ -d "$_eff" ]; then
+    if [ -n "$_eff" ] && [ -d "$_eff" ] && [ ! -h "$_eff" ]; then
         t_pass "TP-CLI-12 effective_storage directory exists"
     else
         t_fail "TP-CLI-12 effective_storage missing: '${_eff:-empty}'"
     fi
+    _perm=$(command ls -ld "${_eff}" 2>/dev/null | cut -c1-10)
+    assert_eq "TP-CLI-12 cache leaf mode 0700" "drwx------" "${_perm}"
+    if [ -O "${_eff}" ]; then
+        t_pass "TP-CLI-12 cache leaf owned by this login"
+    else
+        t_fail "TP-CLI-12 cache leaf not owned by this login: '${_eff}'"
+    fi
     case "$_eff" in
-        */cache/cache-${APP_NAME}|*/cache/cache-${APP_NAME}/*|*/.cache/cache-${APP_NAME}|*/.cache/cache-${APP_NAME}/*)
+        */cache/cache-${APP_NAME}|*/cache/cache-${APP_NAME}-*|*/.cache/cache-${APP_NAME}|*/.cache/cache-${APP_NAME}-*)
             t_pass "TP-CLI-12 live cache uses cache-${APP_NAME} leaf"
             ;;
         *)
@@ -314,6 +338,11 @@ run_test_cli() {
         assert_not_contains "TP-CLI-16 no remove on main" "$_plain" "remove-project-sudoers: Remove the local grant"
         assert_not_contains "TP-CLI-16 no menu row" "$_plain" "menu: Show the numbered list"
         assert_not_contains "TP-CLI-16 no main row" "$_plain" "main: Same numbered list"
+        assert_not_contains "TP-CLI-16 no self-install row" "$_plain" "self-install:"
+        assert_not_contains "TP-CLI-16 no self-update row" "$_plain" "self-update:"
+        assert_not_contains "TP-CLI-16 no self-uninstall row" "$_plain" "self-uninstall:"
+        assert_not_contains "TP-CLI-16 no version-check row" "$_plain" "version-check:"
+        assert_not_contains "TP-CLI-16 no self-management row" "$_plain" "self-management:"
 
         # TP-CLI-18 — default CLI main menu style (product alias of portable TP-CLI-17)
         _out=$(PTY_IN="9" ci_pty_run menu)

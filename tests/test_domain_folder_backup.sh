@@ -28,6 +28,28 @@ fb_ci_path_without_working_sudo() {
     printf '%s' "${_bindir}:${PATH}"
 }
 
+# Host rm is safe-rm. A successful remove prints "[OK] Caller …" on stdout.
+# sudoer-cli builds the sudoers file inside $(sr_render_sudoers), and that
+# function removes a temp file, so the OK line becomes sudoers text and
+# visudo rejects it. This PATH entry still runs safe-rm (refusals stay on
+# stderr) and silences only the success line.
+fb_ci_quiet_rm_path() {
+    if [ ! -x /usr/bin/safe-rm ]; then
+        printf '%s' "${PATH}"
+        return 0
+    fi
+    _qr=$(mktemp -d "${TMPDIR:-/tmp}/fb-qrm.XXXXXX")
+    mkdir -p "${_qr}/link"
+    ln -s /usr/bin/safe-rm "${_qr}/link/rm"
+    cat > "${_qr}/rm" << 'EOF'
+#!/bin/sh
+export QUIET=1
+exec "$(dirname "$0")/link/rm" "$@"
+EOF
+    chmod 0755 "${_qr}/rm"
+    printf '%s' "${_qr}:${PATH}"
+}
+
 run_test_domain_folder_backup() {
     t_header "Domain folder-backup (TP-FOLDER-BACKUP)"
 
@@ -141,7 +163,7 @@ run_test_domain_folder_backup() {
         # production-path copy of the same args (backup * / restore *).
         _jconv="${CI_HOME}/out/pretty-wellknown.json"
         sed 's|"path": *"[^"]*/folder-backup"|"path": "/usr/local/bin/folder-backup"|g' "${_jgrant}" >"${_jconv}"
-        HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_jconv}" --out "${_pback}" >/dev/null 2>&1
+        PATH=$(fb_ci_quiet_rm_path) HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_jconv}" --out "${_pback}" >/dev/null 2>&1
         assert_eq "TP-FOLDER-BACKUP-22e pretty convert exit 0" 0 "$?"
         _pbtxt=$(cat "${_pback}" 2>/dev/null || true)
         assert_contains "TP-FOLDER-BACKUP-22e convert keeps backup" "${_pbtxt}" "folder-backup backup"
@@ -388,6 +410,26 @@ run_test_domain_folder_backup() {
     assert_file_missing "TP-FOLDER-BACKUP-15b explicit draft removed" "${_draft_default}"
     assert_file_exists "TP-FOLDER-BACKUP-15b legacy draft remains" "${CI_HOME}/.config/folder-backup/sudoers.fragment"
     assert_file_exists "TP-FOLDER-BACKUP-15b other draft remains" "${CI_HOME}/.config/folder-backup/sudoers.fragment-otheruser"
+
+    # TP-FOLDER-BACKUP-15c TTY multi-draft picker reads the number in this shell
+    if command -v python3 >/dev/null 2>&1; then
+        rm -f "${CI_HOME}/.config/folder-backup/sudoers.fragment" \
+            "${CI_HOME}/.config/folder-backup/sudoers.fragment-otheruser" \
+            "${_draft_default}"
+        mkdir -p "${CI_HOME}/.config/folder-backup"
+        printf '# legacy\n' > "${CI_HOME}/.config/folder-backup/sudoers.fragment"
+        printf '# aaa\n' > "${CI_HOME}/.config/folder-backup/sudoers.fragment-aaa"
+        printf '# zzz\n' > "${CI_HOME}/.config/folder-backup/sudoers.fragment-zzz"
+        _out=$(HOME="${CI_HOME}" LC_ALL=C PTY_IN="2" ci_pty_run remove-project-sudoers --force)
+        assert_contains "TP-FOLDER-BACKUP-15c shows the question" "$_out" "Choose draft number to remove"
+        assert_not_contains "TP-FOLDER-BACKUP-15c choice is not glued to the prompt" "$_out" "Invalid choice"
+        assert_contains "TP-FOLDER-BACKUP-15c removed the second draft" "$_out" "sudoers.fragment-aaa"
+        assert_file_missing "TP-FOLDER-BACKUP-15c second draft gone" "${CI_HOME}/.config/folder-backup/sudoers.fragment-aaa"
+        assert_file_exists "TP-FOLDER-BACKUP-15c legacy remains" "${CI_HOME}/.config/folder-backup/sudoers.fragment"
+        assert_file_exists "TP-FOLDER-BACKUP-15c third draft remains" "${CI_HOME}/.config/folder-backup/sudoers.fragment-zzz"
+    else
+        t_skip "TP-FOLDER-BACKUP-15c TTY multi-draft picker (no python3 for PTY)"
+    fi
 
     # TP-FOLDER-BACKUP-16 restore dest whitelist (W-ETC-USER / hard deny /etc/passwd)
     _broot16="${CI_HOME}/backup-root16"
@@ -697,7 +739,7 @@ STUB
         _p24="${CI_HOME}/out/gen-convert.sudoers"
         _gconv="${CI_HOME}/out/gen-wellknown.json"
         sed 's|"path": *"[^"]*/folder-backup"|"path": "/usr/local/bin/folder-backup"|g' "${_gen_exp}" >"${_gconv}"
-        HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_gconv}" --out "${_p24}" >/dev/null 2>&1
+        PATH=$(fb_ci_quiet_rm_path) HOME="${CI_HOME}" sh "${_srcli}" json-to-sudoers --file "${_gconv}" --out "${_p24}" >/dev/null 2>&1
         assert_eq "TP-FOLDER-BACKUP-24c convert exit 0" 0 "$?"
         _c24=$(cat "${_p24}" 2>/dev/null || true)
         assert_contains "TP-FOLDER-BACKUP-24c convert backup" "${_c24}" "folder-backup backup"
@@ -753,7 +795,7 @@ STUB25
             t_skip "TP-FOLDER-BACKUP-22e real submit (no well-known grant fixture)"
         else
             _live22e=$(ci_snapshot_live_sudoer_inbound)
-            _out22e=$(HOME="${CI_HOME}" \
+            _out22e=$(PATH=$(fb_ci_quiet_rm_path) HOME="${CI_HOME}" \
                 SUDOER_CLI="${_srcli}" \
                 SUDOER_ADM_USER="$(id -un)" \
                 SUDOER_QUEUE_INBOUND="${_q22}/sudoer-request" \

@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-storage.md  
-**Status**: Active (Version 1.2.0)  
+**Status**: Active (Version 1.4.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-storage`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -10,14 +10,14 @@ This requirement is the **project Single Source of Truth** for **shell CLI stora
 
 | Family | Role | Path |
 |--------|------|------|
-| **Cache folder** | Volatile scratch / backup staging | preferred `/dev/shm/cache/cache-folder-backup`; fallback `${XDG_CACHE_HOME}/cache-folder-backup` |
+| **Cache folder** | Volatile scratch / backup staging | preferred `/dev/shm/cache/cache-${APP_NAME}-${login}-$$`; first fallback `/tmp/cache/cache-${APP_NAME}-${login}-$$`; second `${HOME}/.cache/cache-${APP_NAME}-$$` |
 | **Persistence storage** | Durable Type 0 product files that survive reboot | `${HOME}/.local/folder-backup/` |
 
 It owns resolver helpers, isolation, `app_main` wire, and about diagnostics for **both** families.
 
 ### 1.1 Human-facing
 
-**In one sentence:** `folder-backup about` names the RAM cache folder for throw-away scratch and the persistence folder under your home `.local/folder-backup` for files that must survive a reboot.
+**In one sentence:** `folder-backup about` names the RAM cache folder for throw-away scratch, the live private cache folder this login is using, and the persistence folder under your home `.local/folder-backup` for files that must survive a reboot.
 
 | Box | Meaning | Example |
 |-----|---------|---------|
@@ -27,15 +27,15 @@ It owns resolver helpers, isolation, `app_main` wire, and about diagnostics for 
 
 | Includes | Excludes |
 |----------|----------|
-| Cache folder (preferred) `/dev/shm/cache/cache-folder-backup` | `/dev/shm/folder-backup` as cache (that looks like a project folder) |
-| Cache folder (fallback) `${XDG_CACHE_HOME}/cache-folder-backup` | Install binary `${HOME}/.local/bin/folder-backup` |
+| Cache folder (preferred) `/dev/shm/cache/cache-folder-backup-<login>-<pid>` | `/dev/shm/folder-backup` as cache (that looks like a project folder) |
+| Cache folder (fallback) `/tmp/cache/cache-folder-backup-<login>-<pid>` | Install binary `${HOME}/.local/bin/folder-backup` |
 | Persistence storage `${HOME}/.local/folder-backup/` | Durable host deposit `/var/backup/...` |
 | Create each chosen folder before using it | Bare shared `/tmp` dump |
 
 | Surface | What you open | What for |
 |---------|---------------|----------|
 | `./src/folder-backup` | ship unit | resolvers + about text |
-| `folder-backup about` | command | Cache folder lines + Persistence storage |
+| `folder-backup about` | command | Cache folder lines (preferred, fallback, live) + Persistence storage |
 | `folder-backup --json about` | command | `cache_preferred` / `cache_fallback` / `effective_storage` / `persistent_storage` |
 
 | You do… | What it means | What you type |
@@ -62,7 +62,7 @@ It owns resolver helpers, isolation, `app_main` wire, and about diagnostics for 
 |------|-------|-----|
 | `${HOME}/.local/${APP_NAME}/` | Persistence storage (this file) | Install location |
 | `${HOME}/.local/bin/${APP_NAME}` | Local install binary | Persistence |
-| `/dev/shm/cache/cache-${APP_NAME}` | Cache folder (this file) | Ram-drive **project** tree |
+| `/dev/shm/cache/cache-${APP_NAME}-${login}-$$` | Cache folder (this file) | Ram-drive **project** tree |
 | `/var/backup/${BACKUP_NOTATION}/` | Host deposit (privilege + domain) | Cache or persistence |
 
 ### 2.1 Cache resolver SSOT
@@ -77,17 +77,19 @@ It owns resolver helpers, isolation, `app_main` wire, and about diagnostics for 
 
 First match that can be created **and** is writable:
 
-| Order | Condition | Path shape |
-|-------|-----------|------------|
-| 1 | `/dev/shm` exists and is writable; leaf is writable | `/dev/shm/cache/cache-${APP_NAME}` |
-| 2 | `/tmp` is writable; leaf is writable | `/tmp/cache/cache-${APP_NAME}` |
-| 3 | Fallback | `STORAGE_DIR` (`${XDG_CACHE_HOME:-${HOME}/.cache}/cache-${APP_NAME}`, env-overridable) |
+| Order | Linux path | Leaf |
+|-------|------------|------|
+| 1 preferred | `/dev/shm/cache/cache-${APP_NAME}-${login}-$$` | `util_cache_volatile_leaf` |
+| 2 first fallback | `/tmp/cache/cache-${APP_NAME}-${login}-$$` | same volatile leaf |
+| 3 second fallback | `${HOME}/.cache/cache-${APP_NAME}-$$` | `util_cache_home_leaf` (login already isolated by home) |
+
+Git Bash preferred is `/tmp/cache/` plus the volatile leaf; its first fallback is `${HOME}/AppData/Local/Temp/` plus the home leaf. Mac preferred is `/tmp/cache/` plus the volatile leaf; fallbacks are `Library/Caches` then `${HOME}/cache`. Host kind may be forced with `SELFMANAGED_CACHE_HOST` (`linux`, `gitbash`, or `mac`). **Do not rename that variable.**
 
 **MUST NOT** use `/dev/shm/${APP_NAME}` or `/dev/shm/${APP_NAME}-${USERNAME}` as cache — those look like ram-drive **project** folders.
 
-Create `/dev/shm/cache` (prefer mode **1777**) so other logins can add sibling `cache-<app>` leaves. Same spirit under `/tmp/cache`. If the preferred leaf exists but is **not writable**, fall through.
+Create `/dev/shm/cache` or `/tmp/cache` with mode **1777** when `mkdir -m` succeeds, so other logins can add their own leaves. The **leaf** includes this login and this process id. `util_cache_try_dir` creates it with `mkdir -m 0700` and keeps it when it is a directory and writable. A missed tier is silent. If every tier fails, the resolver fails closed.
 
-**Create before return:** for the **chosen** cache tier, the resolver **MUST** `mkdir -p` the leaf, then print the path. If no writable leaf can be created → **MUST** fail closed. **MUST NOT** return a path without creating it.
+**Create before return:** the chosen tier is created before the path is printed. **MUST NOT** return a path without creating it.
 
 ### 2.3 Persistence storage SSOT
 
@@ -101,8 +103,8 @@ Create `/dev/shm/cache` (prefer mode **1777**) so other logins can add sibling `
 
 ### 2.4 Isolation (cache)
 
-1. Cache **leaves** **MUST** include **`${APP_NAME}`** as `cache-${APP_NAME}`.  
-2. Fallback **MUST** sit under the invoking user’s XDG/home cache (inherently per-user). Preferred shm/tmp leaves sit under a sticky `…/cache/` parent — **MUST NOT** reuse ram-drive-shaped `${APP_NAME}-${USERNAME}` on `/dev/shm`.  
+1. Volatile cache **leaves** **MUST** be `cache-${APP_NAME}-${login}-$$`. Home-cache leaves **MUST** be `cache-${APP_NAME}-$$`.  
+2. The second fallback **MUST** sit under this login’s home cache. Preferred shm/tmp leaves sit under a sticky `…/cache/` parent — **MUST NOT** reuse ram-drive-shaped `${APP_NAME}-${USERNAME}` on `/dev/shm`. A freshly created leaf **MUST** be mode **0700**.  
 3. **MUST NOT** use a single shared world-writable dump for all apps.  
 4. Live product **MUST** export `TMPDIR=${EFFECTIVE_STORAGE_DIR}` so `mktemp` inherits the chosen **cache** root.  
 5. New scratch files **MUST** be created via **`util_mktemp`** (or `mktemp` under a path `util_resolve_storage` returned).  
@@ -147,7 +149,7 @@ tmp="${EFFECTIVE_STORAGE_DIR}/${APP_NAME}.$$"
 |---------|-------------|
 | `app_main` | Resolve once early: `EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)`; `PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)`; export `EFFECTIVE_STORAGE_DIR`, `STORAGE_DIR`, `TMPDIR`, `PERSISTENT_STORAGE_DIR` |
 | `app_about` JSON | Include `cache_preferred`, `cache_fallback`, live chosen cache `effective_storage`, and `persistent_storage` |
-| `app_about` human | **Cache folder (preferred):** `/dev/shm/cache/cache-${APP_NAME}` · **Cache folder (fallback):** XDG `cache-${APP_NAME}` · **Persistence storage:** `${HOME}/.local/${APP_NAME}`. **MUST NOT** label cache lines Storage (effective)/(fallback) |
+| `app_about` human | **Cache folder (preferred):** `/dev/shm/cache/cache-${APP_NAME}` · **Cache folder (fallback):** XDG `cache-${APP_NAME}` · **Cache folder (live):** `EFFECTIVE_STORAGE_DIR` · **Persistence storage:** `${HOME}/.local/${APP_NAME}`. **MUST NOT** label cache lines Storage (effective)/(fallback) |
 | Domain `backup` | Stage archives under the live **cache** root; clean up on exit |
 
 Cache preferred/fallback about lines are the **policy** cache paths (helpers). Persistence about is the persistence policy path (created).
@@ -165,8 +167,8 @@ Cache preferred/fallback about lines are the **policy** cache paths (helpers). P
 |------|------------|
 | **Product / binary** | `folder-backup` |
 | **Cache resolver** | `util_resolve_storage` in `src/folder-backup` |
-| **Preferred cache** | `/dev/shm/cache/cache-folder-backup` (`util_preferred_cache_dir`) |
-| **Fallback cache** | `${XDG_CACHE_HOME}/cache-folder-backup` (`util_fallback_cache_dir`) |
+| **Preferred cache** | `/dev/shm/cache/cache-folder-backup-<login>-<pid>` (`util_preferred_cache_dir`) |
+| **Fallback cache** | `/tmp/cache/cache-folder-backup-<login>-<pid>` (`util_fallback_cache_dir`); then `${HOME}/.cache/cache-folder-backup-<pid>` |
 | **Live chosen cache** | `EFFECTIVE_STORAGE_DIR` (JSON `effective_storage`) |
 | **Persistence helper** | `util_resolve_persistent_storage` |
 | **Persistence path** | `${HOME}/.local/folder-backup/` (JSON `persistent_storage`) |
@@ -221,6 +223,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 10. Treat storage as cache-only and omit persistence `${HOME}/.local/${APP_NAME}/`.  
 11. Use `${HOME}/.local/bin` as persistence storage.  
 12. Put backup staging in persistence by default.
+13. Publish a preferred cache path that omits the login and the process id, or use `/dev/shm/folder-backup` as that cache.
 
 **Violating this rule is a critical storage isolation regression.**
 
@@ -235,7 +238,8 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | AC-3 | `app_main` sets `EFFECTIVE_STORAGE_DIR` / `TMPDIR` and `PERSISTENT_STORAGE_DIR` early |
 | AC-4 | Backup staging uses the cache resolver root and cleans up |
 | AC-5 | Scratch files use `util_mktemp` / `mktemp` XXXXXX; no `$$` names |
-| AC-6 | Human about prints **Cache folder (preferred)** `/dev/shm/cache/cache-folder-backup` and **Cache folder (fallback)**; JSON includes `cache_preferred` and `cache_fallback` |
+| AC-6 | Human about prints **Cache folder (preferred)**, **Cache folder (fallback)**, and **Cache folder (live)**. On Linux the preferred path starts with `/dev/shm/cache/cache-folder-backup-`. JSON includes `cache_preferred`, `cache_fallback`, and `effective_storage` |
+| AC-8 | The live cache leaf is a directory this login owns, mode **0700** (`drwx------`) |
 | AC-7 | Persistence is `${HOME}/.local/folder-backup/`; helper creates it; about human **Persistence storage** and JSON `persistent_storage` |
 
 ---
@@ -257,7 +261,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | TP family / ID | Suite | Status |
 |----------------|-------|--------|
 | **TP-CLI-06** | `tests/test_cli.sh` | have — JSON cache + `persistent_storage`; human Cache folder + Persistence storage |
-| **TP-CLI-12** | same | have — live cache dir + persistence `${HOME}/.local/folder-backup` exists |
+| **TP-CLI-12** | same | have — live cache dir mode 0700 owned by this login + persistence `${HOME}/.local/folder-backup` exists |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -272,9 +276,11 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-08-15 | Active 1.0.0 | `util_mktemp` sample; forbid `$$` scratch names |
 | 2026-08-30 | Active 1.1.0 | Preferred `/dev/shm/cache/cache-folder-backup`; about Cache folder (preferred)/(fallback) |
 | 2026-08-30 | Active 1.2.0 | Storage = cache folder **and** persistence `${HOME}/.local/folder-backup/` |
+| 2026-09-23 | Active 1.3.0 | Chosen cache leaf is this login’s mode 0700 directory; human about prints **Cache folder (live)** |
+| 2026-09-30 | Active 1.4.0 | Leaf inherited from selfmanaged: `cache-${APP_NAME}-${login}-$$` under `/dev/shm/cache`. About labels unchanged. `SELFMANAGED_CACHE_HOST` kept. |
 
 ---
 
-**Last Updated**: 2026-08-30  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-interactive-vs-noninteractive.md  
-**Status**: Active (Version 1.0.0)  
+**Status**: Active (Version 1.1.1)  
 **Area**: shell  
 **Key**: `requirement-shell-interactive-vs-noninteractive`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -86,28 +86,30 @@ prompt_yes_no() {
 }
 ```
 
-**Complete `prompt_ask` sample** (same consume-`TTY` rule):
+**Complete `prompt_ask` sample** (same consume-`TTY` rule). The answer is `PROMPT_ASK_VALUE` in the current shell. **MUST NOT** `_choice=$(prompt_ask …)`.
 
 ```sh
+# WARNING — do-not-capture-read (PP-A-22)
+# Call in the current shell. Do not wrap this function in $().
 prompt_ask() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${TTY:=0}"
     message="${1-}"
     default="${2-}"
+    PROMPT_ASK_VALUE="${default}"
     if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ] || [ "${TTY}" -ne 1 ]; then
-        printf '%s' "${default}"
         return 0
     fi
     out_msg_n "${message}: "
     answer=""
     read -r answer || true
-    if [ -z "${answer}" ]; then
-        printf '%s' "${default}"
-    else
-        printf '%s' "${answer}"
+    if [ -n "${answer}" ]; then
+        PROMPT_ASK_VALUE="${answer}"
     fi
 }
+# prompt_ask "Choose draft number to remove" "0"
+# _choice="${PROMPT_ASK_VALUE}"
 ```
 
 ### 2.3 Behavioral matrix (this product)
@@ -128,8 +130,8 @@ prompt_ask() {
 | Item | Value |
 |------|--------|
 | **Product** | `folder-backup` |
-| **No curl\|sh auto-install path** | Local-only; non-interactive does not mean Type O install-ensure |
-| **Prompt helper** | `prompt_yes_no` for uninstall (and any future destructive confirm) |
+| **Empty argv off-TTY** | Help, not install-ensure. Channel place is the explicit verb `self-install`. |
+| **Prompt helper** | `prompt_yes_no` for uninstall (exit status). Value prompts use `prompt_ask` then `PROMPT_ASK_VALUE` (current shell) |
 
 ### 2.5 Why This Requirement Exists (CIAO)
 
@@ -167,7 +169,8 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 2. Auto-yes destructive uninstall without `--force` in non-interactive mode.  
 3. Scatter unguarded `read` calls outside `prompt_*`.  
 4. Re-test live `[ -t 0 ]` / `[ -t 1 ]` inside `prompt_*` as the interactive-capability gate (helpers consume `TTY`).  
-4. Treat non-interactive as license to skip required validation.
+5. Treat non-interactive as license to skip required validation.
+6. Capture `prompt_ask` or any `read` helper with `$()` or backticks. The value return is `PROMPT_ASK_VALUE`.
 
 **Violating this rule is a critical interaction-mode regression.**
 
@@ -180,6 +183,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | AC-1 | Non-interactive uninstall without force fails closed |
 | AC-2 | JSON mode never prompts |
 | AC-3 | Backup never hangs waiting for optional confirm by default |
+| AC-4 | `prompt_ask` assigns `PROMPT_ASK_VALUE` in the current shell; no `$()` capture of that helper |
 
 ---
 
@@ -199,9 +203,11 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | Date | Status | Note |
 |------|--------|------|
 | 2026-08-03 | Active | Interactive vs non-interactive for folder-backup |
+| 2026-09-23 | Active 1.1.0 | `prompt_ask` returns `PROMPT_ASK_VALUE`; `$()` capture forbidden |
+| 2026-09-30 | Active 1.1.1 | Off-TTY empty argv stays help. `self-install` is explicit. |
 
 ---
 
-**Last Updated**: 2026-08-15  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

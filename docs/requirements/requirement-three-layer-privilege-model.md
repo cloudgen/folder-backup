@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-three-layer-privilege-model.md  
-**Status**: Active (Version 1.12.0)  
+**Status**: Active (Version 1.12.1)  
 **Area**: architecture  
 **Key**: `requirement-three-layer-privilege-model`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -58,7 +58,7 @@ Domain backup semantics (naming, tar, pillars) live in `requirement-domain-folde
 2. **MUST** create the tar.gz archive as the invoking user in isolated staging.  
 3. **MUST** elevate only for the **deposit** step (and only via allowlisted sudo).  
 4. **MUST NOT** grant unrestricted shell, package install, or arbitrary `cp` across the filesystem.  
-5. **MUST NOT** open unapproved network egress as part of privilege design (local-only product).  
+5. **MUST NOT** open network egress from deposit, restore, or sudoers privilege paths. Explicit channel verbs (`self-install`, `version-check`, `self-update`) are outside this privilege design.  
 6. **MUST NOT** treat “sudoers installed” as permission to broaden Cmnds later without a new security review.
 
 ---
@@ -352,7 +352,7 @@ When an agent **creates or materially revises** a sudoers draft (beyond re-runni
 | Invocation | `sudo -n` after passwordless fragment; non-interactive without ticket **fails closed** |
 | Scope | Deposit only — not package install, not shell |
 | Destination create | Deposit dir `/var/backup/folder-backup` **SHOULD** exist (admin or project command after elev) |
-| Staging | Cache under `/dev/shm/cache/cache-folder-backup` (preferred), else `/tmp/cache/cache-folder-backup`, else XDG `cache-folder-backup` — Type 1 internals, **not** fragment operands |
+| Staging | Cache under `/dev/shm/cache/cache-folder-backup-<login>-<pid>` (preferred), else `/tmp/cache/…`, else `${HOME}/.cache/cache-folder-backup-<pid>` — Type 1 internals, **not** fragment operands |
 
 ### 2.5 Implementation Notes (this project)
 
@@ -581,9 +581,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-08-17 | Active 1.10.0 | §2.3.2a independent generate (any sudoer generate = Type 0 subcommand → readable dest); AC-24; TP-24d |
 | 2026-08-23 | Active 1.11.0 | Sudoers exact-argv: `backup *` / `restore *` required; verb-only withdrawn; AC-25; probe honesty |
 | 2026-08-23 | Active 1.12.0 | `--json backup *` / `--json restore *` **MUST** (not SHOULD); JSON body dual on `requirement-sudoer-json-file` 1.4.0 |
+| 2026-09-30 | Active 1.12.1 | Privilege paths stay off the network. Channel download is not a sudoers grant. |
 
 ---
 
-**Last Updated**: 2026-08-23  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

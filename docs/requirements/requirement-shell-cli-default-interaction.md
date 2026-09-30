@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-default-interaction.md  
-**Status**: Active (Version 1.6.0)  
+**Status**: Active (Version 1.6.1)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-default-interaction`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-DEFAULT-INTERACTION`  
@@ -9,7 +9,7 @@
 
 This requirement is the **product Single Source of Truth** for folder-backup’s **claimed default interactive main menu** and for **empty-argv** dispatcher meaning.
 
-The product is **not** online-installable. There is **no** Active specialized zero-argument requirement. **Case 2** applies: on a real terminal, a bare `folder-backup` run opens the numbered work list; off-TTY that same bare run prints help. Named commands **`menu`** and **`main`** open the same list. Related grant/draft commands sit behind one **family** row **`sudoers`**. Submenu membership, Back/Exit, and the live-verb rule are owned by **`requirement-shell-cli-sudoers-submenu`**. **`sudoers` is not a live dispatcher token.**
+Channel verbs exist and are explicit (`self-install`, `version-check`, `self-update`, `self-uninstall`, `self-management`). They do not own empty argv. There is **no** Active specialized zero-argument requirement. **Case 2** applies by owner order: on a real terminal, a bare `folder-backup` run opens the numbered work list; off-TTY that same bare run prints help. Named commands **`menu`** and **`main`** open the same list. Related grant/draft commands sit behind one **family** row **`sudoers`**. Submenu membership, Back/Exit, and the live-verb rule are owned by **`requirement-shell-cli-sudoers-submenu`**. **`sudoers` is not a live dispatcher token.**
 
 ### 1.1 Human-facing
 
@@ -52,7 +52,7 @@ The product is **not** online-installable. There is **no** Active specialized ze
 ### 2.1 Claim and case
 
 1. This product **claims** a default interactive main menu.  
-2. **Case 2** applies: **no** Active specialized zero-argument requirement **and** the product is **not** online-installable.  
+2. **Case 2** applies: **no** Active specialized zero-argument requirement. Channel verbs do not move empty argv to install-ensure.  
 3. This file **owns empty argv**.  
 4. Interactive empty argv (`TTY=1`, `$# -eq 0` at `app_main`) **MUST** open the numbered list (`app_main_menu`).  
 5. Non-interactive empty argv (`TTY=0`, `$# -eq 0`) **MUST** be **help** (`app_help`). **MUST NOT** prompt. **MUST NOT** install-ensure.  
@@ -81,7 +81,7 @@ Measure interactive capability **outside functions** (`TTY=1` only when stdin an
 1. Print a **numbered list** of **daily backup work** plus one **family** row, then **Exit**.  
 2. Each command row is one live **operational** command that is **not** excluded below, numbered **1 … N** in kept-list order.  
 3. Printed command-row text **MUST** be the kept-list **human-readable** value: **`{{short-descript}}: {{explain}}`** (short-descript = the command token). The family row **MUST** use this file’s table (it is not a routed-verb).  
-4. **MUST NOT** list `help`, `menu`, `main`, gap/forbidden names, **diagnostics** (`version`, `about`), **self-managed / install-setup** tokens (`install`, `uninstall`, `where-is-me`, `setup`), or **test-purpose** verbs on the **main** list. On this product the test-purpose verbs **MUST** be `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request`. Those stay on `help`, listed apart from operational work, and live on the sudoers submenu (§2.4).  
+4. **MUST NOT** list `help`, `menu`, `main`, gap/forbidden names, **diagnostics** (`version`, `about`), **self-managed / install-setup** tokens (`install`, `uninstall`, `where-is-me`, `setup`), **channel** tokens (`self-install`, `self-update`, `self-uninstall`, `version-check`, `self-management`), or **test-purpose** verbs on the **main** list. On this product the test-purpose verbs **MUST** be `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request`. Those stay on `help`, listed apart from operational work, and live on the sudoers submenu (§2.4). Channel tokens stay on `help` and on the separate `self-management` board.  
 5. **MUST NOT** list the five sudoers verbs on the **main** list (they live on the submenu).  
 6. Accept a **number** or the **verb token**. Extra operands: prompt **one field at a time** on TTY, or print `Next: folder-backup <verb> …` and return.  
 6b. **Do not capture `read`:** the choice **MUST** be read in the **current shell**. Typical: `prompt_line "Choice"` then `_pick="${_prompt_line}"`. **MUST NOT** `_pick=$(prompt_line …)` / `_pick=$(prompt_ask …)` / `$()` / backticks of **any** function whose body contains `read` (do-not-capture-read / **PP-A-22**). stderr+$() is **not** a license.  
@@ -110,7 +110,7 @@ Family row **3** / `sudoers` **MUST** open the grant/draft list. Full membership
 |------|--------|
 | **Product** | `folder-backup` |
 | **Claimed** | yes |
-| **Case** | **2** (no Active zero-arg REQ; local-only) |
+| **Case** | **2** (no Active zero-arg REQ; channel verbs explicit; empty argv is still this list) |
 | **Empty argv owner** | **this file** (TTY menu; off-TTY help) |
 | **Menu verbs** | empty argv on TTY; `menu` (preferred named); `main` alias |
 | **Handler** | `app_main_menu`; submenu printer/loop under the same `app_main_menu_*` family |
@@ -216,7 +216,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | AC-3 | Interactive empty argv **and** interactive `menu` draw the three-row list (backup, restore, family sudoers) + Exit 9 |
 | AC-4 | Interactive `menu --json` still draws the list |
 | AC-5 | Non-interactive `menu` is help; `--json` is JSON help |
-| AC-6 | Numbered **main** list omits help, install, uninstall, where-is-me, version, about, setup, menu, main, the five sudoers verbs, and test-purpose grant-emit as main rows |
+| AC-6 | Numbered **main** list omits help, install, uninstall, where-is-me, version, about, setup, menu, main, the five sudoers verbs, test-purpose grant-emit, and channel verbs (`self-install`, `self-update`, `self-uninstall`, `version-check`, `self-management`) as main rows |
 | AC-7 | Command-row labels match kept-list human-readable `verb: explain`; family explain is this file’s table |
 | AC-8 | TTY header is live `folder-backup(VERSION)` with bold name and italic version; numbered `explain` is italic and light gray; number and verb unstyled; no CSI off-TTY; submenu nametag matches |
 | AC-9 | Menu choice is current-shell `prompt_line` / `_prompt_line`; **MUST NOT** `$()` a `read` helper |
@@ -265,9 +265,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-03 | Active 1.4.0 | Default CLI main menu style (header nametag + TTY gray italic explain); do-not-capture-read MUST; **TP-CLI-18** |
 | 2026-09-03 | Active 1.5.0 | Family row **sudoers** + submenu (five grant/draft setup verbs remain live CLI commands; Back 8 / Exit 9); main **N = 3**; `sudoers` not dispatched |
 | 2026-09-03 | Active 1.6.0 | Submenu **body** moved to **`requirement-shell-cli-sudoers-submenu`**; this file keeps the family row on the start list |
+| 2026-09-30 | Active 1.6.1 | Channel verbs are live and stay off this list. Case 2 still owns empty argv. |
 
 ---
 
-**Last Updated**: 2026-09-03  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

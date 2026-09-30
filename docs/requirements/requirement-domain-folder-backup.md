@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-domain-folder-backup.md  
-**Status**: Active (Version 1.6.5)  
+**Status**: Active (Version 1.6.6)  
 **Area**: domain  
 **Key**: `requirement-domain-folder-backup`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -131,7 +131,7 @@ folder-backup submit-sudoer-request
 | Host sudoers fragment | `host_sudoers_present` / `host_sudoers_path` — this user’s `/etc/sudoers.d/{{APP_NAME}}-<user>` (or legacy); drives submit default add vs update |
 | Domain version note | Product `VERSION` remains Type 0 local version SSOT |
 
-**About is not** a remote version-check and **must not** advertise online install channels.
+**About is not** a remote version-check. The channel URL in about is Type 0 (`script_url`). Domain rows do not upload archives.
 
 ### 2.5 Implementation Notes (this project)
 
@@ -148,7 +148,7 @@ folder-backup submit-sudoer-request
 | **Generate verb** | `generate-sudoer-request` → `fb_generate_sudoer_request` |
 | **Public inbound (sibling)** | `/var/sudoer-cli/sudoer-request` (3773) |
 | **Worked queued basename** | `sudoer-20260815-folder-backup-{{USERNAME}}-add-1.json` |
-| **Bootstrap** | Specialized from **cli-template** Type 0 architecture; online install already absent on A |
+| **Bootstrap** | Specialized from **selfmanaged**. Channel verbs stay Type 0. Domain stays on this product. |
 
 ### 2.6 Why This Requirement Exists (CIAO)
 
@@ -186,7 +186,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 1. Duplicate full create/name/deposit/verify law here once `requirement-folder-archive-backup` is Active.  
 2. Add online install or remote upload as silent domain behavior without new requirements.  
-3. Put domain law into bootstrap parent `cli-template`.  
+3. Put domain law into bootstrap parent `selfmanaged`.  
 4. Leave help listing `backup` without an Active operational backup requirement.  
 5. Create a second Active `requirement-domain-*` without superseding this one.  
 6. Document inbound as `sudoer-approving` (home dropbox) as the preferred dest.  
@@ -222,7 +222,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | `requirement-shell-cli-interface` | Routes domain verbs; help purpose split |
 | `requirement-shell-cli-default-interaction` | Main menu omits test-purpose grant-emit verbs |
 | `requirement-shell-cli-sudoers-submenu` | Five grant/draft setup verbs on the sudoers submenu; remain live CLI commands |
-| `requirement-bootstrap-chain` | Domain extend from cli-template |
+| `requirement-bootstrap-chain` | Domain extend from selfmanaged |
 | `docs/requirements/index.md` | Registry |
 
 ---
@@ -264,9 +264,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-03 | Active 1.6.3 | Grant/draft setup verbs stay live CLI commands on the sudoers submenu; not main-menu rows |
 | 2026-09-03 | Active 1.6.4 | Submenu SSOT **`requirement-shell-cli-sudoers-submenu`** |
 | 2026-09-03 | Active 1.6.5 | Dual mention: submenu membership cites **`requirement-shell-cli-sudoers-submenu`** (start list stays default-interaction) |
+| 2026-09-30 | Active 1.6.6 | Origin note is selfmanaged. Domain verbs and the main menu are unchanged. |
 
 ---
 
-**Last Updated**: 2026-09-03  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

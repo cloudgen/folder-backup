@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.8.2)  
+**Status**: Active (Version 1.9.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -84,7 +84,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 | Purpose | Verbs |
 |---------|-------|
 | **Operational** | `backup`, `restore`, `remove-project-sudoers`, `submit-sudoer-request`; `menu` / `main` when routed. Grant/draft setup verbs share the **sudoers** family row on the numbered list (`requirement-shell-cli-default-interaction`) |
-| **Self-managed** | `install`, `uninstall`, `where-is-me` |
+| **Self-managed** | `install`, `uninstall`, `where-is-me`, `self-install`, `self-update`, `self-uninstall`, `version-check`, `self-management` |
 | **Diagnostics** | `version`, `about`, `help` |
 | **Test-purpose** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` |
 
@@ -103,7 +103,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | **Version SSOT** | ship unit `VERSION=` in `src/folder-backup` (do not pin a stale number here) |
 | **Install paths** | Global: `GLOBAL_BIN` default `/usr/local/bin`; User: `USER_BIN` default `${HOME}/.local/bin` |
 | **Primary install story** | User bin: `~/.local/bin/folder-backup` |
-| **Online channel env** | **Not product UX** (absent; inherited from cli-template) |
+| **Online channel env** | **Product UX.** Help lists `SCRIPT_URL`. `install` does not download. Empty argv does not download. |
 | **Type 2 commands** | None |
 | **Dedicated system user** | Not required |
 
@@ -112,11 +112,16 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | Command | Type | Handler family | Required behavior |
 |---------|------|----------------|-------------------|
 | *(no args — empty argv)* | Type 0 | `app_main` → `app_main_menu` | **Case 2:** TTY numbered list; off-TTY help — not install |
-| `install` | Type 0 | `inst_local_install` | Copy running ship unit to privilege-correct bin; idempotent unless `--force` |
+| `install` | Type 0 | `inst_local_install` | Copy running ship unit to privilege-correct bin; mode **0755**; idempotent unless `--force`. **Not** `inst_self_install`. |
 | `uninstall` | Type 0 | `inst_local_uninstall` | Remove managed binary; confirm unless `--force` |
 | `where-is-me` | Type 0 | `app_where_is_me` | Running + install paths + installed flag |
+| `self-install` | Type 0 | `inst_self_install` | Copy when `$0` is a file; download when piped. Local dest mode **0700**, global **0755**. |
+| `version-check` | Type 0 | `ver_check` | Compare local `VERSION` with the channel. Needs a reachable `SCRIPT_URL`. |
+| `self-update` | Type 0 | `inst_self_update` | Replace the managed binary from the channel. |
+| `self-uninstall` | Type 0 | `inst_self_uninstall` | Remove the channel-managed binary. Off-TTY without `--force` fails closed when a binary exists. |
+| `self-management` | Type 0 | `app_default_self_loop` | TTY opens the self-care board. Off-TTY help. **Not** a main-menu row. |
 | `version` | Type 0 | `app_version` | Local `VERSION` only; no network |
-| `about` | Type 0 | `app_about` | Diagnostics: install presence, paths, user, shell, TTY, **Cache folder (preferred)/(fallback)**, **Persistence storage** `${HOME}/.local/folder-backup`, backup defaults; **no** channel one-liner |
+| `about` | Type 0 | `app_about` | Diagnostics: install presence, paths, user, shell, TTY, **Cache folder (preferred)/(fallback)/(live)**, **Persistence storage** `${HOME}/.local/folder-backup`, channel `script_url`, backup defaults |
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
 | `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | **Operational.** Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
 | `restore` | Type 0 (+ Type 1 stage fetch) | `fb_restore` (domain) | **Operational.** Put an archive back onto the hard-disk projects tree |
@@ -149,7 +154,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 #### Explicitly out of scope
 
-- Online: `version-check`, `self-update`, `self-uninstall`, channel `install` via URL  
+- Empty argv as download-and-run or as `inst_self_install`
 - Type 1 host bootstrap beyond **narrow deposit** and **sudoers fragment generation**  
 - Creating the sibling inbound (`sudo sudoer-cli setup` is not this CLI)  
 - Type 2 app runtime under a dedicated system user  
@@ -186,7 +191,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 - **Caution:** Fail loud on bad input; never silent wrong privilege context.  
 - **Intentional:** Command table + help + dispatcher stay synchronized.  
 - **Anti-fragile:** Works under TTY, quiet, JSON, offline local install.  
-- **Over-protect:** Do not collapse Type 0/1, reintroduce online verbs, or raw output for user messages.  
+- **Over-protect:** Do not collapse Type 0/1, hide the channel verbs, or raw-print user messages.  
 - **SSOT:** `APP_NAME` / `VERSION` / flags at config defaults; output via `out_*`; dispatch via `app_main`.
 
 ---
@@ -195,8 +200,8 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
-1. Add online lifecycle commands without an explicit product-mode change and registry update.  
-2. Change empty argv to install-ensure while install mode remains local-only.  
+1. Drop the channel verbs, or point empty argv at install-ensure, without a registry update.  
+2. Alias `install` to `self-install`.  
 3. List commands in help that are not routed (or route commands not listed).  
 4. Bypass `out_*` for product user messages.  
 5. Run the entire CLI as root by default instead of narrow deposit elevation.  
@@ -217,7 +222,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | AC-1 | All **Implemented** commands in the table are routed and listed in help |
 | AC-2 | Global flags wire QUIET/JSON/DEBUG/FORCE as specified |
 | AC-3 | Empty argv is TTY numbered list / off-TTY help (case 2); never install-ensure |
-| AC-4 | No online self-management verbs on the surface |
+| AC-4 | Channel verbs are routed and listed in help; they are not main-menu rows; empty argv is still case 2 |
 | AC-5 | Domain verbs point to domain requirement for deep semantics |
 | AC-6 | `submit-sudoer-request` is Type 0, routed, listed in help; does not write `/etc` or create inbound |
 | AC-7 | `generate-sudoer-request` is Type 0, routed, listed in help; independent of submit; dest is invoking-user readable; does not write `/etc` or inbound |
@@ -269,9 +274,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-03 | Active 1.8.0 | Grant/draft setup verbs stay live CLI commands; numbered **main** list uses family **sudoers** (submenu); `sudoers` not dispatched; AC-10 |
 | 2026-09-03 | Active 1.8.1 | Submenu SSOT **`requirement-shell-cli-sudoers-submenu`** |
 | 2026-09-06 | Active 1.8.2 | §1.1 Human-facing; help **Work commands** vs **Grant and draft setup** (AC-9 / TP-CLI-17 have); Under command line section |
+| 2026-09-30 | Active 1.9.0 | Channel verbs from selfmanaged are routed. `install` stays the local copy. Main menu unchanged. |
 
 ---
 
-**Last Updated**: 2026-09-06  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

@@ -1,38 +1,31 @@
 #!/bin/sh
 # =============================================================================
-# folder-backup - Local self-managed folder archive CLI (tar.gz + sudo deposit)
+# folder-backup - Folder archive CLI specialized from selfmanaged
 # =============================================================================
 #
-# FULL FEATURED LOCAL TYPE 0 + DOMAIN BACKUP (CIAO / CIAO-Lite Compliant)
+# FULL FEATURED SELF-MANAGED PROGRAM + FOLDER BACKUP (CIAO / CIAO-Lite Compliant)
 #
-# Bootstrap origin: cli-template (Type 0 local-only template, hop 0).
-# Specialize: A=cli-template → B=folder-backup (domain extend). Do not reverse-copy.
-# Online install / remote self-update / channel checksum: absent on A; remain absent.
+# Bootstrap origin: selfmanaged (Type 0, full self-install / version-check /
+# self-update / self-uninstall / channel checksum). Direction A → B only.
+# Specialize: identity folder-backup + domain backup/restore/sudoers.
+# Main menu stays the folder-backup work list (backup, restore, sudoers, Exit 9).
+# Empty argv stays case 2 (TTY work list; off-TTY help) — not Type O install-ensure.
 #
 # Project requirements (docs/requirements/ only — never cite templates here):
-# - requirement-class-software-dev.md
 # - requirement-bootstrap-chain.md
-# - requirement-project-folder.md
-# - requirement-three-layer-privilege-model.md
-# - requirement-sudoer-json-file.md  (JSON sudoer file: PRJ_NAME only)
+# - requirement-class-software-dev.md
+# - requirement-domain-folder-backup.md
 # - requirement-shell-cli-interface.md
-# - requirement-shell-cli-default-interaction.md  (case 2: TTY empty argv + menu/main numbered list)
-# - requirement-shell-cli-sudoers-submenu.md      (family sudoers + five live grant/draft setup verbs)
+# - requirement-shell-cli-default-interaction.md
+# - requirement-shell-cli-sudoers-submenu.md
 # - requirement-shell-local-self-management.md
 # - requirement-shell-cli-storage.md
-# - requirement-shell-idempotency.md
-# - requirement-shell-modular-function-design.md
-# - requirement-shell-output-requirements.md
-# - requirement-shell-interactive-vs-noninteractive.md
-# - requirement-folder-archive-backup.md  (backup/restore ops SSOT — not domain)
-# - requirement-domain-folder-backup.md   (domain surface four pillars)
+# - requirement-folder-archive-backup.md
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
-# Philosophy: CIAO (Caution • Intentional • Anti-fragile • Over-engineered)
-# Single-file ship unit under src/; local install to ~/.local/bin.
-#
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.16.3"
+# VERSION: hard-assign VERSION="1.17.0"
+# SCRIPT_URL: composed from REPO_USER / REPO_NAME / SCRIPT_RELPATH (selfmanaged channel).
 #
 # =============================================================================
 
@@ -45,17 +38,12 @@ set -u  # Treat unset variables as error (defensive)
 # Product identity SSOT (extractors use: grep '^APP_NAME="' / '^VERSION="').
 APP_NAME="folder-backup"
 : "${APP_NAME:=folder-backup}"
-: "${APP_DESC:=Local folder archive backup/restore with narrow sudo deposit}"
+: "${APP_DESC:=Folder archive backup and restore, with self-install, version-check, self-update, and self-uninstall}"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
-: "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
+: "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered work list.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.16.3"
-: "${VERSION:=1.16.3}"
-# Repository identity SSOT (git host owner/repo for project-repository alignment).
-# Install remains local-only: SCRIPT_URL stays empty (no online curl|sh channel).
-: "${REPO_USER:=cloudgen}"
-: "${REPO_NAME:=folder-backup}"
-: "${SCRIPT_URL:=}"
+VERSION="1.17.0"
+: "${VERSION:=1.17.0}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -64,12 +52,12 @@ VERSION="1.16.3"
 : "${FORCE_REINSTALL:=0}"
 : "${DEBUG:=0}"
 : "${TTY:=0}"
-# Sudoers trust: local-only emit requires explicit test-mode allow (see three-layer privilege).
-: "${ALLOW_TEST_LOCAL_SUDOERS:=0}"
 
 # ----------------------------- Safe Variable Defaults ------------------------
 : "${GLOBAL_BIN:=/usr/local/bin}"
 # INC-20260713-001: under set -u, never expand bare ${HOME} before it is set.
+# Order: resolve HOME (safe ${HOME-} probes) → then USER_BIN from HOME.
+# Prefer existing non-empty HOME; else passwd home (getent / USER); else /tmp.
 if [ -z "${HOME-}" ]; then
     _home_resolved=""
     if command -v getent >/dev/null 2>&1; then
@@ -93,21 +81,24 @@ if [ -z "${HOME-}" ]; then
 fi
 : "${HOME:=/tmp}"
 : "${USER_BIN:=${HOME}/.local/bin}"
-: "${INSTALL_PATH:=}"
+: "${INSTALL_PATH:=${GLOBAL_BIN}/${APP_NAME}}"
+# Repository identity → install channel (Option B: raw.githubusercontent.com)
+: "${REPO_USER:=cloudgen}"
+: "${REPO_NAME:=folder-backup}"
+: "${SCRIPT_RELPATH:=src/${APP_NAME}}"
+: "${SCRIPT_URL:=https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${SCRIPT_RELPATH}}"
+: "${CHECKSUM:=}"
+
 : "${FORCE_USER:=0}"
 : "${FORCE_GLOBAL:=0}"
-: "${COMMAND:=help}"
-: "${SH:=sh}"
-
-# Domain / backup deposit SSOT
+: "${ALLOW_TEST_LOCAL_SUDOERS:=0}"
+# Domain / backup deposit SSOT (folder-backup verbs)
 : "${BACKUP_ROOT:=/var/backup}"
 : "${BACKUP_NOTATION:=folder-backup}"
-# Restore host SSOT: reverse of ram-drive-first → hard-disk is default restore target
 : "${RESTORE_HOST_DEFAULT:=hard-disk}"
 : "${RAM_ROOT:=/dev/shm}"
 : "${PROJECTS_ROOT:=}"
 : "${RESTORE_HOST:=}"
-# Optional sudoer-cli compose (Type 0 submit into approval inbound)
 : "${SUDOER_CLI:=}"
 : "${SUDOER_ADM_USER:=sudoer-adm}"
 : "${SUDOER_QUEUE_INBOUND:=}"
@@ -118,19 +109,21 @@ fi
 : "${SUBMIT_ACTION:=add}"
 : "${SUBMIT_ACTION_EXPLICIT:=0}"
 : "${SUDOERS_D_DIR:=/etc/sudoers.d}"
+: "${MAX_DAILY_BACKUPS:=5}"
+: "${MAX_TOTAL_BACKUPS:=30}"
 
-# Interactive capability SSOT — measure [ -t outside functions only.
-TTY=0
+
 [ -t 0 ] && [ -t 1 ] && TTY=1
-export TTY
 USERNAME="$(id -un 2>/dev/null || echo "unknown")"
+# Privilege SSOT for recommended install path / bin choice (set -u safe).
+# Re-detected inside inst_perform_install before mutating INSTALL_PATH.
 if [ "$(id -u 2>/dev/null || echo 1)" -eq 0 ]; then
     IS_ROOT=1
 else
     IS_ROOT=0
 fi
 : "${IS_ROOT:=0}"
-
+: "${SH:=sh}"
 # =============================================================================
 # out_text() - SINGLE SOURCE OF TRUTH FOR ALL OUTPUT
 # =============================================================================
@@ -181,10 +174,12 @@ out_text() {
             ;;
     esac
 
+    local extra="${3-}"
+    local extra2="${4-}"
     local RED='' GREEN='' YELLOW='' BLUE='' DESC='' NC=''
     [ "${TTY:-0}" -eq 1 ] && [ "${QUIET}" -eq 0 ] && [ "${JSON}" -eq 0 ] && {
-        RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
-        BLUE='\033[0;34m'; DESC='\033[3;37m'; NC='\033[0m'
+        RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'
+        DESC='\033[3;37m'; NC='\033[0m'
     }
 
     case "${level}" in
@@ -193,12 +188,12 @@ out_text() {
         out_debug)   printf >&2 "${BLUE}[DEBUG]${NC} %s\n" "${msg}" ;;
         out_info)    printf "${GREEN}[INFO]${NC} %s\n" "${msg}" ;;
         out_success) printf "${GREEN}[OK]${NC} %s\n" "${msg}" ;;
-        plain)       printf "%s\n" "${msg}" ;;
-        plain_n)     printf "%s" "${msg}" ;;
         menu_choice)
-            # Number + name default; explain italic + light gray (SGR 3+37).
+            # Number + name plain; explain italic + light gray (folder-backup main menu).
             printf '%s. %s: %b%s%b\n' "${3-}" "${4-}" "${DESC}" "${5-}" "${NC}"
             ;;
+        plain)       printf "%s\n" "${msg}" ;;
+        plain_n)     printf "%s" "${msg}" ;;
         *)           printf "%s\n" "${msg}" ;;
     esac
 }
@@ -320,19 +315,17 @@ out_plain() {
 }
 
 # =============================================================================
-# out_menu_choice() - Numbered menu row (default CLI main menu style)
+# out_menu_choice() - Numbered menu row (folder-backup main menu style)
 # =============================================================================
 #
 # GENERAL PURPOSE:
 # Print `n. verb: explain`. On a TTY the explain is italic + light gray.
 # Number and verb stay unstyled. Rows with no explain (Exit / Back) print
-# `n. label` only. Quiet/JSON follow out_text.
+# `n. label` only.
 #
 # ALIGNMENT:
-# - requirement-shell-output-requirements.md
 # - requirement-shell-cli-default-interaction.md
-#
-# Last updated: 2026-09-03
+# - requirement-shell-output-requirements.md
 # =============================================================================
 out_menu_choice() {
     _n="${1-}"
@@ -343,6 +336,31 @@ out_menu_choice() {
     else
         out_plain "${_n}. ${_label}"
     fi
+    unset _n _label _desc
+}
+
+# =============================================================================
+# util_app_ident() - APP_NAME(VERSION) nametag for menu headers
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Return the header nametag. TTY and not JSON: bold name, italic version.
+# Off-TTY: plain. Class B return-via-stdout.
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+# - requirement-shell-output-requirements.md
+# =============================================================================
+util_app_ident() {
+    : "${APP_NAME:=folder-backup}"
+    : "${VERSION:=1.17.0}"
+    : "${TTY:=0}"
+    : "${JSON:=0}"
+    if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
+        printf '\033[1m%s\033[0m(\033[3m%s\033[0m)' "${APP_NAME}" "${VERSION}"
+        return 0
+    fi
+    printf '%s(%s)' "${APP_NAME}" "${VERSION}"
 }
 
 # =============================================================================
@@ -471,22 +489,6 @@ util_json_escape() {
     }'
 }
 
-# SSOT REMARK (pipeline): identity token string for capture; not a product banner.
-# TTY: SGR 1 bold name, SGR 3 italic version. Off-TTY / JSON: plain APP_NAME(VERSION).
-# MUST NOT $() a read helper. Last updated: 2026-09-03
-# ALIGNMENT: requirement-shell-output-requirements.md
-util_app_ident() {
-    : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=0.0.0}"
-    : "${TTY:=0}"
-    : "${JSON:=0}"
-    if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
-        printf '\033[1m%s\033[0m(\033[3m%s\033[0m)' "${APP_NAME}" "${VERSION}"
-        return 0
-    fi
-    printf '%s(%s)' "${APP_NAME}" "${VERSION}"
-}
-
 out_json() {
     [ "${JSON}" -eq 0 ] && return 0
     local type="$1" message="$2" key raw_key; shift 2
@@ -545,6 +547,1147 @@ out_json_error() {
     printf >&2 '}\n'
 }
 
+# =============================================================================
+# inst_perform_install() - Perform the actual installation (v2 with checksum)
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Orchestrates the complete installation flow:
+#   1. Privilege-aware path setup (root → /usr/local/bin, normal user → ~/.local/bin)
+#   2. Early exit if already installed (unless --force / FORCE_REINSTALL=1)
+#   3. Target directory preparation
+#   4. Secure download with layered checksum verification:
+#        - If CHECKSUM env var is set → strict verification (user/CI pinned version)
+#        - Otherwise → best-effort verification via ${SCRIPT_URL}.sha256 (if present)
+#   5. Atomic move + chmod + PATH update via inst_perform_install_atomic_install()
+#
+# This is the SINGLE SOURCE OF TRUTH for all installation operations
+# (initial install, self-update, and forced reinstall).
+#
+# CIAO PRINCIPLES APPLIED:
+# - Caution (Principle 1): Never trust network download without verification when possible.
+#   Always use mktemp, explicit error checks, and atomic mv.
+# - Intentional (Principle 2): Clear step-by-step flow with explicit if/then blocks.
+#   Behavior is fully predictable in interactive, quiet, JSON, and non-TTY modes.
+# - Anti-fragile (Principle 3): Works for both root and normal users, survives partial
+#   failures, and maintains backward compatibility when no CHECKSUM is provided.
+# - Over-protect (Principle 18): Strong Protection Zone, safe defaults, checksum layers,
+#   and cleanup on every error path. Designed to be reusable across CIAO-Lite projects.
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# This is the central installation orchestrator. Any change must preserve the
+# checksum decision logic, atomic install step, and variable scoping for helpers.
+#
+# Lessons Learned (CIAO Reflection):
+# 2026-06-26:
+#   - Original implementation was a stub (created tmp_file then returned 0).
+#     This made self-update and the core install path completely non-functional.
+#   - Updated to wire the existing v2 download helpers + atomic install helper.
+#   - Changed mktemp error handling to explicit if (matching the style enforced
+#     in inst_perform_install_download_without_checksum).
+#   - Added safe defaults for FORCE_REINSTALL and CHECKSUM.
+#   - Ensured tmp_file is always cleaned on failure paths.
+#   - Preserved full original defensive header and only appended this Lessons Learned section.
+#
+# Last reviewed: 2026-06-26
+# =============================================================================
+
+inst_perform_install() {
+    # --- Safe Variable Defaults ---
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${USER_BIN:=${HOME}/.local/bin}"
+    : "${INSTALL_PATH:=${GLOBAL_BIN}/${APP_NAME}}"
+    : "${FORCE_REINSTALL:=0}"
+    : "${CHECKSUM:=}"
+    : "${SCRIPT_URL:=}"
+    : "${REMOTE_VERSION:=}"
+
+    if [ "$(id -u)" -eq 0 ]; then
+        IS_ROOT=1
+        INSTALL_PATH="${GLOBAL_BIN}/${APP_NAME}"
+    else
+        IS_ROOT=0
+        INSTALL_PATH="${USER_BIN}/${APP_NAME}"
+    fi
+
+    if [ -z "$REMOTE_VERSION" ]; then
+        REMOTE_VERSION=${VERSION}
+    fi
+
+    if [ "${JSON}" -eq 0 ]; then
+        out_info "Starting installation of ${APP_NAME} ${REMOTE_VERSION}..."
+    fi
+
+    if inst_is_installed && [ "${FORCE_REINSTALL}" -eq 0 ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json "out_success" "${APP_NAME} is already installed."
+        else
+            # Success no-op: re-running curl | sh / install does not require --force.
+            # --force is only for deliberate re-download/replace (see self-update).
+            out_success "${APP_NAME} is already installed."
+            out_info "Use --force only to reinstall deliberately (or run: ${APP_NAME} self-update)."
+        fi
+        return 0
+    fi
+
+    # Step 1: Prepare target folder
+    if ! inst_perform_install_prepare_target; then
+        return 1
+    fi
+
+    local tmp_file
+    tmp_file=$(util_mktemp "bin")
+    if [ -z "${tmp_file}" ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to create temporary file" "io_error"
+        else
+            out_error "Failed to create temporary file"
+        fi
+        return 1
+    fi
+
+    local downloaded_checksum_ok=0
+    : "${INST_AUTO_CHECKSUM_OK:=0}"
+
+    if [ -n "${CHECKSUM}" ]; then
+        # Strict user/CI-provided checksum (highest security)
+        if inst_perform_install_download_with_checksum "${tmp_file}"; then
+            downloaded_checksum_ok=1
+        else
+            rm -f "${tmp_file}" 2>/dev/null || true
+            return 1
+        fi
+    else
+        # Automatic verification via ${SCRIPT_URL}.sha256 (primary integrity path)
+        INST_AUTO_CHECKSUM_OK=0
+        if ! inst_perform_install_download_without_checksum "${tmp_file}"; then
+            rm -f "${tmp_file}" 2>/dev/null || true
+            return 1
+        fi
+        # Set only when companion matched (not on missing-sidecar continue)
+        downloaded_checksum_ok=${INST_AUTO_CHECKSUM_OK:-0}
+    fi
+
+    # Step 4: Atomic move to final location + PATH update + success message
+    if ! inst_perform_install_atomic_install "${tmp_file}" "${downloaded_checksum_ok}"; then
+        rm -f "${tmp_file}" 2>/dev/null || true
+        return 1
+    fi
+
+    return 0
+}
+
+# =============================================================================
+# inst_perform_install_prepare_target() - Step 1: Target folder preparation
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Creates the correct installation directory (global or user) with proper
+# permissions check.
+#
+# Last reviewed: 29 April 2026
+# =============================================================================
+
+inst_perform_install_prepare_target() {
+    if [ "$IS_ROOT" -eq 1 ]; then
+        if ! mkdir -p "${GLOBAL_BIN}" 2>/dev/null; then
+            if [ "${JSON}" -eq 1 ]; then
+                out_json_error "Failed to create ${GLOBAL_BIN}" "io_error"
+            else
+                out_error "Failed to create ${GLOBAL_BIN}"
+            fi
+            return 1
+        fi
+    else
+        if ! mkdir -p "${USER_BIN}" 2>/dev/null; then
+            if [ "${JSON}" -eq 1 ]; then
+                out_json_error "Failed to create ${USER_BIN}" "io_error"
+            else
+                out_error "Failed to create ${USER_BIN}"
+            fi
+            return 1
+        fi
+    fi
+    return 0
+}
+
+# =============================================================================
+# inst_perform_install_download_with_checksum() - Step 2: Download with explicit CHECKSUM
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Downloads the script and verifies it against user-provided CHECKSUM (strict).
+#
+# PRINTF EXCEPTION (class D – tool protocol / computation pipe):
+# printf '%s  %s\n' … | sha256sum -c feeds the verifier only (not product UI).
+# Status/errors still go through out_* / out_json_error / out_die.
+# See requirement-shell-output-requirements.md §2.1.1.
+#
+# Last reviewed: 2026-07-12
+# =============================================================================
+
+inst_perform_install_download_with_checksum() {
+    local tmp_file="$1"
+
+    if [ "${JSON}" -eq 0 ]; then
+        out_info "Verifying download against provided CHECKSUM..."
+    fi
+
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL "${SCRIPT_URL}" -o "${tmp_file}" || {
+            if [ "${JSON}" -eq 1 ]; then
+                out_json_error "Download failed (curl)" "network_error"
+            else
+                out_error "Download failed (curl)"
+            fi
+            return 1
+        }
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO "${tmp_file}" "${SCRIPT_URL}" || {
+            if [ "${JSON}" -eq 1 ]; then
+                out_json_error "Download failed (wget)" "network_error"
+            else
+                out_error "Download failed (wget)"
+            fi
+            return 1
+        }
+    else
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Neither curl nor wget found" "missing_dependency"
+        else
+            out_error "Neither curl nor wget found"
+        fi
+        return 1
+    fi
+
+    # Verify provided CHECKSUM (sha256sum | shasum | openssl — util_sha256_file)
+    local actual
+    actual=$(util_sha256_file "${tmp_file}") || actual=""
+    if [ -n "${actual}" ] && [ "${CHECKSUM}" = "${actual}" ]; then
+        if [ "${JSON}" -eq 0 ]; then
+            out_success "Checksum verification passed (user-provided CHECKSUM)."
+        fi
+        return 0
+    else
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Checksum verification failed (provided CHECKSUM does not match)" "checksum_mismatch"
+        else
+            out_die "Checksum verification failed. The downloaded file does not match the provided CHECKSUM. Installation aborted for security."
+        fi
+        return 1
+    fi
+}
+
+# =============================================================================
+# inst_perform_install_download_without_checksum() - Step 3: Download with automatic .sha256
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Downloads the script and attempts best-effort verification via ${SCRIPT_URL}.sha256.
+# Falls back gracefully if no .sha256 file exists (backward compatible).
+# Uses robust, auditable hash comparison that actually works.
+#
+# CIAO PRINCIPLES APPLIED:
+# - Caution (Principle 1): Never trust download without verification when possible.
+# - Intentional (Principle 2): Explicit HTTP code capture and clear hash comparison.
+#   All error handling uses explicit if/then blocks (no || {} or compact || return).
+# - Anti-fragile (Principle 3): Tolerates minor whitespace in .sha256 file.
+# - Over-protect (Principle 18): Security-critical install path now has working
+#   verification and follows current coding standards.
+#
+# ALIGNMENT (live requirements only):
+# - requirement-shell-self-management.md (install download / integrity path)
+# - requirement-shell-output-requirements.md (out_* status and errors)
+# - requirement-shell-modular-function-design.md (inst_* ownership, headers)
+# Source comments cite only files under docs/requirements/ that exist on disk.
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# Designed to be reusable in other CIAO-Lite projects.
+#
+# Lessons Learned (CIAO Reflection):
+# 2026-06-07:
+#   - Fixed fundamentally broken verification: `sha256sum -c ... < "${tmp_file}"`
+#     does not work as intended.
+#   - Removed all `|| {}` and `|| return 1` patterns in this function to comply
+#     with updated coding standard.
+#   - Both curl and wget paths now use consistent, explicit error handling.
+# 2026-07-12: ALIGNMENT retargeted to live docs/requirements/ files only;
+#             removed citations to non-existent requirements / templates.
+# 2026-07-14: requirement-shell-automatic-checksum transparency (link/value/result);
+#             first-field digest parse (sha256sum "hash  file" lines); set
+#             INST_AUTO_CHECKSUM_OK=1 on companion match so atomic install can
+#             report verified success (was always 0 on automatic path).
+#
+# Last reviewed: 2026-07-14
+# =============================================================================
+
+inst_perform_install_download_without_checksum() {
+    local tmp_file="$1"
+    # Caller (inst_perform_install) reads this after return 0.
+    # 1 = companion present and digests match; 0 = missing sidecar (warn+continue) or unset.
+    INST_AUTO_CHECKSUM_OK=0
+    : "${SCRIPT_URL:=}"
+
+    if [ "${JSON}" -eq 0 ]; then
+        out_info "No CHECKSUM pin → automatic integrity via companion ${SCRIPT_URL}.sha256"
+        out_info "Companion link: ${SCRIPT_URL}.sha256"
+    fi
+
+    if command -v curl >/dev/null 2>&1; then
+        if ! curl -fsSL "${SCRIPT_URL}" -o "${tmp_file}"; then
+            if [ "${JSON}" -eq 1 ]; then
+                out_json_error "Download failed (curl)" "network_error"
+            else
+                out_error "Download failed (curl)"
+            fi
+            return 1
+        fi
+
+        local sha_file
+        sha_file=$(util_mktemp "sha256")
+        if [ -z "${sha_file}" ]; then
+            if [ "${JSON}" -eq 1 ]; then
+                out_json_error "Failed to create temporary file for checksum" "io_error"
+            else
+                out_error "Failed to create temporary file for checksum"
+            fi
+            return 1
+        fi
+
+        # Capture HTTP code cleanly
+        local http_code
+        http_code=$(curl -fsSL -w "%{http_code}" "${SCRIPT_URL}.sha256" -o "${sha_file}" 2>/dev/null)
+
+        if [ "${http_code}" = "200" ]; then
+            # First field only: bare hex or standard "hash  filename" lines
+            local expected actual
+            expected=$(awk 'NF { print $1; exit }' "${sha_file}" 2>/dev/null)
+            actual=$(util_sha256_file "${tmp_file}") || actual=""
+
+            if [ -n "${expected}" ] && [ -n "${actual}" ] && [ "${expected}" = "${actual}" ]; then
+                INST_AUTO_CHECKSUM_OK=1
+                if [ "${JSON}" -eq 0 ]; then
+                    out_info "Expected SHA-256: ${expected}"
+                    out_info "Actual SHA-256:   ${actual}"
+                    out_success "Automatic checksum result: PASS (match ${SCRIPT_URL}.sha256)."
+                fi
+            else
+                rm -f "${sha_file}"
+                if [ "${JSON}" -eq 1 ]; then
+                    out_json_error "Automatic checksum verification failed" "checksum_mismatch"
+                else
+                    out_info "Expected SHA-256: ${expected:-"(empty)"}"
+                    out_info "Actual SHA-256:   ${actual:-"(empty)"}"
+                    out_die "Checksum verification failed (mismatch with ${SCRIPT_URL}.sha256). Installation aborted for security."
+                fi
+                return 1
+            fi
+        else
+            if [ "${JSON}" -eq 0 ]; then
+                out_warn "No .sha256 companion at ${SCRIPT_URL}.sha256 → continuing without automatic verification."
+            fi
+        fi
+        rm -f "${sha_file}" 2>/dev/null || true
+
+    elif command -v wget >/dev/null 2>&1; then
+        if ! wget -qO "${tmp_file}" "${SCRIPT_URL}"; then
+            if [ "${JSON}" -eq 1 ]; then
+                out_json_error "Download failed (wget)" "network_error"
+            else
+                out_error "Download failed (wget)"
+            fi
+            return 1
+        fi
+
+        local sha_file
+        sha_file=$(util_mktemp "sha256")
+        if [ -z "${sha_file}" ]; then
+            if [ "${JSON}" -eq 1 ]; then
+                out_json_error "Failed to create temporary file for checksum" "io_error"
+            else
+                out_error "Failed to create temporary file for checksum"
+            fi
+            return 1
+        fi
+
+        if wget -q --server-response "${SCRIPT_URL}.sha256" -O "${sha_file}" 2>&1 | grep -qE "HTTP/[0-9.]+ 200"; then
+            local expected actual
+            expected=$(awk 'NF { print $1; exit }' "${sha_file}" 2>/dev/null)
+            actual=$(util_sha256_file "${tmp_file}") || actual=""
+
+            if [ -n "${expected}" ] && [ -n "${actual}" ] && [ "${expected}" = "${actual}" ]; then
+                INST_AUTO_CHECKSUM_OK=1
+                if [ "${JSON}" -eq 0 ]; then
+                    out_info "Companion link: ${SCRIPT_URL}.sha256"
+                    out_info "Expected SHA-256: ${expected}"
+                    out_info "Actual SHA-256:   ${actual}"
+                    out_success "Automatic checksum result: PASS (match ${SCRIPT_URL}.sha256)."
+                fi
+            else
+                rm -f "${sha_file}"
+                if [ "${JSON}" -eq 1 ]; then
+                    out_json_error "Automatic checksum verification failed" "checksum_mismatch"
+                else
+                    out_info "Expected SHA-256: ${expected:-"(empty)"}"
+                    out_info "Actual SHA-256:   ${actual:-"(empty)"}"
+                    out_die "Checksum verification failed (mismatch with ${SCRIPT_URL}.sha256). Installation aborted for security."
+                fi
+                return 1
+            fi
+        else
+            if [ "${JSON}" -eq 0 ]; then
+                out_warn "No .sha256 companion at ${SCRIPT_URL}.sha256 → continuing without automatic verification."
+            fi
+        fi
+        rm -f "${sha_file}" 2>/dev/null || true
+
+    else
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Neither curl nor wget found" "missing_dependency"
+        else
+            out_error "Neither curl nor wget found"
+        fi
+        return 1
+    fi
+
+    return 0
+}
+
+# =============================================================================
+# inst_perform_install_atomic_install() - Step 4: Atomic copy to target location
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Atomically moves the staged file to INSTALL_PATH with dest mode
+# (0755 global / 0700 local via inst_cli_dest_mode). PATH rc for user installs.
+#
+# MUST NOT chmod +x on mktemp 0600 — that mints 0711; other logins cannot
+# open the shebang (/bin/sh: Permission denied). PP-A-28 / L-DEST-0711-01.
+#
+# Last updated: 2026-09-17
+# =============================================================================
+
+inst_perform_install_atomic_install() {
+    local tmp_file="$1"
+    local downloaded_checksum_ok="$2"
+
+    local _mode
+    _mode=$(inst_cli_dest_mode)
+    chmod "${_mode}" "${tmp_file}" 2>/dev/null || true
+
+    rm -f "${INSTALL_PATH}" 2>/dev/null
+    if ! mv "${tmp_file}" "${INSTALL_PATH}" 2>/dev/null; then
+        rm -f "${tmp_file}"
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to move to ${INSTALL_PATH}" "io_error"
+        else
+            out_error "Failed to move to ${INSTALL_PATH}"
+        fi
+        return 1
+    fi
+    chmod "${_mode}" "${INSTALL_PATH}" 2>/dev/null || true
+
+    # Add ~/.local/bin to PATH for normal user installs
+    if [ "$IS_ROOT" -eq 0 ]; then
+        path_add_shell
+    fi
+    
+    if [ "${JSON}" -eq 1 ]; then
+        out_json "out_success" "${APP_NAME} ${REMOTE_VERSION} successfully installed to ${INSTALL_PATH}" "path" "${INSTALL_PATH}"
+    else
+        out_success "${APP_NAME} ${REMOTE_VERSION} successfully installed to ${INSTALL_PATH}"
+        if [ "${downloaded_checksum_ok}" -eq 1 ]; then
+            out_success "✓ Download was cryptographically verified."
+        fi
+    fi
+    return 0
+}
+
+# =============================================================================
+# inst_argv0_is_shell_interpreter() - True when $0 is sh/bash/zsh/…
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Detect curl|sh / stdin-pipe invocations where process $0 is the interpreter
+# (not the ship unit). Login-dash prefixes are stripped.
+#
+# ALIGNMENT (live requirements only):
+# - requirement-shell-cli-self-install.md
+#
+# Last updated: 2026-09-17
+# =============================================================================
+inst_argv0_is_shell_interpreter() {
+    local _a0="${1:-}"
+    local _base="${_a0##*/}"
+    case "${_base}" in
+        -*) _base="${_base#-}" ;;
+    esac
+    case "${_base}" in
+        sh|bash|dash|ash|zsh|ksh|mksh|yash|posh|csh|tcsh|fish|busybox)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
+# =============================================================================
+# inst_resolve_self_script() - Absolute path of the running script, or empty
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# If $0 is a readable regular file (not an interpreter), print its absolute
+# path. Basename-only invocations use command -v.
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout): path or nothing.
+#
+# ALIGNMENT (live requirements only):
+# - requirement-shell-cli-self-install.md
+#
+# Last updated: 2026-09-17
+# =============================================================================
+inst_resolve_self_script() {
+    local _a0="${1:-}"
+    local _dir _found
+    if [ -z "${_a0}" ]; then
+        return 1
+    fi
+    if inst_argv0_is_shell_interpreter "${_a0}"; then
+        return 1
+    fi
+    if [ -f "${_a0}" ] && [ -r "${_a0}" ]; then
+        _dir=$(CDPATH= cd -- "$(dirname -- "${_a0}")" && pwd) || return 1
+        printf '%s\n' "${_dir}/${_a0##*/}"
+        return 0
+    fi
+    case "${_a0}" in
+        */*) return 1 ;;
+    esac
+    _found=$(command -v "${_a0}" 2>/dev/null) || return 1
+    if [ -f "${_found}" ] && [ -r "${_found}" ]; then
+        printf '%s\n' "${_found}"
+        return 0
+    fi
+    return 1
+}
+
+# =============================================================================
+# inst_cli_dest_mode() - 0755 global / 0700 local for self-install dest
+# =============================================================================
+#
+# ALIGNMENT (live requirements only):
+# - requirement-shell-cli-self-install.md
+#
+# Last updated: 2026-09-17
+# =============================================================================
+inst_cli_dest_mode() {
+    if [ "$(id -u 2>/dev/null || echo 1)" -eq 0 ]; then
+        printf '%s\n' "0755"
+    else
+        printf '%s\n' "0700"
+    fi
+}
+
+# =============================================================================
+# inst_self_install_copy_from_script() - Copy $0 to dest without download
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Stage as ${APP_NAME}-XXXXXX under TMPDIR/cache, chmod dest mode, atomic mv.
+# MUST NOT chmod +x on mktemp 0600 (that mints 0711).
+#
+# ALIGNMENT (live requirements only):
+# - requirement-shell-cli-self-install.md
+#
+# Last updated: 2026-09-17
+# =============================================================================
+inst_self_install_copy_from_script() {
+    local _src="$1"
+    local _mode="$2"
+    local _tmp
+    : "${APP_NAME:=folder-backup}"
+    : "${JSON:=0}"
+    : "${INSTALL_PATH:=}"
+
+    _tmp=$(util_mktemp "stage")
+    if [ -z "${_tmp}" ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to create temporary file" "io_error"
+        else
+            out_error "Failed to create temporary file"
+        fi
+        return 1
+    fi
+    if ! cp "${_src}" "${_tmp}"; then
+        rm -f "${_tmp}" 2>/dev/null || true
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to copy ${_src}" "io_error"
+        else
+            out_error "Failed to copy ${_src}"
+        fi
+        return 1
+    fi
+    chmod "${_mode}" "${_tmp}" 2>/dev/null || true
+    rm -f "${INSTALL_PATH}" 2>/dev/null
+    if ! mv "${_tmp}" "${INSTALL_PATH}" 2>/dev/null; then
+        rm -f "${_tmp}" 2>/dev/null || true
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to move to ${INSTALL_PATH}" "io_error"
+        else
+            out_error "Failed to move to ${INSTALL_PATH}"
+        fi
+        return 1
+    fi
+    chmod "${_mode}" "${INSTALL_PATH}" 2>/dev/null || true
+    return 0
+}
+
+# =============================================================================
+# inst_self_install() - Place the CLI only (copy from script $0, else download)
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Type O CLI place/ensure. Empty argv and the self-install verb (install is
+# an alias). Script $0 → copy without download. Interpreter $0 → channel
+# download. Dest mode 0755 global / 0700 local. PATH rc MAY.
+#
+# ALIGNMENT (live requirements only):
+# - requirement-shell-cli-self-install.md
+# - requirement-shell-cli-zero-arguments.md
+# - requirement-shell-automatic-checksum.md
+#
+# Last updated: 2026-09-17
+# =============================================================================
+inst_self_install() {
+    : "${JSON:=0}"
+    : "${FORCE_REINSTALL:=0}"
+    : "${APP_NAME:=folder-backup}"
+    : "${VERSION:=}"
+    : "${HOME:=/tmp}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${USER_BIN:=${HOME}/.local/bin}"
+    : "${REMOTE_VERSION:=${VERSION}}"
+    : "${CHECKSUM:=}"
+    : "${SCRIPT_URL:=}"
+
+    if [ "$(id -u 2>/dev/null || echo 1)" -eq 0 ]; then
+        IS_ROOT=1
+        INSTALL_PATH="${GLOBAL_BIN}/${APP_NAME}"
+    else
+        IS_ROOT=0
+        INSTALL_PATH="${USER_BIN}/${APP_NAME}"
+    fi
+    local _mode _src _tmp _ck
+    _mode=$(inst_cli_dest_mode)
+
+    if [ "${JSON}" -eq 0 ]; then
+        out_info "Starting self-install of ${APP_NAME} ${REMOTE_VERSION}..."
+    fi
+
+    path_add_shell
+
+    if inst_is_installed && [ "${FORCE_REINSTALL}" -eq 0 ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json "out_success" "${APP_NAME} is already installed."
+        else
+            out_success "${APP_NAME} is already installed."
+            out_info "Use --force only to replace deliberately (or run: ${APP_NAME} self-update)."
+        fi
+        return 0
+    fi
+
+    if ! inst_perform_install_prepare_target; then
+        return 1
+    fi
+
+    _src=$(inst_resolve_self_script "$0") || _src=""
+    if [ -n "${_src}" ]; then
+        if [ "${JSON}" -eq 0 ]; then
+            out_info "Installing from local script ${_src} (no download)."
+        fi
+        if ! inst_self_install_copy_from_script "${_src}" "${_mode}"; then
+            return 1
+        fi
+        if [ "${JSON}" -eq 1 ]; then
+            out_json "out_success" "${APP_NAME} ${REMOTE_VERSION} successfully installed to ${INSTALL_PATH}" "path" "${INSTALL_PATH}"
+        else
+            out_success "${APP_NAME} ${REMOTE_VERSION} successfully installed to ${INSTALL_PATH}"
+        fi
+        return 0
+    fi
+
+    _tmp=$(util_mktemp "stage")
+    if [ -z "${_tmp}" ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to create temporary file" "io_error"
+        else
+            out_error "Failed to create temporary file"
+        fi
+        return 1
+    fi
+    _ck=0
+    : "${INST_AUTO_CHECKSUM_OK:=0}"
+    if [ -n "${CHECKSUM}" ]; then
+        if inst_perform_install_download_with_checksum "${_tmp}"; then
+            _ck=1
+        else
+            rm -f "${_tmp}" 2>/dev/null || true
+            return 1
+        fi
+    else
+        INST_AUTO_CHECKSUM_OK=0
+        if ! inst_perform_install_download_without_checksum "${_tmp}"; then
+            rm -f "${_tmp}" 2>/dev/null || true
+            return 1
+        fi
+        _ck=${INST_AUTO_CHECKSUM_OK:-0}
+    fi
+    if ! inst_perform_install_atomic_install "${_tmp}" "${_ck}"; then
+        rm -f "${_tmp}" 2>/dev/null || true
+        return 1
+    fi
+    chmod "${_mode}" "${INSTALL_PATH}" 2>/dev/null || true
+    return 0
+}
+
+# =============================================================================
+# inst_maybe_install() - Friendly installation prompt
+# =============================================================================
+#
+# Respects both --quiet and --json modes.
+# Quiet/JSON: no prompt — MUST call inst_self_install (CLI place; not return 0 skip).
+# Interactive gate consumes process TTY (set once at startup), not a second [ -t.
+# Uses prompt_yes_no() as single source of truth for confirmation.
+#
+# !!! DO NOT MODIFY OR SIMPLIFY !!!
+# Designed to be reusable in other projects.
+#
+# Lessons Learned (CIAO Reflection):
+# 2026-07-13:
+#   - Under set -u, recommended-install branch used IS_ROOT / SH before any
+#     assignment (those were only set inside inst_perform_install). Crash:
+#     "IS_ROOT: parameter not set" after printing "Recommended installation
+#     command:". Fixed with local privilege detection + SH/SCRIPT_URL defaults.
+# 2026-09-02:
+#   - JSON/QUIET returned 0 without placing (SM-BUG-01). Specializees that
+#     copy this helper as Case A SSOT inherited silent success. Now calls
+#     inst_perform_install and returns its status. Prompt gate reads TTY.
+# 2026-09-17:
+#   - Quiet/JSON and TTY yes now call inst_self_install (copy when $0 is a
+#     script; dest 0755 global / 0700 local).
+#
+# Last updated: 2026-09-17
+# =============================================================================
+
+inst_maybe_install() {
+    : "${QUIET:=0}"
+    : "${JSON:=0}"
+    : "${TTY:=0}"
+    : "${FORCE_REINSTALL:=0}"
+    : "${SCRIPT_URL:=}"
+    : "${SH:=sh}"
+    # Privilege for recommended install command (set -u safe; same rule as inst_perform_install)
+    if [ "$(id -u 2>/dev/null || echo 1)" -eq 0 ]; then
+        IS_ROOT=1
+    else
+        IS_ROOT=0
+    fi
+
+    if inst_is_installed && [ "${FORCE_REINSTALL}" -eq 0 ]; then
+        return 0
+    fi
+    # Quiet or JSON: CLI place with no prompt (requirement-shell-cli-self-install).
+    if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ]; then
+        inst_self_install
+        return $?
+    fi
+    out_empty_line
+    out_plain "Note: '${APP_NAME}' is not installed yet."
+    out_plain "     Version: ${VERSION}"
+    out_empty_line
+    out_plain "Recommended installation command:"
+    out_empty_line
+
+    if [ "$IS_ROOT" -eq 1 ]; then
+        out_plain "     sudo curl -fsSL ${SCRIPT_URL} | sudo ${SH}"
+    else
+        out_plain "     curl -fsSL ${SCRIPT_URL} | ${SH}"
+    fi
+    out_empty_line
+
+    _maybe_should_install=0
+
+    if [ "${TTY}" -eq 1 ]; then
+        if prompt_yes_no "Install ${APP_NAME} ${VERSION} now?"; then
+            _maybe_should_install=1
+        else
+            out_plain "Installation skipped by user."
+            return 0
+        fi
+    else
+        out_plain "Non-interactive mode detected → installing automatically..."
+        _maybe_should_install=1
+    fi
+
+    if [ "${_maybe_should_install}" -eq 1 ]; then
+        inst_self_install
+        return $?
+    fi
+    return 0
+}
+
+# =============================================================================
+# inst_self_update() - Perform atomic self-update to latest version
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Orchestrates self-update for the installed ${APP_NAME} binary.
+# Fetches the remote VERSION string, compares it with the locally installed
+# version, and (if different or --force) delegates to inst_perform_install
+# with FORCE_REINSTALL=1. Designed to be safe, idempotent-friendly, and
+# respectful of the current installation type (user vs global).
+#
+# CIAO PRINCIPLES APPLIED:
+# - Caution (Principle 1): Never downgrades without explicit FORCE; always
+#   verifies remote version before proceeding; uses centralized output.
+# - Intentional (Principle 2): Clear separation between version check and
+#   actual install; explicit variable handling and error paths.
+# - Anti-fragile (Principle 3): Works for both root and normal users;
+#   survives missing SCRIPT_URL (graceful error) and network failures.
+# - Over-protect (Principle 18): Full CIAO header, safe defaults, Protection
+#   Zone comment, and Lessons Learned traceability. Reusable pattern for
+#   other CIAO-Lite self-managed tools.
+#
+# ALIGNMENT (live requirements only):
+# - requirement-shell-self-management.md
+# - requirement-shell-cli-interface.md
+# - requirement-shell-output-requirements.md
+# - requirement-shell-idempotency.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# This is the canonical self-update entry point. Any change must preserve
+# the REMOTE_VERSION visibility contract with inst_perform_install and
+# the centralized output discipline.
+#
+# Lessons Learned (CIAO Reflection):
+# 2026-06-26: Original implementation was a stub. Updated to call the v2
+#             inst_perform_install path with checksum support.
+# 2026-06-26 (correction): Removed accidental `local` on REMOTE_VERSION
+#             (was invisible to inst_perform_install). Added safe default
+#             for SCRIPT_URL and explicit comment about distribution URL
+#             requirement. No hard-coded project-specific values introduced.
+#
+# Last reviewed: 2026-06-26
+# =============================================================================
+
+inst_self_update() {
+    # --- Safe Variable Defaults ---
+    : "${APP_NAME:=folder-backup}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    : "${FORCE:=0}"
+    : "${FORCE_REINSTALL:=0}"
+    : "${SCRIPT_URL:=}"
+
+    # Align force aliases (CLI --force sets both)
+    if [ "${FORCE}" -eq 1 ]; then
+        FORCE_REINSTALL=1
+    fi
+
+    if [ "${JSON}" -eq 0 ]; then
+        out_info "Starting self-update of ${APP_NAME}..."
+    fi
+
+    # SCRIPT_URL is Config SSOT (composed default from REPO_* / SCRIPT_RELPATH).
+    # Override via env for forks or offline channels. Empty → fail loud below.
+
+    REMOTE_VERSION=$(util_fetch_remote_version "${SCRIPT_URL}")
+
+    if [ -z "$REMOTE_VERSION" ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to fetch latest version" "network_error"
+        else
+            out_error "Failed to fetch latest version (SCRIPT_URL may be unset or unreachable)"
+        fi
+        return 1
+    fi
+
+    local local_version
+    local_version=$(inst_get_version)
+
+    if [ "$local_version" = "$REMOTE_VERSION" ] && [ "${FORCE_REINSTALL}" -eq 0 ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json "out_success" "Already running the latest version (${REMOTE_VERSION})."
+        else
+            out_success "Already running the latest version (${REMOTE_VERSION})."
+        fi
+        return 0
+    fi
+
+    # No silent downgrade: remote older than local requires --force
+    # (requirement-shell-self-management.md)
+    if [ "$local_version" != "not installed" ] && \
+       [ "$local_version" != "unknown" ] && \
+       ver_gt "$local_version" "$REMOTE_VERSION" && \
+       [ "${FORCE_REINSTALL}" -eq 0 ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Refusing downgrade from ${local_version} to ${REMOTE_VERSION} (use --force)" "downgrade_blocked"
+        else
+            out_error "Refusing silent downgrade: local ${local_version} is newer than remote ${REMOTE_VERSION}."
+            out_info "Re-run with --force to reinstall/downgrade deliberately."
+        fi
+        return 1
+    fi
+
+    if [ "$local_version" != "$REMOTE_VERSION" ] && [ "${JSON}" -eq 0 ]; then
+        if ver_gt "$REMOTE_VERSION" "$local_version" 2>/dev/null || [ "$local_version" = "not installed" ]; then
+            out_info "Updating from ${local_version} → ${REMOTE_VERSION}"
+        else
+            out_warn "Force reinstall/downgrade: ${local_version} → ${REMOTE_VERSION}"
+        fi
+    fi
+
+    FORCE_REINSTALL=1
+    inst_perform_install
+}
+
+# =============================================================================
+# inst_self_uninstall() - Main orchestrator for uninstallation
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Removes the installed ${APP_NAME} binary (global or user) and optionally
+# cleans up PATH entries.
+#
+# Respects --force, --quiet, and --json.
+# Works for both root and user installations.
+#
+# DESIGN:
+# Split into three clear steps for readability while preserving original
+# behavior and safety.
+#
+# Last reviewed: 29 April 2026
+# =============================================================================
+
+inst_self_uninstall() {
+    # Align force aliases (CLI --force)
+    : "${FORCE:=0}"
+    : "${FORCE_REINSTALL:=0}"
+    if [ "${FORCE}" -eq 1 ]; then
+        FORCE_REINSTALL=1
+    fi
+
+    if [ "${JSON}" -eq 0 ]; then
+        out_info "Starting self-uninstall of ${APP_NAME}..."
+    fi
+
+    # Step 1: Determine which installation to remove
+    local bin_path
+    bin_path=$(inst_self_uninstall_determine_bin)
+    if [ -z "$bin_path" ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json "out_success" "${APP_NAME} is not installed. Nothing to uninstall."
+        else
+            out_warn "${APP_NAME} is not installed. Nothing to uninstall."
+        fi
+        return 0
+    fi
+
+    # Step 2: Confirm (if needed) and perform removal
+    if ! inst_self_uninstall_confirm_and_remove "$bin_path"; then
+        return 1
+    fi
+
+    # Step 3: Clean up PATH entries (user installs only)
+    inst_self_uninstall_cleanup_path
+
+    if [ "${JSON}" -eq 1 ]; then
+        out_json "out_success" "${APP_NAME} has been uninstalled."
+    else
+        out_success "${APP_NAME} has been uninstalled."
+    fi
+    return 0
+}
+
+# =============================================================================
+# inst_self_uninstall_determine_bin() - Step 1: Determine which installation to remove
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Decides the correct binary path to remove based on current user,
+# FORCE_GLOBAL, and actual file presence.
+#
+# Returns the full path to remove, or empty string if nothing to uninstall.
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout):
+# Final printf '%s' "$bin_path" is a data return for $(…) capture by the
+# uninstall orchestrator — not a product user message. User-facing text in
+# this helper uses out_warn. Callers must capture the path; do not treat
+# this printf as a substitute for out_*.
+# See requirement-shell-output-requirements.md §2.1.1.
+#
+# CRITICAL: Respects root vs user logic exactly as before.
+#
+# Last reviewed: 2026-07-12
+# =============================================================================
+
+inst_self_uninstall_determine_bin() {
+    # Prefer shared path SSOT (util_get_install_bin_path); only return if file exists.
+    : "${APP_NAME:=folder-backup}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${HOME:=/tmp}"
+    : "${USER_BIN:=${HOME}/.local/bin}"
+
+    local bin_path=""
+    bin_path=$(util_get_install_bin_path)
+    if [ -n "${bin_path}" ] && [ -f "${bin_path}" ]; then
+        printf '%s' "${bin_path}"
+        return 0
+    fi
+    # Empty → not installed (caller treats as nothing to uninstall)
+    printf '%s' ""
+}
+
+# =============================================================================
+# inst_self_uninstall_confirm_and_remove() - Step 2: Confirm and remove binary
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Handles confirmation (unless --force) and actual file removal.
+# Interactive TTY uses prompt_yes_no(); non-interactive / --json / --quiet
+# fail closed with an explicit --force requirement (never auto-delete).
+#
+# Returns 0 on out_success, non-zero on failure/cancel.
+#
+# Last reviewed: 2026-07-13
+# =============================================================================
+
+inst_self_uninstall_confirm_and_remove() {
+    local bin_path="$1"
+
+    # Confirm before removal (unless --force / FORCE_REINSTALL).
+    # Non-interactive / --json / --quiet: fail closed — never auto-delete.
+    # Do not report that as "cancelled by user" (user never answered a prompt).
+    if [ "${FORCE_REINSTALL:-0}" -eq 0 ] && [ "${FORCE:-0}" -eq 0 ]; then
+        : "${JSON:=0}"
+        : "${QUIET:=0}"
+
+        if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ] || ! [ -t 0 ] || ! [ -t 1 ]; then
+            # requirement-shell-interactive-vs-noninteractive.md: destructive ops need --force
+            if [ "${JSON}" -eq 1 ]; then
+                out_json_error "Uninstall requires --force in non-interactive mode (refusing to remove ${bin_path})." "confirm_required"
+            else
+                out_error "Uninstall requires --force in non-interactive mode (refusing to remove ${bin_path})."
+                out_info "Re-run with: ${APP_NAME} self-uninstall --force"
+            fi
+            return 1
+        fi
+
+        if prompt_yes_no "This will remove: ${bin_path}"; then
+            :  # confirmed on TTY
+        else
+            # Interactive TTY: user answered no / empty (default N)
+            out_plain "Uninstall cancelled by user."
+            return 1
+        fi
+    fi
+
+    # Remove the binary
+    if rm -f "$bin_path" 2>/dev/null; then
+        return 0
+    else
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to remove ${bin_path} (permission denied?)" "permission_denied"
+        else
+            out_error "Failed to remove ${bin_path} (permission denied?)"
+        fi
+        return 1
+    fi
+}
+
+# =============================================================================
+# inst_self_uninstall_cleanup_path() - Step 3: Clean up PATH entries
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Removes installer-added PATH entries from shell config files
+# (bash, zsh, fish) for user-level installations **only if** USER_BIN
+# is empty or does not exist.
+#
+# SAFETY RULE:
+# If USER_BIN still contains other files (other tools, scripts, etc.),
+# we deliberately keep the PATH entry to avoid breaking the user's environment.
+# This follows CIAO-Lite "Caution" and "Anti-fragile" principles.
+#
+# Last reviewed: 2026-07-14
+# =============================================================================
+
+inst_self_uninstall_cleanup_path() {
+    # Only attempt cleanup for non-root installs
+    if [ "$(id -u)" -eq 0 ]; then
+        return 0
+    fi
+
+    : "${HOME:=/tmp}"
+    : "${USER_BIN:=${HOME}/.local/bin}"
+    local bin_dir="${USER_BIN}"
+    local should_clean_path=1
+
+    # === SAFETY CHECK: Only clean PATH if USER_BIN is empty ===
+    if [ -d "$bin_dir" ]; then
+        if [ -n "$(ls -A "$bin_dir" 2>/dev/null)" ]; then
+            # Directory exists and is not empty → keep PATH for other tools
+            should_clean_path=0
+            if [ "${JSON}" -eq 0 ]; then
+                out_warn "Keeping ${bin_dir} in PATH because it still contains files."
+            fi
+        fi
+    fi
+
+    if [ "$should_clean_path" -eq 0 ]; then
+        return 0
+    fi
+
+    # Directory is empty or missing → safe to remove our PATH entries
+    local cleaned=0
+    local escaped_bin
+    # Escape sed | delimiter characters in USER_BIN for path-line removal
+    escaped_bin=$(printf '%s' "${bin_dir}" | sed 's/[\\/&|]/\\&/g')
+
+    for config in "${HOME}/.bashrc" "${HOME}/.zshrc" "${HOME}/.config/fish/config.fish"; do
+        if [ -f "$config" ]; then
+            if sed -i.bak \
+                -e '/# Added by .* installer/d' \
+                -e "\|${escaped_bin}|d" \
+                "$config" 2>/dev/null; then
+                cleaned=1
+            fi
+            rm -f "${config}.bak" 2>/dev/null || true
+        fi
+    done
+
+    if [ "$cleaned" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
+        out_plain "→ Cleaned ${APP_NAME} PATH entries from shell config files"
+        out_plain "→ You may want to restart your terminal"
+    fi
+}
+
+# =============================================================================
+# inst_is_installed() - Robust installation check
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Checks whether the program is already installed, supporting both root
+# and normal user installations with safe fallbacks.
+#
+# Please don't modify this code for root-only installed
+# You can check [ "$(id -u)" -eq 0 ] before calling / excuting 
+#   this function
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# Designed to be reusable in other projects.
+#
+# Last reviewed: 29 April 2026
+# =============================================================================
 
 inst_is_installed() {
     version=$(inst_get_version)
@@ -561,15 +1704,36 @@ inst_is_installed() {
 #
 # GENERAL PURPOSE:
 # Safely reads the VERSION constant from the installed script.
-# Used by about / install diagnostics (local Type 0). Not a remote version-check.
+# Used by --version-check and --self-update.
 #
 # Safe Variable Defaults
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # Designed to be reusable in other projects.
 #
-# CRITICAL: installed-version extraction must stay grep '^VERSION="' + cut.
-# about/install compare managed binaries this way. Do not invent a parser.
+# CRITICAL WARNING - VERSION EXTRACTION IS ESSENTIAL FOR SELF-UPDATE:
+# Knowing the exact installed version is not optional — it is the foundation
+# of safe self-update and version-check logic.
+#
+# Without a reliable inst_get_version(), self-update cannot properly
+# compare local version against remote, leading to:
+# - Unnecessary re-downloads
+# - Failed updates
+# - Silent failures
+# - Potential downgrade or broken installation
+#
+# AI assistants frequently fail to respect this importance. They often
+# overlook, simplify, or remove version extraction logic because they
+# consider it "minor" or try to replace the entire self-update flow with
+# a simpler approach. This always breaks the self-update mechanism.
+#
+# This function is battle-field tested and intentionally simple/robust
+# (grep + cut on the VERSION= line). Any attempt to rewrite or bypass it
+# risks destroying the self-update safety net.
+#
+# We must intentionally preserve and reuse this exact function instead of
+# replacing it. Respecting version awareness is a core part of CIAO
+# Caution and Anti-fragility.
 #
 # PRINTF/ECHO EXCEPTION (class B – function return-via-stdout):
 # echo "unknown" / echo "not installed" / grep|cut pipeline output are data
@@ -612,6 +1776,194 @@ inst_get_version() {
         echo "not installed"
     fi
 }
+
+# =============================================================================
+# ver_gt() - Pure POSIX semantic version comparison
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Returns 0 (true) if ver1 > ver2, otherwise returns 1 (false).
+# Used by ver_check() and inst_self_update() to prevent incorrect downgrades.
+#
+# Safe Variable Defaults
+# Respects CIAO zero-dependency rule — no external tools (no sort -V).
+#
+# CRITICAL DESIGN CHOICE:
+# This function was added because previous AI suggestions using `sort -V`
+# were not portable enough for harsh environments (Alpine ash, busybox,
+# minimal containers, Git Bash, etc.).
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# Past AI assistants have repeatedly tried to replace this with:
+#   - `sort -V` one-liners
+#   - Inline string comparisons
+#   - "Cleaner" but less robust logic
+#
+# Any such change re-introduces downgrade bugs and breaks portability.
+# This function must remain pure POSIX and self-contained.
+#
+# AI assistants are explicitly required to:
+# - Never remove or inline this function
+# - Always use it for all version comparisons in grokrec
+# - Preserve all defensive comments
+# - Study the test script provided by the user before suggesting changes
+#
+# This is part of the battle-field-tested defensive layer.
+#
+# Last reviewed: 29 April 2026
+# =============================================================================
+
+ver_gt() {
+    # --- Safe Variable Defaults ----
+    v1=$1
+    v2=$2
+
+    while [ -n "$v1" ] || [ -n "$v2" ]; do
+        p1=${v1%%.*}
+        p2=${v2%%.*}
+
+        [ -z "$p1" ] && p1=0
+        [ -z "$p2" ] && p2=0
+
+        if [ "$p1" -gt "$p2" ]; then
+            return 0
+        fi
+        if [ "$p1" -lt "$p2" ]; then
+            return 1
+        fi
+
+        if [ "$v1" = "${v1#*.}" ]; then
+            v1=""
+        else
+            v1=${v1#*.}
+        fi
+
+        if [ "$v2" = "${v2#*.}" ]; then
+            v2=""
+        else
+            v2=${v2#*.}
+        fi
+    done
+
+    return 1    # versions are equal
+}
+
+# =============================================================================
+# ver_check() - Check for newer version from remote source
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Compares the locally installed version of ${APP_NAME} against the remote
+# version available at SCRIPT_URL. Supports both human-readable output and
+# clean JSON mode. Used by the `version-check` command and as a helper for
+# self-update decision logic.
+#
+# CIAO PRINCIPLES APPLIED:
+# - Caution (Principle 1): Never assumes SCRIPT_URL is set; graceful failure
+#   with actionable error when remote version cannot be fetched.
+# - Intentional (Principle 2): Explicit safe defaults, clear separation of
+#   version fetching vs comparison, and consistent behavior in JSON/quiet modes.
+# - Anti-fragile (Principle 3): Works whether the tool is installed globally,
+#   per-user, or not yet installed; survives network or parsing failures.
+# - Over-protect (Principle 18): Full defensive header, Protection Zone,
+#   Lessons Learned traceability, and strict avoidance of hard-coded
+#   project-specific URLs or repository paths.
+#
+# ALIGNMENT (live requirements only):
+# - requirement-shell-self-management.md
+# - requirement-shell-cli-interface.md
+# - requirement-shell-output-requirements.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# This function is the single source of truth for remote version comparison.
+# Any change must preserve the SCRIPT_URL handling contract and the exact
+# JSON output shape expected by consumers.
+#
+# Lessons Learned (CIAO Reflection):
+# 2026-06-26: Original version contained a hardcoded project-specific default
+#             URL pointing to an unrelated repository (porting artifact).
+#             Corrected to empty safe default + explicit comment. Removed
+#             all hard-coded distribution details to comply with generalization
+#             and hardcoding-prevention rules.
+#
+# Last reviewed: 2026-06-26
+# =============================================================================
+
+ver_check() {
+    # --- Safe Variable Defaults ----
+    # Defensive defaults - never assume globals are set
+    : "${APP_NAME:=folder-backup}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    : "${SCRIPT_URL:=}"
+
+    # SCRIPT_URL is Config SSOT (composed default from REPO_USER/REPO_NAME/SCRIPT_RELPATH).
+    # Override via env for forks or offline channels. Empty → network steps fail loud.
+
+    # Fetch remote version (curl or wget)
+    REMOTE_VERSION=$(util_fetch_remote_version "${SCRIPT_URL}")
+
+    if [ -z "$REMOTE_VERSION" ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to fetch remote version" "network_error"
+        else
+            out_error "Failed to fetch remote version (SCRIPT_URL may be unset or unreachable)"
+        fi
+        return 1
+    fi
+
+    local local_version
+    local_version=$(inst_get_version)
+
+    if [ "${JSON}" -eq 1 ]; then
+        # out_json type message key value … — empty message so fields stay key/value pairs
+        local _is_latest="false"
+        if [ "$local_version" = "$REMOTE_VERSION" ]; then
+            _is_latest="true"
+        elif ver_gt "$local_version" "$REMOTE_VERSION" 2>/dev/null; then
+            _is_latest="true"
+        fi
+        out_json "ver_check" "" \
+            "local_version" "$local_version" \
+            "remote_version" "$REMOTE_VERSION" \
+            "is_latest" "${_is_latest}"
+    else
+        if [ "${QUIET}" -eq 0 ]; then
+            out_info "Checking latest version of ${APP_NAME}..."
+            out_plain "Local version : ${local_version}"
+            out_plain "Latest version: ${REMOTE_VERSION}"
+            out_empty_line
+
+            if [ "$local_version" = "$REMOTE_VERSION" ]; then
+                out_success "You are running the latest version."
+            elif ver_gt "$local_version" "$REMOTE_VERSION"; then
+                out_success "You are running a newer development version (${local_version} > ${REMOTE_VERSION})"
+            elif [ "$local_version" = "not installed" ]; then
+                out_warn "${APP_NAME} is not installed yet."
+            else
+                out_warn "A newer version is available (${REMOTE_VERSION})"
+            fi
+        fi
+    fi
+}
+
+
+# =============================================================================
+# path_add_bashrc() - Add ~/.local/bin to ~/.bashrc
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Appends the PATH export to ~/.bashrc only if not already present.
+#
+# Returns 0 if added (or was already present), 1 if file missing or failed.
+#
+# PRINTF EXCEPTION (class C – file I/O redirect):
+# printf … >> "$bashrc" writes shell config content to a file, not product
+# stdout/stderr. User-visible “→ Added …” lines use out_plain.
+# See requirement-shell-output-requirements.md §2.1.1.
+#
+# Last reviewed: 2026-07-12
+# =============================================================================
 
 path_add_bashrc() {
     : "${HOME:=/tmp}"
@@ -776,6 +2128,88 @@ path_add_shell() {
 # Digests are data returns for $(util_sha256_file …), not product UI.
 # =============================================================================
 
+util_sha256_file() {
+    local file="${1-}" dig=""
+    if [ -z "${file}" ] || [ ! -f "${file}" ]; then
+        return 1
+    fi
+    if command -v sha256sum >/dev/null 2>&1; then
+        dig=$(sha256sum "${file}" 2>/dev/null | awk '{ print $1; exit }')
+    elif command -v shasum >/dev/null 2>&1; then
+        dig=$(shasum -a 256 "${file}" 2>/dev/null | awk '{ print $1; exit }')
+    elif command -v openssl >/dev/null 2>&1; then
+        # openssl dgst -sha256 → "SHA256(file)= hex" or "SHA2-256(file)= hex"
+        dig=$(openssl dgst -sha256 "${file}" 2>/dev/null | awk '{ print $NF; exit }')
+    else
+        return 1
+    fi
+    if [ -z "${dig}" ]; then
+        return 1
+    fi
+    printf '%s\n' "${dig}"
+    return 0
+}
+
+# =============================================================================
+# util_fetch_remote_version() - Extract VERSION="…" from remote SCRIPT_URL body
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Download SCRIPT_URL with curl or wget and print the remote VERSION value.
+# Empty stdout on failure (caller fails loud). Class B return-via-stdout.
+# =============================================================================
+
+util_fetch_remote_version() {
+    local url="${1-}"
+    local body=""
+    if [ -z "${url}" ]; then
+        return 1
+    fi
+    if command -v curl >/dev/null 2>&1; then
+        body=$(curl -fsSL "${url}" 2>/dev/null) || body=""
+    elif command -v wget >/dev/null 2>&1; then
+        body=$(wget -qO- "${url}" 2>/dev/null) || body=""
+    else
+        return 1
+    fi
+    if [ -z "${body}" ]; then
+        return 1
+    fi
+    printf '%s\n' "${body}" | grep '^VERSION="' | head -n1 | cut -d'"' -f2
+    return 0
+}
+
+# =============================================================================
+# util_get_install_bin_path() - Return the correct binary path to operate on
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Returns the full path to the ${APP_NAME} binary that should be used for
+# install/uninstall/update operations.
+#
+# Safe Variable Defaults
+#
+# Respects --force and --json.
+# Respects root vs non-root isolation, --force-user, --force-global.
+#
+# For non-root: prefers ~/.local/bin, falls back to /usr/local/bin if present.
+# For root: always uses /usr/local/bin.
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# This is a minimal defensive helper to reduce repetition while preserving
+# the strict root/non-root separation that has been battle-field tested.
+#
+# CRITICAL: Any change here must maintain zero cross-contamination between
+# user and global installations.
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout):
+# Final printf '%s' "${bin_path}" is a data return for $(…) capture — not
+# product UI. Warnings use out_warn. Callers must capture the path.
+# See requirement-shell-output-requirements.md §2.1.1.
+#
+# Last reviewed: 2026-07-12
+# =============================================================================
+
 util_get_install_bin_path() {
     # --- Safe Variable Defaults ----
     # Defensive defaults - never assume globals are set
@@ -895,39 +2329,316 @@ util_backup() {
 }
 
 # =============================================================================
-# util_preferred_cache_dir() - Policy preferred cache leaf (class B)
+# util_cache_host_kind() - linux | gitbash | mac
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Returns the preferred RAM cache folder. Not a ram-drive project tree.
-# About human/JSON "Cache folder (preferred)" uses this path.
+# Classify this host for the cache-folder chain. Linux includes Termux and
+# every host that is not Git Bash and not Mac.
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout):
+# printf is a data return for $(util_cache_host_kind), not a product message.
 #
 # ALIGNMENT: requirement-shell-cli-storage.md
+# Test-purpose: SELFMANAGED_CACHE_HOST=linux|gitbash|mac
+#               SELFMANAGED_CACHE_SKIP=preferred skips tier 1 with no message
 #
-# Last updated: 2026-08-30
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# Designed to be reusable in other projects.
+#
+# Last updated: 2026-09-27
 # =============================================================================
-util_preferred_cache_dir() {
-    : "${APP_NAME:=folder-backup}"
-    printf '%s' "/dev/shm/cache/cache-${APP_NAME}"
+util_cache_host_kind() {
+    case "${SELFMANAGED_CACHE_HOST:-}" in
+        linux|gitbash|mac)
+            printf '%s' "${SELFMANAGED_CACHE_HOST}"
+            return 0
+            ;;
+    esac
+    if [ -n "${MSYSTEM:-}" ]; then
+        printf '%s' "gitbash"
+        return 0
+    fi
+    case "$(uname -s 2>/dev/null)" in
+        MINGW*|MSYS*) printf '%s' "gitbash" ;;
+        Darwin) printf '%s' "mac" ;;
+        *) printf '%s' "linux" ;;
+    esac
 }
 
 # =============================================================================
-# util_fallback_cache_dir() - Policy fallback cache leaf (class B)
+# util_cache_login() - one path segment from this login
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Returns the user XDG cache folder used when RAM/tmp cache leaves are unusable.
-# About human/JSON "Cache folder (fallback)" uses this path.
+# Return id -un (USERNAME) as a single path segment. Characters outside
+# letters, digits, dot, underscore, and hyphen become underscores.
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout):
+# printf is a data return, not a product message.
 #
 # ALIGNMENT: requirement-shell-cli-storage.md
 #
-# Last updated: 2026-08-30
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+#
+# Last updated: 2026-09-27
+# =============================================================================
+util_cache_login() {
+    : "${USERNAME:=unknown}"
+    _clogin="${USERNAME}"
+    case "${_clogin}" in
+        *[!A-Za-z0-9._-]*)
+            _clogin=$(printf '%s' "${_clogin}" | tr -c 'A-Za-z0-9._-' '_')
+            ;;
+    esac
+    if [ -z "${_clogin}" ]; then
+        _clogin="unknown"
+    fi
+    printf '%s' "${_clogin}"
+    unset _clogin
+}
+
+# =============================================================================
+# util_cache_volatile_leaf() - cache-${APP_NAME}-${login}-$$
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Leaf name for /dev/shm/cache and /tmp/cache. Includes this login and this
+# process id so two logins do not share one directory.
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout).
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+#
+# Last updated: 2026-09-27
+# =============================================================================
+util_cache_volatile_leaf() {
+    : "${APP_NAME:=app}"
+    printf '%s' "cache-${APP_NAME}-$(util_cache_login)-$$"
+}
+
+# =============================================================================
+# util_cache_home_leaf() - cache-${APP_NAME}-$$
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Leaf name under this login’s home. Home already isolates the login, so the
+# leaf omits the login segment and keeps this process id.
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout).
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+#
+# Last updated: 2026-09-27
+# =============================================================================
+util_cache_home_leaf() {
+    : "${APP_NAME:=app}"
+    printf '%s' "cache-${APP_NAME}-$$"
+}
+
+# =============================================================================
+# util_preferred_cache_dir() - preferred cache path for this host
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Print the preferred cache directory. Does not create it.
+# Linux: /dev/shm/cache/cache-${APP_NAME}-${login}-$$
+# Git Bash and Mac: /tmp/cache/cache-${APP_NAME}-${login}-$$
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout).
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+#
+# Last updated: 2026-09-27
+# =============================================================================
+util_preferred_cache_dir() {
+    : "${APP_NAME:=app}"
+    : "${HOME:=/tmp}"
+    case "$(util_cache_host_kind)" in
+        gitbash|mac)
+            printf '%s' "/tmp/cache/$(util_cache_volatile_leaf)"
+            ;;
+        *)
+            printf '%s' "/dev/shm/cache/$(util_cache_volatile_leaf)"
+            ;;
+    esac
+}
+
+# =============================================================================
+# util_fallback_cache_dir() - 1st fallback cache path for this host
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Print the 1st fallback. Does not create it.
+# Linux: /tmp/cache/cache-${APP_NAME}-${login}-$$
+# Git Bash: ${HOME}/AppData/Local/Temp/cache-${APP_NAME}-$$
+# Mac: ${HOME}/Library/Caches/cache-${APP_NAME}-$$
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout).
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+#
+# Last updated: 2026-09-27
 # =============================================================================
 util_fallback_cache_dir() {
-    : "${APP_NAME:=folder-backup}"
+    : "${APP_NAME:=app}"
     : "${HOME:=/tmp}"
-    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
-    printf '%s' "${XDG_CACHE_HOME}/cache-${APP_NAME}"
+    case "$(util_cache_host_kind)" in
+        gitbash)
+            printf '%s' "${HOME}/AppData/Local/Temp/$(util_cache_home_leaf)"
+            ;;
+        mac)
+            printf '%s' "${HOME}/Library/Caches/$(util_cache_home_leaf)"
+            ;;
+        *)
+            printf '%s' "/tmp/cache/$(util_cache_volatile_leaf)"
+            ;;
+    esac
+}
+
+# =============================================================================
+# util_fallback2_cache_dir() - 2nd fallback, empty on Git Bash
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Print the 2nd fallback, or an empty string when this host has none.
+# Linux: ${HOME}/.cache/cache-${APP_NAME}-$$
+# Mac: ${HOME}/cache/cache-${APP_NAME}-$$
+# Git Bash: empty
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout).
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+#
+# Last updated: 2026-09-27
+# =============================================================================
+util_fallback2_cache_dir() {
+    : "${APP_NAME:=app}"
+    : "${HOME:=/tmp}"
+    case "$(util_cache_host_kind)" in
+        gitbash)
+            printf '%s' ""
+            ;;
+        mac)
+            printf '%s' "${HOME}/cache/$(util_cache_home_leaf)"
+            ;;
+        *)
+            printf '%s' "${HOME}/.cache/$(util_cache_home_leaf)"
+            ;;
+    esac
+}
+
+# =============================================================================
+# util_cache_try_dir() - create one cache tier; silent on failure
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Create the parent, then the leaf mode 0700. Return 0 when the leaf exists
+# and is writable. Return 1 with no message when it does not. The caller
+# tries the next tier. A skipped tier is not a warning and not an error.
+#
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+#
+# Last updated: 2026-09-27
+# =============================================================================
+util_cache_try_dir() {
+    _cdir="${1:-}"
+    if [ -z "${_cdir}" ]; then
+        unset _cdir
+        return 1
+    fi
+    _cparent=$(dirname "${_cdir}")
+    case "${_cparent}" in
+        /dev/shm/cache|/tmp/cache)
+            if ! mkdir -m 1777 -p "${_cparent}" 2>/dev/null; then
+                if ! mkdir -p "${_cparent}" 2>/dev/null; then
+                    unset _cdir _cparent
+                    return 1
+                fi
+            fi
+            ;;
+        *)
+            if ! mkdir -p "${_cparent}" 2>/dev/null; then
+                unset _cdir _cparent
+                return 1
+            fi
+            ;;
+    esac
+    if ! mkdir -m 0700 -p "${_cdir}" 2>/dev/null; then
+        if ! mkdir -p "${_cdir}" 2>/dev/null; then
+            unset _cdir _cparent
+            return 1
+        fi
+    fi
+    if [ ! -d "${_cdir}" ] || [ ! -w "${_cdir}" ]; then
+        unset _cdir _cparent
+        return 1
+    fi
+    unset _cdir _cparent
+    return 0
+}
+
+# =============================================================================
+# util_persistent_storage_dir() - ${HOME}/.local/${APP_NAME}
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Print the durable per-login directory. Persistence is not a cache tier.
+# No login suffix and no process id. Not the install bin directory.
+#
+# PRINTF EXCEPTION (class B – function return-via-stdout).
+# ALIGNMENT: requirement-shell-cli-storage.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+#
+# Last updated: 2026-09-27
+# =============================================================================
+util_persistent_storage_dir() {
+    : "${APP_NAME:=app}"
+    : "${HOME:=/tmp}"
+    printf '%s' "${HOME}/.local/${APP_NAME}"
+}
+
+# =============================================================================
+# util_resolve_persistent_storage() - create persistence, then print it
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# mkdir the persistence directory and print it. Fail closed when it cannot
+# be created or when the path is the install bin directory.
+#
+# ECHO EXCEPTION (class B – function return-via-stdout):
+# echo is a data return for $(util_resolve_persistent_storage). Failures use out_die.
+#
+# ALIGNMENT: requirement-shell-cli-storage.md
+#             requirement-shell-output-requirements.md
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+#
+# Last updated: 2026-09-27
+# =============================================================================
+util_resolve_persistent_storage() {
+    : "${APP_NAME:=app}"
+    : "${HOME:=/tmp}"
+    _persist=$(util_persistent_storage_dir)
+    case "${_persist}" in
+        */.local/bin|*/.local/bin/)
+            out_die "Persistence storage must not be the install bin directory ${_persist}. Next: keep durable data in ${HOME}/.local/${APP_NAME}."
+            ;;
+    esac
+    if ! mkdir -p "${_persist}" 2>/dev/null || [ ! -w "${_persist}" ]; then
+        out_die "Cannot create persistence storage ${_persist}. Next: make your home directory writable, then run ${APP_NAME} about."
+    fi
+    echo "${_persist}"
+    unset _persist
+    return 0
 }
 
 # =============================================================================
@@ -935,20 +2646,19 @@ util_fallback_cache_dir() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Returns the best available volatile cache directory for scratch/staging.
-# Prefers /dev/shm/cache/cache-${APP_NAME} → /tmp/cache/cache-${APP_NAME}
-# → ${XDG_CACHE_HOME}/cache-${APP_NAME}. Create chosen leaf before echo.
+# Return the best available cache directory for scratch files.
+# Linux: shm leaf, then /tmp leaf, then ${HOME}/.cache leaf.
+# Git Bash: /tmp leaf, then AppData Local Temp leaf.
+# Mac: /tmp leaf, then Library/Caches leaf, then ${HOME}/cache leaf.
+# Volatile leaves are cache-${APP_NAME}-${login}-$$. Home leaves omit login.
+# A missed tier is silent (no warning, no error). Error only if every tier fails.
+# MUST NOT use /dev/shm/${APP_NAME} or /dev/shm/${APP_NAME}-${USERNAME}.
 #
 # CIAO PRINCIPLES APPLIED:
-# - Caution: Multi-user hosts; sticky /dev/shm/cache so sibling cache-<app>
-#   leaves can be created; if the preferred leaf is not writable, fall through.
-# - Intentional: One resolver SSOT. Cache leaves are cache-${APP_NAME}, not
-#   ram-drive-shaped /dev/shm/${APP_NAME} or /dev/shm/${APP_NAME}-${USERNAME}.
-# - Anti-fragile: Missing /dev/shm still works via /tmp then XDG.
-#
-# CRITICAL WARNING - RAM-DRIVE COLLISION:
-# /dev/shm/${APP_NAME} and /dev/shm/${APP_NAME}-${USERNAME} look like project
-# trees on the RAM disk. Cache MUST live under /dev/shm/cache/cache-${APP_NAME}.
+# - Caution: two logins must not share one cache leaf.
+# - Intentional: the directory name carries this process id; files inside use mktemp.
+# - Anti-fragile: a missing higher tier is skipped with no message.
+# - Over-protect: fail only when every tier for this host failed.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # Designed to be reusable in other projects.
@@ -960,112 +2670,61 @@ util_fallback_cache_dir() {
 #
 # Lessons Learned (CIAO Reflection):
 # 2026-07-13: STORAGE_DIR was bare/unset on third fallback (INC-20260713-001 P1).
-# 2026-07-14: Third fallback uses XDG_CACHE_HOME / HOME/.cache under set -u.
-# 2026-07-16: Create chosen tier root before echo (fail-closed) for all tiers;
-#             wire from app_main (EFFECTIVE_STORAGE_DIR + TMPDIR). SM-STOR-01.
-# 2026-08-30: Preferred /dev/shm/cache/cache-${APP_NAME}; about labels are
-#             Cache folder (preferred)/(fallback), not Storage (effective)/(fallback).
+# 2026-07-16: Create chosen tier root before echo (fail-closed). SM-STOR-01.
+# 2026-09-27: Leaf is cache-${APP_NAME}-${login}-$$ under cache/. Tier misses
+#             stay silent. Home tiers omit the login segment.
 #
-# Last updated: 2026-08-30
+# Last updated: 2026-09-27
 # SSOT: requirement-shell-cli-storage.md
 # =============================================================================
 util_resolve_storage() {
-    : "${APP_NAME:=folder-backup}"
+    : "${USERNAME:=unknown}"
+    : "${APP_NAME:=app}"
     : "${HOME:=/tmp}"
-    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
-    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/cache-${APP_NAME}}"
 
     _storage_candidate=""
-    if [ -d "/dev/shm" ] && [ -w "/dev/shm" ]; then
-        if ! mkdir -m 1777 -p /dev/shm/cache 2>/dev/null; then
-            mkdir -p /dev/shm/cache 2>/dev/null || true
-        fi
-        _pref="/dev/shm/cache/cache-${APP_NAME}"
-        if mkdir -p "${_pref}" 2>/dev/null; then
-            if [ -w "${_pref}" ]; then
-                _storage_candidate="${_pref}"
-            fi
+    if [ "${SELFMANAGED_CACHE_SKIP:-}" != "preferred" ]; then
+        _pref=$(util_preferred_cache_dir)
+        if util_cache_try_dir "${_pref}"; then
+            _storage_candidate="${_pref}"
         fi
     fi
-    if [ -z "${_storage_candidate}" ] && [ -w "/tmp" ]; then
-        if ! mkdir -m 1777 -p /tmp/cache 2>/dev/null; then
-            mkdir -p /tmp/cache 2>/dev/null || true
+    if [ -z "${_storage_candidate}" ]; then
+        _fb1=$(util_fallback_cache_dir)
+        if util_cache_try_dir "${_fb1}"; then
+            _storage_candidate="${_fb1}"
         fi
-        _tmpc="/tmp/cache/cache-${APP_NAME}"
-        if mkdir -p "${_tmpc}" 2>/dev/null; then
-            if [ -w "${_tmpc}" ]; then
-                _storage_candidate="${_tmpc}"
+    fi
+    if [ -z "${_storage_candidate}" ]; then
+        _fb2=$(util_fallback2_cache_dir)
+        if [ -n "${_fb2}" ]; then
+            if util_cache_try_dir "${_fb2}"; then
+                _storage_candidate="${_fb2}"
             fi
         fi
     fi
     if [ -z "${_storage_candidate}" ]; then
-        _storage_candidate="${STORAGE_DIR}"
-        if ! mkdir -p "${_storage_candidate}" 2>/dev/null; then
-            out_die "Cannot create cache folder ${_storage_candidate}"
-        fi
-        if [ ! -w "${_storage_candidate}" ]; then
-            out_die "Cannot create cache folder ${_storage_candidate}"
-        fi
+        out_die "Cannot create cache folder. Every cache location on this computer failed. Next: make /tmp or your home directory writable, then run ${APP_NAME} about."
     fi
     echo "${_storage_candidate}"
-    unset _storage_candidate _pref _tmpc
+    unset _storage_candidate _pref _fb1 _fb2
     return 0
 }
 
 # =============================================================================
-# util_persistent_storage_dir() - Policy persistence leaf (class B)
+# util_mktemp() - scratch file inside the cache folder
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Returns durable Type 0 persistence storage: ${HOME}/.local/${APP_NAME}.
-# Not the install binary (${HOME}/.local/bin) and not cache.
+# Create a mktemp file under the cache folder. The directory name carries
+# this process id. The file name must not.
 #
+# PRINTF EXCEPTION (class B – function return-via-stdout).
 # ALIGNMENT: requirement-shell-cli-storage.md
 #
-# Last updated: 2026-08-30
-# =============================================================================
-util_persistent_storage_dir() {
-    : "${APP_NAME:=folder-backup}"
-    : "${HOME:=/tmp}"
-    printf '%s' "${HOME}/.local/${APP_NAME}"
-}
-
-# =============================================================================
-# util_resolve_persistent_storage() - Persistence storage resolver
-# =============================================================================
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 #
-# GENERAL PURPOSE:
-# Creates and returns ${HOME}/.local/${APP_NAME} for durable product files.
-# Create-before-return; fail closed.
-#
-# ECHO EXCEPTION (class B – function return-via-stdout):
-# echo of the persistence path is a data return for $(…) capture.
-# See requirement-shell-output-requirements.md §2.1.1.
-#
-# ALIGNMENT: requirement-shell-cli-storage.md
-#
-# Last updated: 2026-08-30
-# =============================================================================
-util_resolve_persistent_storage() {
-    : "${APP_NAME:=folder-backup}"
-    : "${HOME:=/tmp}"
-    _persist=$(util_persistent_storage_dir)
-    if ! mkdir -p "${_persist}" 2>/dev/null; then
-        out_die "Cannot create persistence storage ${_persist}"
-    fi
-    if [ ! -w "${_persist}" ]; then
-        out_die "Cannot create persistence storage ${_persist}"
-    fi
-    echo "${_persist}"
-    unset _persist
-    return 0
-}
-
-# =============================================================================
-# util_mktemp() - Isolated scratch file (consume EFFECTIVE_STORAGE_DIR)
-# =============================================================================
-# ALIGNMENT: requirement-shell-cli-storage.md
-# Forbidden: predictable $$ names (e.g. /tmp/${APP_NAME}.$$).
+# Last updated: 2026-09-27
 # =============================================================================
 util_mktemp() {
     : "${APP_NAME:=folder-backup}"
@@ -1074,16 +2733,23 @@ util_mktemp() {
     _dollar='$'
     case "${_suffix}" in
         *"${_dollar}${_dollar}"*)
-            out_die "util_mktemp: refuse predictable \$\$ name template"
+            out_die "Refusing a scratch file name that contains a process id. Next: pass a suffix such as bin or sha256."
             ;;
     esac
     if [ -z "${EFFECTIVE_STORAGE_DIR}" ]; then
         EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
         export EFFECTIVE_STORAGE_DIR
     fi
-    mktemp "${EFFECTIVE_STORAGE_DIR}/${APP_NAME}.${_suffix}.XXXXXX" 2>/dev/null \
-        || mktemp "${TMPDIR:-/tmp}/${APP_NAME}.${_suffix}.XXXXXX" 2>/dev/null \
-        || mktemp
+    _made=""
+    _made=$(mktemp "${EFFECTIVE_STORAGE_DIR}/${APP_NAME}.${_suffix}.XXXXXX" 2>/dev/null) || _made=""
+    if [ -z "${_made}" ]; then
+        _made=$(mktemp "${TMPDIR:-/tmp}/${APP_NAME}.${_suffix}.XXXXXX" 2>/dev/null) || _made=""
+    fi
+    if [ -z "${_made}" ]; then
+        _made=$(mktemp 2>/dev/null) || _made=""
+    fi
+    printf '%s' "${_made}"
+    unset _suffix _dollar _made
 }
 
 # =============================================================================
@@ -1108,59 +2774,60 @@ util_mktemp() {
 # Past AI assistants have repeatedly broken this by using raw printf/echo + read,
 # which violates the single output system, quiet/json handling, and TTY detection.
 #
-# PRINTF EXCEPTION (class B – function return-via-stdout only):
-# printf '%s' "${default|answer}" returns the chosen value for $(prompt_ask …)
-# capture. It is NOT the prompt UI. User-visible prompt text MUST stay on
-# out_info / out_msg_n. Do not replace those with raw printf + read.
-# See requirement-shell-output-requirements.md §2.1.1.
+# WARNING — do-not-capture-read (PP-A-22):
+# Call in the current shell. The answer is PROMPT_ASK_VALUE.
+# MUST NOT _x=$(prompt_ask …). Stdout is the prompt, not the return.
+# See requirement-shell-interactive-vs-noninteractive.md
+# and requirement-shell-script-coding.md.
 #
-# Last reviewed: 2026-07-12
+# Last updated: 2026-09-23
 # =============================================================================
 
 prompt_ask() {
     # --- Safe Variable Defaults ---
     : "${JSON:=0}"
     : "${QUIET:=0}"
+    : "${TTY:=0}"
 
     # set -u safe: missing args become empty defaults (INC-20260713-001 class)
-    local message="${1-}"
-    local default="${2-}"
-    local current="${3-}"
+    _pa_message="${1-}"
+    _pa_default="${2-}"
+    _pa_current="${3-}"
+    PROMPT_ASK_VALUE="${_pa_default}"
 
-    # Never prompt in non-interactive modes
+    # Never prompt in non-interactive modes. Default stays in PROMPT_ASK_VALUE.
     if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ]; then
-        printf '%s' "${default}"
+        unset _pa_message _pa_default _pa_current
         return 0
     fi
 
     # Consume TTY SSOT (measured outside functions). Do not re-test [ -t.
     if [ "${TTY:-0}" -ne 1 ]; then
         if [ "${INTERACTIVE:-0}" -ne 1 ]; then
-            printf '%s' "${default}"
+            unset _pa_message _pa_default _pa_current
             return 0
         fi
     fi
 
     # Show current value if present
-    if [ -n "${current}" ]; then
-        out_info "Current: ${current}"
+    if [ -n "${_pa_current}" ]; then
+        out_info "Current: ${_pa_current}"
     fi
 
     # Show default
-    if [ -n "${default}" ]; then
-        out_info "Default: ${default}"
+    if [ -n "${_pa_default}" ]; then
+        out_info "Default: ${_pa_default}"
     fi
 
-    out_msg_n "${message}: "
+    out_msg_n "${_pa_message}: "
 
-    local answer=""
-    read -r answer || true
-
-    if [ -z "${answer}" ]; then
-        printf '%s' "${default}"
-    else
-        printf '%s' "${answer}"
+    _pa_answer=""
+    read -r _pa_answer || true
+    if [ -n "${_pa_answer}" ]; then
+        PROMPT_ASK_VALUE="${_pa_answer}"
     fi
+    unset _pa_message _pa_default _pa_current _pa_answer
+    return 0
 }
 
 # =============================================================================
@@ -1168,8 +2835,8 @@ prompt_ask() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Ask one field on a real terminal. Do not use $(prompt_ask): out_msg_n writes
-# stdout and would pollute the captured path. Consumes TTY / JSON / QUIET.
+# Ask one field on a real terminal. Answer is _prompt_line in this shell.
+# Do not use $(prompt_line) or $(prompt_ask). Consumes TTY / JSON / QUIET.
 #
 # ALIGNMENT:
 # - requirement-shell-interactive-vs-noninteractive.md
@@ -1218,7 +2885,7 @@ prompt_line() {
 # This helper exists specifically to prevent that regression and to enforce
 # CIAO-Lite principles of Caution, Intentionality, and Over-protect.
 #
-# Last reviewed: 29 April 2026
+# Last updated: 2026-09-02
 # =============================================================================
 
 prompt_yes_no() {
@@ -1226,6 +2893,7 @@ prompt_yes_no() {
     # Defensive defaults - never assume globals are set
     : "${JSON:=0}"
     : "${QUIET:=0}"
+    : "${TTY:=0}"
 
     local message="$1"
 
@@ -1234,8 +2902,8 @@ prompt_yes_no() {
         return 1   # treat as "no" in non-interactive modes
     fi
 
-    # Consume TTY SSOT (measured outside functions). Do not re-test [ -t.
-    if [ "${TTY:-0}" -ne 1 ]; then
+    # Consume process TTY (measured once at startup; no second [ -t).
+    if [ "${TTY}" -ne 1 ]; then
         return 1
     fi
 
@@ -1272,7 +2940,11 @@ prompt_yes_no() {
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # Designed to be reusable in other CIAO projects.
-# Last reviewed: April 2026
+# Lessons Learned (CIAO Reflection):
+# 2026-09-27: about names Cache folder used / preferred / 1st / 2nd and
+#             Persistence storage. A fallback tier is not a warning.
+#
+# Last updated: 2026-09-27
 # =============================================================================
 
 # =============================================================================
@@ -1292,7 +2964,7 @@ prompt_yes_no() {
 # Nested functions are not portable POSIX; this must stay top-level.
 #
 # Last reviewed: 2026-07-12
-
+# =============================================================================
 util_get_current_shell() {
     local shell="unknown"
     shell=$(ps -p $$ -o comm= 2>/dev/null | tr -d '()' || echo "unknown")
@@ -1309,6 +2981,222 @@ util_get_current_shell() {
 }
 
 
+# =============================================================================
+# app_about() - Diagnostics (selfmanaged channel + folder-backup domain)
+# =============================================================================
+#
+# ALIGNMENT:
+# - requirement-shell-cli-interface.md
+# - requirement-domain-folder-backup.md (about domain fields)
+# - requirement-shell-cli-storage.md
+#
+# Last updated: 2026-09-23
+# =============================================================================
+app_about() {
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    : "${APP_NAME:=folder-backup}"
+    : "${VERSION:=1.17.0}"
+    : "${REPO_USER:=cloudgen}"
+    : "${REPO_NAME:=folder-backup}"
+    : "${SCRIPT_URL:=}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${HOME:=/tmp}"
+    : "${USER_BIN:=${HOME}/.local/bin}"
+    : "${USERNAME:=unknown}"
+    : "${RESTORE_HOST_DEFAULT:=hard-disk}"
+    : "${PROJECTS_ROOT:=}"
+    : "${RAM_ROOT:=/dev/shm}"
+    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
+    : "${BACKUP_ROOT:=/var/backup}"
+    : "${BACKUP_NOTATION:=folder-backup}"
+    : "${MAX_DAILY_BACKUPS:=5}"
+    : "${MAX_TOTAL_BACKUPS:=30}"
+
+    if [ -z "${EFFECTIVE_STORAGE_DIR:-}" ]; then
+        EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
+    fi
+    : "${STORAGE_DIR:=$(util_fallback_cache_dir)}"
+    _cache_pref=$(util_preferred_cache_dir)
+    _cache_fb=$(util_fallback_cache_dir)
+    if [ -z "${PERSISTENT_STORAGE_DIR:-}" ]; then
+        PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)
+    fi
+
+    _installed="false"
+    inst_is_installed && _installed="true"
+
+    _global_ver="not found"
+    if [ -x "${GLOBAL_BIN}/${APP_NAME}" ]; then
+        _global_ver=$(grep '^VERSION="' "${GLOBAL_BIN}/${APP_NAME}" 2>/dev/null | cut -d'"' -f2 || echo "unknown")
+    fi
+    _local_ver="not found"
+    if [ -x "${USER_BIN}/${APP_NAME}" ]; then
+        _local_ver=$(grep '^VERSION="' "${USER_BIN}/${APP_NAME}" 2>/dev/null | cut -d'"' -f2 || echo "unknown")
+    fi
+    _shell=$(util_get_current_shell)
+    _user=$(id -un 2>/dev/null || echo "unknown")
+    _interactive="false"
+    [ "${TTY:-0}" -eq 1 ] && _interactive="true"
+
+    # Best-effort sudo deposit probe
+    _sudo_deposit="unknown"
+    if [ "$(id -u 2>/dev/null || echo 1)" -eq 0 ]; then
+        _sudo_deposit="root"
+    elif command -v sudo >/dev/null 2>&1; then
+        if sudo -n true 2>/dev/null; then
+            _sudo_deposit="sudo_n_ok"
+        else
+            _sudo_deposit="sudo_needs_auth_or_denied"
+        fi
+    else
+        _sudo_deposit="no_sudo"
+    fi
+
+    _sudoer_cli="not_found"
+    if _scli_path=$(fb_detect_sudoer_cli); then
+        _sudoer_cli="${_scli_path}"
+    fi
+    _sudoer_adm="absent"
+    if _sadm_name=$(fb_detect_sudoer_adm); then
+        _sudoer_adm="${_sadm_name}"
+    fi
+    _sudoer_inbound="not_found"
+    _sudoer_inbound_writable="false"
+    if _sin_path=$(fb_detect_sudoer_inbound); then
+        _sudoer_inbound="${_sin_path}"
+        if [ -w "${_sin_path}" ]; then
+            _sudoer_inbound_writable="true"
+        fi
+    fi
+
+    _host_sudoers_present="false"
+    _host_sudoers_path=""
+    if _hsp=$(fb_probe_current_user_host_sudoers); then
+        _host_sudoers_present="true"
+        _host_sudoers_path="${_hsp}"
+    fi
+
+    if [ "${JSON}" -eq 1 ]; then
+        out_json "about" "" \
+            "app" "${APP_NAME}" \
+            "version" "${VERSION}" \
+            "repo_user" "${REPO_USER}" \
+            "repo_name" "${REPO_NAME}" \
+            "repository" "${REPO_USER}/${REPO_NAME}" \
+            "script_url" "${SCRIPT_URL}" \
+            "installed" "${_installed}" \
+            "global_version" "${_global_ver}" \
+            "local_version" "${_local_ver}" \
+            "shell" "${_shell}" \
+            "interactive" "${_interactive}" \
+            "user" "${_user}" \
+            "cache_preferred" "${_cache_pref}" \
+            "cache_fallback" "${_cache_fb}" \
+            "effective_storage" "${EFFECTIVE_STORAGE_DIR}" \
+            "storage_dir" "${STORAGE_DIR}" \
+            "persistent_storage" "${PERSISTENT_STORAGE_DIR}" \
+            "backup_root" "${BACKUP_ROOT}" \
+            "backup_notation" "${BACKUP_NOTATION}" \
+            "deposit_dir" "${BACKUP_ROOT}/${BACKUP_NOTATION}" \
+            "sudo_deposit" "${_sudo_deposit}" \
+            "sudoers_trust_tier" "$(fb_sudoers_trust_tier)" \
+            "sudoer_cli" "${_sudoer_cli}" \
+            "sudoer_adm" "${_sudoer_adm}" \
+            "sudoer_inbound" "${_sudoer_inbound}" \
+            "sudoer_inbound_writable" "${_sudoer_inbound_writable}" \
+            "host_sudoers_present" "${_host_sudoers_present}" \
+            "host_sudoers_path" "${_host_sudoers_path}" \
+            "max_daily_backups" "$(fb_positive_int_or_default "${MAX_DAILY_BACKUPS}" 5)" \
+            "max_total_backups" "$(fb_positive_int_or_default "${MAX_TOTAL_BACKUPS}" 30)" \
+            "restore_host_default" "${RESTORE_HOST_DEFAULT}" \
+            "projects_root" "$(util_resolve_projects_root 2>/dev/null || echo "")" \
+            "ram_root" "${RAM_ROOT}"
+        return 0
+    fi
+
+    [ "${QUIET}" -eq 1 ] && return 0
+
+    out_info "$(util_app_ident) — About / Diagnostics"
+    out_empty_line
+    if [ "${_installed}" = "true" ]; then
+        out_success "${APP_NAME} is properly installed."
+    else
+        out_warn "${APP_NAME} is NOT installed in a managed bin path."
+        out_info "   Recommended: ${APP_NAME} install   (local copy → ${USER_BIN}/${APP_NAME})"
+    fi
+    out_empty_line
+    out_info "Global install  (${GLOBAL_BIN}/${APP_NAME}):   ${_global_ver}"
+    out_info "Local install   (${USER_BIN}/${APP_NAME}):    ${_local_ver}"
+    _tier=$(fb_sudoers_trust_tier)
+    out_info "Sudoers trust tier: ${_tier}  (production requires global; local-only = test mode)"
+    out_empty_line
+    out_info "Repository:        ${REPO_USER}/${REPO_NAME}"
+    if [ -n "${SCRIPT_URL}" ]; then
+        out_info "Install channel:   ${SCRIPT_URL}"
+    else
+        out_info "Install channel:   (empty — local install only)"
+    fi
+    out_empty_line
+    out_info "Current user:      ${_user}"
+    if [ "$(id -u)" -eq 0 ]; then
+        out_success "Execution context: root"
+    else
+        out_info "Execution context: normal user (Type 0 + narrow Type 1 deposit)"
+    fi
+    out_empty_line
+    out_info "Current shell:     ${_shell}"
+    if [ "${TTY:-0}" -eq 1 ]; then
+        out_info "TTY / Interactive: yes"
+    else
+        out_info "TTY / Interactive: no"
+    fi
+    out_empty_line
+    out_info "Cache folder (preferred): ${_cache_pref}"
+    out_info "Cache folder (fallback):  ${_cache_fb}"
+    out_info "Cache folder (live):      ${EFFECTIVE_STORAGE_DIR}"
+    out_info "Persistence storage:      ${PERSISTENT_STORAGE_DIR}"
+    out_empty_line
+    out_info "Backup root:       ${BACKUP_ROOT}"
+    out_info "Backup notation:   ${BACKUP_NOTATION}"
+    out_info "Deposit directory: ${BACKUP_ROOT}/${BACKUP_NOTATION}"
+    out_info "Sudo deposit:      ${_sudo_deposit}"
+    out_info "sudoer-cli:        ${_sudoer_cli}"
+    out_info "sudoer-adm:        ${_sudoer_adm}"
+    if [ "${_sudoer_inbound}" = "not_found" ]; then
+        out_info "sudoer inbound:    not_found (preferred ${SUDOER_PUBLIC_ROOT:-/var/sudoer-cli}/sudoer-request)"
+    else
+        out_info "sudoer inbound:    ${_sudoer_inbound} (writable=${_sudoer_inbound_writable})"
+    fi
+    out_info "Retention daily:   max $(fb_positive_int_or_default "${MAX_DAILY_BACKUPS}" 5) per basename per day (MAX_DAILY_BACKUPS)"
+    out_info "Retention total:   max $(fb_positive_int_or_default "${MAX_TOTAL_BACKUPS}" 30) per basename (MAX_TOTAL_BACKUPS)"
+    _proot=$(util_resolve_projects_root 2>/dev/null || echo "")
+    out_info "Restore default host: ${RESTORE_HOST_DEFAULT} (reverse of ram-drive-first)"
+    out_info "Projects root (hard-disk): ${_proot:-unset — set PROJECTS_ROOT}"
+    out_info "RAM root:          ${RAM_ROOT}"
+    out_empty_line
+    out_info "Useful commands:"
+    out_info "   ${APP_NAME} help            → Full usage"
+    out_info "   ${APP_NAME} install         → Local install to ~/.local/bin"
+    out_info "   ${APP_NAME} print-sudoers   → Sudoers fragment for admin"
+    out_info "   ${APP_NAME} generate-sudoer-request → Write a local JSON grant you can verify"
+    out_info "   ${APP_NAME} submit-sudoer-request → JSON request into /var/sudoer-cli/sudoer-request"
+    out_info "   ${APP_NAME} backup <dir>    → Archive + deposit + retention prune"
+    out_info "   ${APP_NAME} restore <name>  → Restore archive (default dest: hard-disk)"
+    out_info "   ${APP_NAME} --json          → Machine-readable output"
+}
+
+app_version() {
+    : "${APP_NAME:=folder-backup}"
+    : "${VERSION:=1.17.0}"
+    : "${JSON:=0}"
+    if [ "${JSON}" -eq 1 ]; then
+        # Same machine contract as historical app_main inline path
+        out_json "version" "" "app" "${APP_NAME}" "version" "${VERSION}"
+    else
+        out_info "${APP_NAME} version ${VERSION}"
+    fi
+}
 
 # =============================================================================
 # util_resolve_running_path() - Absolute path of running ship unit (class B)
@@ -3954,7 +5842,7 @@ EOF
 # - term project-sudoers-file
 # - requirement-three-layer-privilege-model.md §2.3.3b
 #
-# Last reviewed: 2026-08-09
+# Last updated: 2026-09-23
 # =============================================================================
 fb_remove_project_sudoers() {
     : "${APP_NAME:=folder-backup}"
@@ -4013,7 +5901,8 @@ EOF
                 out_die "remove-project-sudoers: multiple drafts present; specify path argument (non-interactive)."
             fi
 
-            _choice=$(prompt_ask "Choose draft number to remove" "0")
+            prompt_ask "Choose draft number to remove" "0"
+            _choice="${PROMPT_ASK_VALUE}"
             case "${_choice}" in
                 ''|0|[Cc][Aa][Nn][Cc][Ee][Ll]*)
                     out_info "Remove cancelled"
@@ -4102,226 +5991,6 @@ EOF
     return 0
 }
 
-
-# =============================================================================
-# app_version() - Local version only (no network)
-# =============================================================================
-app_version() {
-    : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.8.0}"
-    : "${JSON:=0}"
-    if [ "${JSON}" -eq 1 ]; then
-        out_json "version" "" "app" "${APP_NAME}" "version" "${VERSION}"
-    else
-        out_info "${APP_NAME} version ${VERSION}"
-    fi
-}
-
-# =============================================================================
-# app_about() - Diagnostics (local-only; no channel one-liner)
-# =============================================================================
-#
-# ALIGNMENT:
-# - requirement-shell-cli-interface.md
-# - requirement-domain-folder-backup.md (about domain fields)
-# - requirement-shell-cli-storage.md
-#
-# Last updated: 2026-08-30
-# =============================================================================
-app_about() {
-    : "${JSON:=0}"
-    : "${QUIET:=0}"
-    : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.8.0}"
-    : "${REPO_USER:=cloudgen}"
-    : "${REPO_NAME:=folder-backup}"
-    : "${SCRIPT_URL:=}"
-    : "${GLOBAL_BIN:=/usr/local/bin}"
-    : "${HOME:=/tmp}"
-    : "${USER_BIN:=${HOME}/.local/bin}"
-    : "${USERNAME:=unknown}"
-    : "${RESTORE_HOST_DEFAULT:=hard-disk}"
-    : "${PROJECTS_ROOT:=}"
-    : "${RAM_ROOT:=/dev/shm}"
-    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
-    : "${BACKUP_ROOT:=/var/backup}"
-    : "${BACKUP_NOTATION:=folder-backup}"
-    : "${MAX_DAILY_BACKUPS:=5}"
-    : "${MAX_TOTAL_BACKUPS:=30}"
-
-    if [ -z "${EFFECTIVE_STORAGE_DIR:-}" ]; then
-        EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
-    fi
-    : "${STORAGE_DIR:=$(util_fallback_cache_dir)}"
-    _cache_pref=$(util_preferred_cache_dir)
-    _cache_fb=$(util_fallback_cache_dir)
-    if [ -z "${PERSISTENT_STORAGE_DIR:-}" ]; then
-        PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)
-    fi
-
-    _installed="false"
-    inst_is_installed && _installed="true"
-
-    _global_ver="not found"
-    if [ -x "${GLOBAL_BIN}/${APP_NAME}" ]; then
-        _global_ver=$(grep '^VERSION="' "${GLOBAL_BIN}/${APP_NAME}" 2>/dev/null | cut -d'"' -f2 || echo "unknown")
-    fi
-    _local_ver="not found"
-    if [ -x "${USER_BIN}/${APP_NAME}" ]; then
-        _local_ver=$(grep '^VERSION="' "${USER_BIN}/${APP_NAME}" 2>/dev/null | cut -d'"' -f2 || echo "unknown")
-    fi
-    _shell=$(util_get_current_shell)
-    _user=$(id -un 2>/dev/null || echo "unknown")
-    _interactive="false"
-    [ "${TTY:-0}" -eq 1 ] && _interactive="true"
-
-    # Best-effort sudo deposit probe
-    _sudo_deposit="unknown"
-    if [ "$(id -u 2>/dev/null || echo 1)" -eq 0 ]; then
-        _sudo_deposit="root"
-    elif command -v sudo >/dev/null 2>&1; then
-        if sudo -n true 2>/dev/null; then
-            _sudo_deposit="sudo_n_ok"
-        else
-            _sudo_deposit="sudo_needs_auth_or_denied"
-        fi
-    else
-        _sudo_deposit="no_sudo"
-    fi
-
-    _sudoer_cli="not_found"
-    if _scli_path=$(fb_detect_sudoer_cli); then
-        _sudoer_cli="${_scli_path}"
-    fi
-    _sudoer_adm="absent"
-    if _sadm_name=$(fb_detect_sudoer_adm); then
-        _sudoer_adm="${_sadm_name}"
-    fi
-    _sudoer_inbound="not_found"
-    _sudoer_inbound_writable="false"
-    if _sin_path=$(fb_detect_sudoer_inbound); then
-        _sudoer_inbound="${_sin_path}"
-        if [ -w "${_sin_path}" ]; then
-            _sudoer_inbound_writable="true"
-        fi
-    fi
-
-    _host_sudoers_present="false"
-    _host_sudoers_path=""
-    if _hsp=$(fb_probe_current_user_host_sudoers); then
-        _host_sudoers_present="true"
-        _host_sudoers_path="${_hsp}"
-    fi
-
-    if [ "${JSON}" -eq 1 ]; then
-        out_json "about" "" \
-            "app" "${APP_NAME}" \
-            "version" "${VERSION}" \
-            "repo_user" "${REPO_USER}" \
-            "repo_name" "${REPO_NAME}" \
-            "repository" "${REPO_USER}/${REPO_NAME}" \
-            "script_url" "${SCRIPT_URL}" \
-            "installed" "${_installed}" \
-            "global_version" "${_global_ver}" \
-            "local_version" "${_local_ver}" \
-            "shell" "${_shell}" \
-            "interactive" "${_interactive}" \
-            "user" "${_user}" \
-            "cache_preferred" "${_cache_pref}" \
-            "cache_fallback" "${_cache_fb}" \
-            "effective_storage" "${EFFECTIVE_STORAGE_DIR}" \
-            "storage_dir" "${STORAGE_DIR}" \
-            "persistent_storage" "${PERSISTENT_STORAGE_DIR}" \
-            "backup_root" "${BACKUP_ROOT}" \
-            "backup_notation" "${BACKUP_NOTATION}" \
-            "deposit_dir" "${BACKUP_ROOT}/${BACKUP_NOTATION}" \
-            "sudo_deposit" "${_sudo_deposit}" \
-            "sudoers_trust_tier" "$(fb_sudoers_trust_tier)" \
-            "sudoer_cli" "${_sudoer_cli}" \
-            "sudoer_adm" "${_sudoer_adm}" \
-            "sudoer_inbound" "${_sudoer_inbound}" \
-            "sudoer_inbound_writable" "${_sudoer_inbound_writable}" \
-            "host_sudoers_present" "${_host_sudoers_present}" \
-            "host_sudoers_path" "${_host_sudoers_path}" \
-            "max_daily_backups" "$(fb_positive_int_or_default "${MAX_DAILY_BACKUPS}" 5)" \
-            "max_total_backups" "$(fb_positive_int_or_default "${MAX_TOTAL_BACKUPS}" 30)" \
-            "restore_host_default" "${RESTORE_HOST_DEFAULT}" \
-            "projects_root" "$(util_resolve_projects_root 2>/dev/null || echo "")" \
-            "ram_root" "${RAM_ROOT}"
-        return 0
-    fi
-
-    [ "${QUIET}" -eq 1 ] && return 0
-
-    out_info "$(util_app_ident) — About / Diagnostics"
-    out_empty_line
-    if [ "${_installed}" = "true" ]; then
-        out_success "${APP_NAME} is properly installed."
-    else
-        out_warn "${APP_NAME} is NOT installed in a managed bin path."
-        out_info "   Recommended: ${APP_NAME} install   (local copy → ${USER_BIN}/${APP_NAME})"
-    fi
-    out_empty_line
-    out_info "Global install  (${GLOBAL_BIN}/${APP_NAME}):   ${_global_ver}"
-    out_info "Local install   (${USER_BIN}/${APP_NAME}):    ${_local_ver}"
-    _tier=$(fb_sudoers_trust_tier)
-    out_info "Sudoers trust tier: ${_tier}  (production requires global; local-only = test mode)"
-    out_empty_line
-    out_info "Repository:        ${REPO_USER}/${REPO_NAME}"
-    if [ -n "${SCRIPT_URL}" ]; then
-        out_info "Install channel:   ${SCRIPT_URL}"
-    else
-        out_info "Install channel:   (empty — local install only)"
-    fi
-    out_empty_line
-    out_info "Current user:      ${_user}"
-    if [ "$(id -u)" -eq 0 ]; then
-        out_success "Execution context: root"
-    else
-        out_info "Execution context: normal user (Type 0 + narrow Type 1 deposit)"
-    fi
-    out_empty_line
-    out_info "Current shell:     ${_shell}"
-    if [ "${TTY:-0}" -eq 1 ]; then
-        out_info "TTY / Interactive: yes"
-    else
-        out_info "TTY / Interactive: no"
-    fi
-    out_empty_line
-    out_info "Cache folder (preferred): ${_cache_pref}"
-    out_info "Cache folder (fallback):  ${_cache_fb}"
-    out_info "Persistence storage:      ${PERSISTENT_STORAGE_DIR}"
-    out_empty_line
-    out_info "Backup root:       ${BACKUP_ROOT}"
-    out_info "Backup notation:   ${BACKUP_NOTATION}"
-    out_info "Deposit directory: ${BACKUP_ROOT}/${BACKUP_NOTATION}"
-    out_info "Sudo deposit:      ${_sudo_deposit}"
-    out_info "sudoer-cli:        ${_sudoer_cli}"
-    out_info "sudoer-adm:        ${_sudoer_adm}"
-    if [ "${_sudoer_inbound}" = "not_found" ]; then
-        out_info "sudoer inbound:    not_found (preferred ${SUDOER_PUBLIC_ROOT:-/var/sudoer-cli}/sudoer-request)"
-    else
-        out_info "sudoer inbound:    ${_sudoer_inbound} (writable=${_sudoer_inbound_writable})"
-    fi
-    out_info "Retention daily:   max $(fb_positive_int_or_default "${MAX_DAILY_BACKUPS}" 5) per basename per day (MAX_DAILY_BACKUPS)"
-    out_info "Retention total:   max $(fb_positive_int_or_default "${MAX_TOTAL_BACKUPS}" 30) per basename (MAX_TOTAL_BACKUPS)"
-    _proot=$(util_resolve_projects_root 2>/dev/null || echo "")
-    out_info "Restore default host: ${RESTORE_HOST_DEFAULT} (reverse of ram-drive-first)"
-    out_info "Projects root (hard-disk): ${_proot:-unset — set PROJECTS_ROOT}"
-    out_info "RAM root:          ${RAM_ROOT}"
-    out_empty_line
-    out_info "Useful commands:"
-    out_info "   ${APP_NAME} help            → Full usage"
-    out_info "   ${APP_NAME} install         → Local install to ~/.local/bin"
-    out_info "   ${APP_NAME} print-sudoers   → Sudoers fragment for admin"
-    out_info "   ${APP_NAME} generate-sudoer-request → Write a local JSON grant you can verify"
-    out_info "   ${APP_NAME} submit-sudoer-request → JSON request into /var/sudoer-cli/sudoer-request"
-    out_info "   ${APP_NAME} backup <dir>    → Archive + deposit + retention prune"
-    out_info "   ${APP_NAME} restore <name>  → Restore archive (default dest: hard-disk)"
-    out_info "   ${APP_NAME} --json          → Machine-readable output"
-}
-
-# =============================================================================
 # app_main_menu_print() - Numbered main-menu list (TTY)
 # =============================================================================
 #
@@ -4634,23 +6303,31 @@ app_main_menu() {
 }
 
 # =============================================================================
-# app_help() - Usage (local Type 0 + domain)
+# app_help() - Usage (selfmanaged lifecycle + folder-backup work list)
 # =============================================================================
 #
-# Last updated: 2026-09-06
+# ALIGNMENT:
+# - requirement-shell-cli-interface.md
+# - requirement-shell-cli-default-interaction.md
+# - requirement-domain-folder-backup.md
 # =============================================================================
 app_help() {
-    : "${SHORT_DESCRIPTION:=${APP_DESC:-Local folder archive backup/restore with narrow sudo deposit}}"
-    : "${DESCRIPTION:=POSIX /bin/sh local CLI: install, uninstall, where-is-me, version, about, help, menu, main, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request.}"
+    : "${SHORT_DESCRIPTION:=${APP_DESC:-Folder archive backup and restore, with self-install, version-check, self-update, and self-uninstall}}"
+    : "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered work list.}"
     : "${BACKUP_ROOT:=/var/backup}"
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${RESTORE_HOST_DEFAULT:=hard-disk}"
     : "${RAM_ROOT:=/dev/shm}"
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${REPO_USER:=cloudgen}"
+    : "${REPO_NAME:=folder-backup}"
+    : "${SCRIPT_RELPATH:=src/${APP_NAME}}"
+    : "${SCRIPT_URL:=}"
 
     if [ "${JSON}" -eq 1 ]; then
         out_json "success" "Help text available in human-readable mode. Run without --json." \
             "command" "help" \
-            "note" "Use --json with version, about, install, uninstall, where-is-me, backup, restore. Empty argv off-TTY, flags-only --json, and menu/main off-TTY use this help."
+            "note" "Use --json with version, about, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, backup, restore. Empty argv off-TTY, flags-only --json, and menu/main off-TTY use this help."
         return 0
     fi
     if [ "${QUIET}" -eq 1 ]; then
@@ -4663,8 +6340,15 @@ app_help() {
     out_info "Usage:"
     out_plain "  ${APP_NAME} [command] [options]"
     out_empty_line
+    out_info "Self-management (full channel, any login):"
+    out_plain "  self-install         Place ${APP_NAME} (copy when \$0 is this file; pipe downloads)"
+    out_plain "  version-check        Compare local vs remote version (needs SCRIPT_URL)"
+    out_plain "  self-update          Update ${APP_NAME} to a newer remote version"
+    out_plain "  self-uninstall       Remove ${APP_NAME} (confirm or --force; PATH cleanup)"
+    out_plain "  self-management      On a terminal, numbered self-management board (82-87). Off a terminal, this help"
+    out_empty_line
     out_info "Install and self-care (your own login):"
-    out_plain "  install              Install ${APP_NAME} (root→global, user→~/.local/bin)"
+    out_plain "  install              Install ${APP_NAME} by local copy (root→global, user→~/.local/bin, mode 0755)"
     out_plain "  install --global     Force global path (${GLOBAL_BIN}; needs write/root)"
     out_plain "  uninstall            Remove managed binary (confirm or --force); not sudoers"
     out_plain "  where-is-me          Show running and install paths"
@@ -4702,9 +6386,9 @@ app_help() {
     out_plain "                       default: ~/.config/${APP_NAME}/sudoer-request-<user>.json"
     out_empty_line
     out_info "Global Options:"
-    out_plain "  --quiet, -q          Suppress info/success (errors still shown)"
+    out_plain "  --quiet, -q          Suppress info/success (errors and warnings still shown)"
     out_plain "  --json               Machine-readable JSON (implies --quiet)"
-    out_plain "  --force              Force reinstall / skip uninstall confirm / restore into non-empty dest"
+    out_plain "  --force              Force reinstall / skip uninstall confirm / allow downgrade / restore into non-empty dest"
     out_plain "  --global             Install to GLOBAL_BIN (production elevation path)"
     out_plain "  --allow-test-local   Allow print-sudoers / generate-sudoer-request / submit when only local/unmanaged (TEST MODE)"
     out_plain "  --update             Force submit-sudoer-request action=update"
@@ -4714,6 +6398,15 @@ app_help() {
     out_plain "  --debug              Debug diagnostics on stderr"
     out_empty_line
     out_info "Environment:"
+    out_plain "  REPO_USER            ${REPO_USER}"
+    out_plain "  REPO_NAME            ${REPO_NAME}"
+    out_plain "  SCRIPT_RELPATH       ${SCRIPT_RELPATH}"
+    if [ -n "${SCRIPT_URL}" ]; then
+        out_plain "  SCRIPT_URL           ${SCRIPT_URL}"
+    else
+        out_plain "  SCRIPT_URL           (not set)"
+    fi
+    out_plain "                       Canonical install channel (override via env; needed for version-check/self-update)"
     out_plain "  BACKUP_ROOT          ${BACKUP_ROOT}"
     out_plain "  BACKUP_NOTATION      ${BACKUP_NOTATION}"
     out_plain "  MAX_DAILY_BACKUPS    5  (per basename per day; prune oldest same-day N)"
@@ -4733,23 +6426,121 @@ app_help() {
     out_plain "  ${APP_NAME}                    # TTY numbered work list; off-TTY is help"
     out_plain "  ${APP_NAME} menu"
     out_plain "  ${APP_NAME} install"
+    out_plain "  ${APP_NAME} self-install           # copy this file, or download when piped"
+    out_plain "  ${APP_NAME} version-check"
+    out_plain "  ${APP_NAME} self-update"
     out_plain "  sudo ${APP_NAME} install          # global (production sudoers trust)"
-    out_plain "  ${APP_NAME} print-sudoers --allow-test-local  # → sudoers.fragment-<user>"
-    out_plain "  ${APP_NAME} print-sudoers-install-script   # → /dev/shm/…-sudoers-admin.sh"
-    out_plain "  # admin (sudo rights): sudo sh /dev/shm/…-sudoers-admin.sh install|uninstall|replace"
-    out_plain "  # host path is /etc/sudoers.d/${APP_NAME}-<user> (multi-user safe)"
-    out_plain "  ${APP_NAME} remove-project-sudoers --force  # delete draft only (not /etc elev)"
-    out_plain "  ${APP_NAME} generate-sudoer-request         # verified JSON under ~/.config/"
-    out_plain "  ${APP_NAME} submit-sudoer-request           # JSON into /var/sudoer-cli/sudoer-request"
-    out_plain "  ${APP_NAME} submit-sudoer-request ~/.config/${APP_NAME}/sudoer-request-\$(id -un).json"
     out_plain "  ${APP_NAME} backup /path/to/project"
     out_plain "  ${APP_NAME} restore genesis-template"
     out_plain "  ${APP_NAME} restore genesis-template --ram"
-    out_plain "  ${APP_NAME} restore genesis-template-20260803-3.tar.gz /tmp/restore-out"
     out_empty_line
-    out_info "On a real terminal, no arguments shows the numbered work list; in a script, no arguments shows this help (local-only; no curl|sh install-ensure)."
+    out_info "On a real terminal, no arguments shows the numbered work list; in a script, no arguments shows this help."
+    out_info "Channel place/update is explicit: self-install, version-check, self-update, self-uninstall."
     out_info "Restore default destination is hard-disk (not RAM) unless --ram or dest is set."
     out_info "Local install + sudoers is TEST MODE ONLY; prefer global for durable elevation."
+}
+
+# =============================================================================
+# app_default_print_self_menu() - Self-management board under 8
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Online script-alone, no payload: 81 install stays reserved and is omitted.
+# Listed rows are 82 version through 87 self-install, then 0 Back.
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+#
+# Last updated: 2026-09-27
+# =============================================================================
+app_default_print_self_menu() {
+    out_info "$(util_app_ident) — self-management"
+    out_menu_choice "82" "version" "show current version"
+    out_menu_choice "83" "about" "show detailed diagnostics"
+    out_menu_choice "84" "version-check" "compare local vs remote version"
+    out_menu_choice "85" "self-update" "update ${APP_NAME} to a newer remote version"
+    out_menu_choice "86" "self-uninstall" "remove ${APP_NAME}"
+    out_menu_choice "87" "self-install" "place this CLI only (copy when \$0 is a script; download when piped)"
+    out_menu_choice "0" "Back"
+}
+
+# =============================================================================
+# app_default_run_self_leaf() - Run one self-management verb
+# =============================================================================
+#
+# Returns 0 after a listed leaf. Returns 1 when the pick is not a leaf.
+# install (81) is reserved and is not a leaf. where-is-me is not on this board.
+# =============================================================================
+app_default_run_self_leaf() {
+    _leaf="${1-}"
+    case "${_leaf}" in
+        82|version)
+            app_version
+            ;;
+        83|about)
+            app_about
+            ;;
+        84|version-check)
+            ver_check
+            ;;
+        85|self-update)
+            inst_self_update
+            ;;
+        86|self-uninstall)
+            inst_self_uninstall
+            ;;
+        87|self-install)
+            inst_self_install
+            ;;
+        *)
+            unset _leaf
+            return 1
+            ;;
+    esac
+    unset _leaf
+    return 0
+}
+
+# =============================================================================
+# app_default_self_loop() - Self-management layer
+# =============================================================================
+#
+# A finished leaf returns so the front board redisplays. 0 / back / empty
+# returns to the front board without running a verb. A bad pick reprints
+# this layer. EOF leaves this layer (back to the front board).
+# =============================================================================
+app_default_self_loop() {
+    : "${_menu_json:=0}"
+    : "${_menu_quiet:=0}"
+    while true; do
+        JSON=0
+        QUIET=0
+        export JSON QUIET
+        app_default_print_self_menu
+        out_msg_n "Choice: "
+        _pick=""
+        if ! read -r _pick; then
+            unset _pick
+            return 0
+        fi
+        case "${_pick}" in
+            0|back|Back|"")
+                unset _pick
+                return 0
+                ;;
+        esac
+        JSON="${_menu_json}"
+        QUIET="${_menu_quiet}"
+        export JSON QUIET
+        if app_default_run_self_leaf "${_pick}"; then
+            unset _pick
+            return 0
+        fi
+        JSON=0
+        QUIET=0
+        export JSON QUIET
+        out_error "Not a menu choice '${_pick}'. Type 82-87, 0 back, or a listed command name."
+    done
 }
 
 # =============================================================================
@@ -4757,16 +6548,16 @@ app_help() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Single dispatcher for folder-backup (specialized from cli-template; local Type 0 + domain).
-# Empty argv = case 2 (TTY numbered list; off-TTY help). Not install-ensure.
+# Single dispatcher. Architecture and self-management verbs come from
+# selfmanaged. Folder-backup verbs and the work-list menu are added here.
+# Empty argv = case 2 (TTY numbered work list; off-TTY help). Not install-ensure.
 #
 # ALIGNMENT:
+# - requirement-bootstrap-chain.md
 # - requirement-shell-cli-interface.md
 # - requirement-shell-cli-default-interaction.md
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
-#
-# Last updated: 2026-08-28
 # =============================================================================
 app_main() {
     : "${COMMAND:=help}"
@@ -4782,16 +6573,16 @@ app_main() {
     : "${SUBMIT_ACTION_EXPLICIT:=0}"
     : "${USERNAME:=unknown}"
     : "${HOME:=/tmp}"
-    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
     : "${APP_NAME:=folder-backup}"
-    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/cache-${APP_NAME}}"
 
     EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
     PERSISTENT_STORAGE_DIR=$(util_resolve_persistent_storage)
+    STORAGE_DIR=$(util_fallback_cache_dir)
     export EFFECTIVE_STORAGE_DIR STORAGE_DIR PERSISTENT_STORAGE_DIR
     export TMPDIR="${EFFECTIVE_STORAGE_DIR}"
 
-    # Case 2: empty argv → TTY numbered list; off-TTY help
+    # Case 2: empty argv → TTY numbered work list; off-TTY help.
+    # Self-install stays an explicit verb (full selfmanaged channel, not surprise install).
     if [ $# -eq 0 ]; then
         app_main_menu
         return 0
@@ -4838,7 +6629,7 @@ app_main() {
                 RESTORE_HOST="ram-drive"
                 export RESTORE_HOST
                 ;;
-            version|about|help|install|uninstall|where-is-me|backup|restore|print-sudoers|print-sudoers-install-script|remove-project-sudoers|generate-sudoer-request|submit-sudoer-request|menu|main)
+            version|about|help|install|uninstall|where-is-me|backup|restore|print-sudoers|print-sudoers-install-script|remove-project-sudoers|generate-sudoer-request|submit-sudoer-request|menu|main|self-install|self-update|self-uninstall|version-check|self-management)
                 if [ "${COMMAND}" = "menu" ] || [ "${COMMAND}" = "main" ]; then
                     if [ -z "${_menu_pick}" ]; then
                         _menu_pick="$1"
@@ -4854,7 +6645,6 @@ app_main() {
                 fi
                 ;;
             *)
-                # Positional operands for domain verbs / menu pick
                 if [ "${COMMAND}" = "backup" ] || [ "${COMMAND}" = "print-sudoers" ] \
                     || [ "${COMMAND}" = "print-sudoers-install-script" ] \
                     || [ "${COMMAND}" = "remove-project-sudoers" ] \
@@ -4899,6 +6689,27 @@ app_main() {
         install)      inst_local_install ;;
         uninstall)    inst_local_uninstall ;;
         where-is-me)  app_where_is_me ;;
+        self-install) inst_self_install ;;
+        self-update)  inst_self_update ;;
+        self-uninstall) inst_self_uninstall ;;
+        version-check) ver_check ;;
+        self-management)
+            if [ "${TTY}" -eq 1 ]; then
+                _menu_json="${JSON}"
+                _menu_quiet="${QUIET}"
+                app_default_self_loop
+                JSON="${_menu_json}"
+                QUIET="${_menu_quiet}"
+                export JSON QUIET
+            else
+                _menu_quiet="${QUIET}"
+                if [ "${JSON}" -ne 1 ]; then
+                    QUIET=0
+                fi
+                app_help
+                QUIET="${_menu_quiet}"
+            fi
+            ;;
         backup)       fb_backup "${_domain_arg}" ;;
         restore)      fb_restore "${_domain_arg}" "${_domain_arg2}" ;;
         print-sudoers) fb_print_sudoers "${_domain_arg}" ;;
@@ -4916,5 +6727,6 @@ app_main() {
 # =============================================================================
 # Always invoke app_main. No basename gate (pipe-safe entry).
 # Product law: requirement-shell-cli-default-interaction.md (case 2 empty argv).
+# Self-management channel remains on explicit verbs (selfmanaged full feature).
 # =============================================================================
 app_main "$@"

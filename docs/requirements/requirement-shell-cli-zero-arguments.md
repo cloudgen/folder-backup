@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-zero-arguments.md  
-**Status**: Withdrawn (Version 1.1.0 — superseded)  
+**Status**: Withdrawn (Version 1.1.1 — superseded)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-zero-arguments`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -52,8 +52,8 @@ This file remains on disk so agents do **not** recreate an Active Type N always-
 
 ### 2.2 Residual fence (still true)
 
-1. The product remains **local-only**. Empty argv **MUST NOT** become install-ensure (historical Type O).  
-2. Explicit `folder-backup install` remains the only first-time local install path.  
+1. Channel verbs are explicit. Empty argv **MUST NOT** become install-ensure (historical Type O).  
+2. Explicit `folder-backup install` remains the local copy. `self-install` is the channel place. Neither runs on empty argv.  
 3. Script entry **MUST** always call `app_main "$@"` (no basename product-name gate).
 
 ### 2.3 Implementation Notes (this project)
@@ -97,7 +97,7 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
 1. Reactivate this file as an Active Type N always-help owner while case 2 is claimed.  
-2. Change empty argv to install-ensure while the product remains local-only.  
+2. Change empty argv to install-ensure. Channel verbs do not license that.  
 3. Delete this file solely to hide the withdrawal (registry row **MUST** stay **Withdrawn**).  
 4. Treat this basename as live dispatcher law.
 
@@ -142,9 +142,10 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 |------|--------|------|
 | 2026-08-03 | Active 1.0.0 | Type N for local-only folder-backup |
 | 2026-08-28 | **Withdrawn** 1.1.0 | Superseded by default-interaction **case 2** (TTY empty argv = numbered list) |
+| 2026-09-30 | **Withdrawn** 1.1.1 | Residual fence: channel verbs exist; empty argv still must not install-ensure. This key stays Withdrawn. |
 
 ---
 
-**Last Updated**: 2026-08-28  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

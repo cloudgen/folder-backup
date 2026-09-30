@@ -3,7 +3,7 @@
 **Product:** folder-backup  
 **Ship unit:** `src/folder-backup`  
 **Dispatcher:** `app_main`  
-**Scan date:** 2026-09-03  
+**Scan date:** 2026-09-30  
 **Mode:** full (label + purpose refresh)  
 **Copied / re-checked:** 13 live copied · 2 re-checked (`menu`/`main` now routed) · 1 not-yet-wired  
 
@@ -19,6 +19,11 @@ Inventory from dispatcher case, not help. Human-readable is `{{short-descript}}:
 | install | `inst_local_install` | you | 2026-08-09 | self-managed | install: Copy this program into your bin or /usr/local/bin |
 | uninstall | `inst_local_uninstall` | you | 2026-08-03 | self-managed | uninstall: Remove the managed binary (not the host grant) |
 | where-is-me | `app_where_is_me` | you | 2026-08-03 | self-managed | where-is-me: Show running and install paths |
+| self-install | `inst_self_install` | you | 2026-09-30 | self-managed | self-install: Copy this file, or download it when the shell is a pipe |
+| version-check | `ver_check` | you | 2026-09-30 | self-managed | version-check: Compare this version with the channel |
+| self-update | `inst_self_update` | you | 2026-09-30 | self-managed | self-update: Replace the placed binary from the channel |
+| self-uninstall | `inst_self_uninstall` | you | 2026-09-30 | self-managed | self-uninstall: Remove the channel-placed binary |
+| self-management | `app_default_self_loop` | you | 2026-09-30 | self-managed | self-management: On a terminal, open the self-care board |
 | backup | `fb_backup` | you (deposit needs change-the-computer after admin grant) | 2026-08-12 | operational | backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup |
 | restore | `fb_restore` | you (stage fetch may need change-the-computer) | 2026-08-03 | operational | restore: Put an archive back onto the hard-disk projects tree |
 | print-sudoers | `fb_print_sudoers` | you | 2026-08-14 | test-purpose | print-sudoers: Write a grant file an admin can install |
@@ -43,4 +48,4 @@ A TTY **main** menu **MUST** print daily-work **human-readable** lines as a **nu
 
 ## Honesty
 
-Dispatcher tokens on 2026-09-03: version, about, help, install, uninstall, where-is-me, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Empty argv is **not** a token: on a real terminal it calls `app_main_menu` (case 2); off-TTY it is help. Online `self-*` / `version-check` are absent by design. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose** (off the **main** list; on the sudoers submenu). **`sudoers` is not a dispatcher token.**
+Dispatcher tokens on 2026-09-30: version, about, help, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, self-management, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Empty argv is **not** a token: on a real terminal it calls `app_main_menu` (case 2); off-TTY it is help. Channel verbs are live and stay off the **main** list. `install` is the local copy. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose** (off the **main** list; on the sudoers submenu). **`sudoers` is not a dispatcher token.**

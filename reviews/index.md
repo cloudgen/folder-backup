@@ -1,5 +1,7 @@
 # Review reports index — folder-backup
 
+**Current product (2026-09-30):** VERSION **1.17.0**. Bootstrap parent is **selfmanaged**. Channel verbs stay. Empty argv is the work list. `install` is the local copy. The table below is the historical report index; those rows stay as written.
+
 | Date | Report | Scope | Verdict | Suite |
 |------|--------|-------|---------|-------|
 | 2026-09-06 | `reports/2026-09-06-requirement-coverage-human-readability.md` | C-full-product coverage + README/REQ human-facing; TP-CLI-17 have; coding-style + sudo-command REQs; wrap/detect/TP-27 Gaps | Sufficient with Gaps | 1.16.3 |

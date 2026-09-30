@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.16.3  
-**Last plan update:** 2026-09-06  
-**Last suite run:** `./tests/run.sh` (1.16.3: PASS=375 FAIL=0 SKIP=2)
+**Product VERSION:** 1.17.0  
+**Last plan update:** 2026-09-30  
+**Last suite run:** `sh tests/run.sh` (1.17.0: PASS=395 FAIL=0 SKIP=2)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -22,7 +22,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TTY main-menu look (nametag + gray italic explain) | have | TP-CLI-18 |
 | Unknown + quiet + set -u HOME | have | TP-CLI-08..11 |
 | Cache folder + persistence `${HOME}/.local/folder-backup/` | have | TP-CLI-06 · TP-CLI-12 |
-| No online verbs / no SCRIPT_URL UX | have | TP-CLI-04, TP-CLI-10 |
+| Channel verbs listed; offline version-check / self-update fail closed; empty argv is not install | have | TP-CLI-04, TP-CLI-07, TP-CLI-10 |
 | Local install / idempotent / uninstall / mode 0755 | have | TP-LC-01..10 |
 | Help lists sudoers verbs (print / install-script / remove draft / **generate** / submit + public inbound) | have | TP-CLI-04 |
 | Independent generate dest readable without sudo | have | TP-FOLDER-BACKUP-24/24b/24c/24d |
@@ -34,7 +34,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Domain surface: print-sudoers allowlist + test-mode gate | have | TP-FOLDER-BACKUP-01, 01b, 01c, 02 |
 | Admin install-script handoff (project-sudoers-file) | have | TP-FOLDER-BACKUP-14 |
 | Remove project-sudoers draft only | have | TP-FOLDER-BACKUP-15 |
-| Multi-draft remove choose / path-required | have | TP-FOLDER-BACKUP-15b |
+| Multi-draft remove choose / path-required | have | TP-FOLDER-BACKUP-15b · **15c** |
 | Per-user draft + installed sudoers basename | have | TP-FOLDER-BACKUP-14 · 15 |
 | Backup ops (name, fail-closed, verify) | have | TP-FOLDER-BACKUP-03..06 · **requirement-folder-archive-backup** |
 | Elevated deposit + next-N + verify | have (root **or** allowlisted `sudo -n`) | TP-FOLDER-BACKUP-07/08 |
@@ -52,21 +52,22 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-01 | `sh -n` ship unit | `tests/test_cli.sh` | requirement-shell-cli-interface | **have** |
 | TP-CLI-02 | version human | test_cli | requirement-shell-cli-interface | **have** |
 | TP-CLI-03 | version JSON | test_cli | requirement-shell-output-requirements | **have** |
-| TP-CLI-04 | help local verbs; print-sudoers + install-script + remove-project-sudoers + generate-sudoer-request + submit-sudoer-request; no online | test_cli | requirement-shell-cli-interface · domain | **have** |
+| TP-CLI-04 | help lists channel verbs and SCRIPT_URL; print-sudoers + install-script + remove-project-sudoers + generate-sudoer-request + submit-sudoer-request; no CHECKSUM in help | test_cli | requirement-shell-cli-interface · domain | **have** |
 | TP-CLI-05 | help JSON short | test_cli | requirement-shell-output-requirements | **have** |
-| TP-CLI-06 | about JSON cache + persistent_storage + human Cache folder + Persistence storage + domain fields | test_cli | requirement-shell-cli-storage · domain | **have** |
+| TP-CLI-06 | about JSON cache + persistent_storage + human Cache folder preferred/fallback/live + Persistence storage + domain fields | test_cli | requirement-shell-cli-storage · domain | **have** |
 | TP-CLI-07 | off-TTY empty argv help (not install) | test_cli | requirement-shell-cli-default-interaction | **have** |
 | TP-CLI-08 | unknown fail-closed | test_cli | requirement-shell-cli-interface | **have** |
 | TP-CLI-09 | quiet suppresses version | test_cli | requirement-shell-output-requirements | **have** |
-| TP-CLI-10 | online verbs rejected | test_cli | requirement-bootstrap-chain | **have** |
+| TP-CLI-10 | channel verbs routed; offline version-check / self-update fail closed (non-empty dead URL); self-uninstall with no binary exits 0 | test_cli | requirement-bootstrap-chain | **have** |
 | TP-CLI-11 | env -u HOME version | test_cli | class / defensive | **have** |
-| TP-CLI-12 | cache folder exists; persistence `${HOME}/.local/folder-backup` exists | test_cli | requirement-shell-cli-storage | **have** |
+| TP-CLI-12 | cache folder exists, mode 0700, owned by this login; persistence `${HOME}/.local/folder-backup` exists | test_cli | requirement-shell-cli-storage | **have** |
 | TP-CLI-13 | interactive empty argv **and** `menu` print backup / restore / family sudoers + `9. Exit`; submenu five grant/draft verbs + Back 8 / Exit 9; `sudoers` not dispatched; members live **without** enqueueing live inbound | test_cli | **shell-cli-default-interaction** AC-3 / AC-10 / AC-11 · **shell-cli-sudoers-submenu** AC-1–AC-4 | **have** |
 | TP-CLI-14 | interactive `menu --json` still prints the list | test_cli | **shell-cli-default-interaction** AC-4 | **have** |
 | TP-CLI-15 | non-interactive `menu` is help; `--json` JSON help; flags-only `--json` JSON help (not the list) | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
 | TP-CLI-16 | numbered **main** list omits help/install/uninstall/where-is-me/version/about/test-purpose/menu and the five sudoers verbs | test_cli | **shell-cli-default-interaction** AC-6 · **shell-cli-sudoers-submenu** AC-5 | **have** |
 | TP-CLI-17 | help lists test-purpose grant-emit verbs under a heading apart from operational | test_cli | **shell-cli-interface** AC-9 | **have** |
 | TP-CLI-18 | default CLI main menu style: header `APP_NAME(VERSION)` bold/italic; numbered explain italic + light gray; no CSI off-TTY; submenu nametag (portable **TP-CLI-17** alias) | test_cli | **shell-cli-default-interaction** AC-8 · **shell-cli-sudoers-submenu** AC-6 · **shell-output-requirements** AC-5 | **have** |
+| TP-CLI-20 | ship unit has no `$()` of `prompt_*` helpers | test_cli | **shell-script-coding** · **shell-interactive-vs-noninteractive** AC-4 | **have** |
 
 ### TP-LC (local lifecycle)
 
@@ -129,6 +130,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-FOLDER-BACKUP-27 | compact/pretty JSON includes `--json` twins; text dual matches; `"*"` not cwd names | test_domain | **sudoer-json-file** AC-8/AC-26 · three-layer AC-26 | **todo** (compact JSON emit Gap) |
 | TP-FOLDER-BACKUP-15 | remove-project-sudoers: force remove draft; refuse `/etc`; already absent; host elev probe | test_domain | three-layer §2.3.3b · project-sudoers-file | **have** |
 | TP-FOLDER-BACKUP-15b | multi-draft: list + non-interactive requires path; explicit path removes one only | test_domain | three-layer AC-15 · L-SUDOERS-04 | **have** |
+| TP-FOLDER-BACKUP-15c | TTY multi-draft picker: choice 2 removes the second draft; prompt text is not glued onto the number | test_domain | **shell-interactive-vs-noninteractive** AC-4 | **have** |
 | TP-FOLDER-BACKUP-16 | restore dest whitelist: refuse `/etc/passwd` + exact `/etc` + `/etc/<other>`; W-ETC-USER `/etc/{{username}}` gate allow | test_domain | **folder-archive-backup** §2.6b.2a · INC-20260812-001 | **have** |
 | TP-FOLDER-BACKUP-17 | total retention: after deposit, prune oldest until ≤30 per basename | test_domain | **retention-total** | **have** |
 | TP-FOLDER-BACKUP-17b | total retention: no cross-basename delete | test_domain | **retention-total** | **have** |

@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-output-requirements.md  
-**Status**: Active (Version 1.1.0)  
+**Status**: Active (Version 1.1.1)  
 **Area**: shell  
 **Key**: `requirement-shell-output-requirements`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -8,7 +8,7 @@
 
 This requirement is the **project Single Source of Truth** for **all CLI output** of folder-backup: human messages, machine JSON, channel split (stdout vs stderr), and mode behavior (normal / quiet / JSON / debug).
 
-Inherited architecture from bootstrap parent **cli-template** (`out_*` family); retargeted for this product’s identity and domain messages.
+Inherited architecture from bootstrap parent **selfmanaged** (`out_*` family); retargeted for this product’s identity and domain messages.
 
 ### 1.1 Human-facing
 
@@ -126,7 +126,7 @@ Proof when the numbered menu is claimed: **TP-CLI-18** (product alias of portabl
 | **Identity token** | `util_app_ident` → `folder-backup(VERSION)` |
 | **Menu rows** | `out_menu_choice n verb explain` |
 | **Domain messages** | Backup progress/results and sudoers-print status **must** use `out_*` |
-| **Bootstrap inheritance** | Same `out_*` family as cli-template |
+| **Bootstrap inheritance** | Same `out_*` family as selfmanaged |
 
 ### 2.6 Why This Requirement Exists (CIAO)
 
@@ -215,9 +215,10 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 |------|--------|------|
 | 2026-08-03 | Active | Output SSOT for folder-backup |
 | 2026-09-03 | Active 1.1.0 | `util_app_ident` / `out_menu_choice`; default CLI main menu style ink |
+| 2026-09-30 | Active 1.1.1 | Bootstrap parent name is selfmanaged (output family unchanged) |
 
 ---
 
-**Last Updated**: 2026-09-03  
+**Last Updated**: 2026-09-30  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
