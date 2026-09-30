@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.18.0] - 2026-09-30
+
+### Changed
+
+- **Numbered boards replace the flat work list.** On a terminal, no arguments (and `menu` / `main`) shows client-side (**1**), self-management (**8**), and Exit (**9**). Server-side is hidden and number **2** stays reserved. Client-side lists backup (**11**), restore (**12**), and sudoers (**17**). The sudoers board lists `submit-sudoer-request` (**172**) and `remove-project-sudoers` (**175**). Test commands stay typed; numbers **171**, **173**, and **174** stay reserved. Self-management lists local `install` (**81**) through `self-install` (**87**). Child boards use **0** Back. A finished command redisplays the front board. Off a terminal, no arguments and `self-management` still show help. `folder-backup sudoers` stays unknown.
+- **Menu ink.** On a terminal the short name is bold. The description stays italic and light gray. The number, Exit, and Back stay plain.
+- **Suite.** `sh tests/run.sh`: PASS=436 FAIL=0 SKIP=2. Proof **TP-CLI-13** · **TP-CLI-14** · **TP-CLI-15** · **TP-CLI-18** · **TP-CLI-19** · **TP-CLI-21**.
+- Law: **requirement-shell-cli-default-interaction** **1.7.0**, **requirement-shell-cli-sudoers-submenu** **1.1.0**, **requirement-shell-cli-interface** **1.9.1**, **requirement-domain-folder-backup** **1.6.7**, **requirement-shell-output-requirements** **1.1.2**, **requirement-bootstrap-chain** **2.2.1**, **requirement-shell-local-self-management** **1.3.1**, **requirement-class-software-dev** **1.1.4**. Version cells point at the ship unit hard-assign.
+
 ## [1.17.0] - 2026-09-30
 
 ### Changed

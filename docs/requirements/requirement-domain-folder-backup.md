@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-domain-folder-backup.md  
-**Status**: Active (Version 1.6.6)  
+**Status**: Active (Version 1.6.7)  
 **Area**: domain  
 **Key**: `requirement-domain-folder-backup`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -55,7 +55,7 @@ This file remains the sole Active **`requirement-domain-*`** (four pillars).
 | `generate-sudoer-request` | optional dest path; `--update` / `--add`; `--allow-test-local` | `fb_*` | Type 0 **independent** generate: write JSON grant to a dest **readable without sudo** (tests/review); compact; both verbs; no `/etc`; no inbound | workflow: **`requirement-three-layer-privilege-model`** §2.3.2a · §2.3.3d · JSON body: **`requirement-sudoer-json-file`** |
 | `submit-sudoer-request` | optional sudoers file; `--purpose`; `--update` / `--add`; `--allow-test-local` | `fb_*` | Type 0 submitter: detect sudoer-cli + sudoer-adm + **public inbound**; **default action=update** if this user’s `/etc/sudoers.d/{{APP_NAME}}-<user>` exists, else add; sibling allocates JSON (no `/etc` write; no inbound `mkdir`) | workflow: **`requirement-three-layer-privilege-model`** §2.3.3c · JSON body: **`requirement-sudoer-json-file`** |
 
-**Purpose (this product):** `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` are **test-purpose**. `backup`, `restore`, `remove-project-sudoers`, and `submit-sudoer-request` are **operational**. Test-purpose verbs stay on `help` under a heading **apart** from operational work and **MUST NOT** appear on the numbered **main** menu. All five grant/draft setup verbs **MUST** remain live CLI verbs and **MUST** appear on the sudoers submenu (`requirement-shell-cli-sudoers-submenu`). **`sudoers` is not a command.**
+**Purpose (this product):** `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` are **test-purpose**. `backup`, `restore`, `remove-project-sudoers`, and `submit-sudoer-request` are **operational**. Test-purpose verbs stay on `help` under a heading **apart** from operational work and **MUST NOT** appear on any numbered board. All five grant/draft setup verbs **MUST** remain live CLI verbs. Operational `submit-sudoer-request` and `remove-project-sudoers` **MUST** appear on the sudoers board (`requirement-shell-cli-sudoers-submenu`). The three test-purpose verbs stay typed; their numbers stay reserved. **`sudoers` is not a command.**
 
 **Routing:** Dispatcher in `app_main` (CLI interface) **MUST** route these verbs; unknown operands fail closed.
 
@@ -88,7 +88,7 @@ Domain **MUST NOT** restate full operational backup rules in a second competing 
 | `remove-project-sudoers [path]` | Delete project-sudoers-file draft only (list/choose if multiple; confirm / `--force`; not `/etc`) |
 | `submit-sudoer-request [file]` | Queue a JSON sudoers-grant request via sudoer-cli into `/var/sudoer-cli/sudoer-request` (default **update** if this user’s host fragment exists; `--add`/`--update`; no `/etc` write; no inbound mkdir) |
 
-**Test-purpose** (grant-emit testers; **not** on the **main** menu; **on** the sudoers submenu; still live CLI verbs):
+**Test-purpose** (grant-emit testers; **off every numbered board**; still live CLI verbs):
 
 | Help row | Text intent |
 |----------|-------------|
@@ -191,7 +191,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 5. Create a second Active `requirement-domain-*` without superseding this one.  
 6. Document inbound as `sudoer-approving` (home dropbox) as the preferred dest.  
 7. Let Type 0 `mkdir` `/var/sudoer-cli/sudoer-request`.  
-8. Mix test-purpose grant-emit verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on the numbered **main** menu (they belong on the sudoers submenu).
+8. Mix test-purpose grant-emit verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on any numbered board (they stay typed commands; numbers **171**, **173**, and **174** stay reserved on the sudoers board).
 
 **Violating this rule is a critical domain regression.**
 
@@ -208,7 +208,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | AC-5 | Registered as sole Active domain SSOT |
 | AC-6 | No competing full backup ops body (defers to folder-archive-backup) |
 | AC-7 | Help/about describe submit as JSON into sibling public inbound, not a home `sudoer-approving` mkdir |
-| AC-8 | `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` are test-purpose on this product; they stay off the numbered **main** menu and on the sudoers submenu as live CLI verbs |
+| AC-8 | `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` are test-purpose on this product; they stay off every numbered board and remain live CLI verbs |
 
 ---
 
@@ -220,8 +220,8 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | `requirement-three-layer-privilege-model` | Elevation + sudoers workflow |
 | `requirement-sudoer-json-file` | JSON sudoer file body (`{{PRJ_NAME}}` only) |
 | `requirement-shell-cli-interface` | Routes domain verbs; help purpose split |
-| `requirement-shell-cli-default-interaction` | Main menu omits test-purpose grant-emit verbs |
-| `requirement-shell-cli-sudoers-submenu` | Five grant/draft setup verbs on the sudoers submenu; remain live CLI commands |
+| `requirement-shell-cli-default-interaction` | Numbered boards omit test-purpose grant-emit verbs |
+| `requirement-shell-cli-sudoers-submenu` | Operational submit and remove on the sudoers board; test-purpose numbers reserved; all five remain live CLI commands |
 | `requirement-bootstrap-chain` | Domain extend from selfmanaged |
 | `docs/requirements/index.md` | Registry |
 
@@ -234,7 +234,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | **TP-FOLDER-BACKUP-01,02** | `tests/test_domain_folder_backup.sh` | have | print-sudoers surface (privilege peer) |
 | **TP-FOLDER-BACKUP-09** | same | have | about domain fields |
 | **TP-CLI-04,06** | `tests/test_cli.sh` | have | help/about list domain verbs |
-| **TP-CLI-17** | same | **todo** | help lists test-purpose grant-emit verbs apart |
+| **TP-CLI-17** | same | **have** | help lists test-purpose grant-emit verbs apart |
 | **TP-FOLDER-BACKUP-19,20** | `tests/test_domain_folder_backup.sh` | have | submit fail-closed / stub inbound (privilege peer) |
 | **TP-FOLDER-BACKUP-23,23b** | same | have | host `/etc/sudoers.d` probe → update; `--add` override |
 | **TP-FOLDER-BACKUP-24,24b,24c,24d** | same | have | generate-sudoer-request independent dest; suite reads without sudo |
@@ -265,6 +265,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-03 | Active 1.6.4 | Submenu SSOT **`requirement-shell-cli-sudoers-submenu`** |
 | 2026-09-03 | Active 1.6.5 | Dual mention: submenu membership cites **`requirement-shell-cli-sudoers-submenu`** (start list stays default-interaction) |
 | 2026-09-30 | Active 1.6.6 | Origin note is selfmanaged. Domain verbs and the main menu are unchanged. |
+| 2026-09-30 | Active 1.6.7 | Test-purpose grant-emit verbs stay off every numbered board. Operational submit and remove stay on the sudoers board. |
 
 ---
 

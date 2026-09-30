@@ -8,19 +8,19 @@
 
 This file is **withdrawn**. It no longer owns empty-argv dispatcher behavior.
 
-From 2026-08-03 through 2026-08-28 this file declared **Type N**: a bare `folder-backup` run always printed **help** (local-only; never install-ensure). That always-help rule is **superseded**. Empty argv is now owned by `requirement-shell-cli-default-interaction` (**case 2**): on a real terminal a bare run opens the numbered work list; in a script or pipe it still prints help.
+From 2026-08-03 through 2026-08-28 this file declared **Type N**: a bare `folder-backup` run always printed **help** (local-only; never install-ensure). That always-help rule is **superseded**. Empty argv is now owned by `requirement-shell-cli-default-interaction` (**case 2**): on a real terminal a bare run opens the numbered boards; in a script or pipe it still prints help.
 
-This file remains on disk so agents do **not** recreate an Active Type N always-help owner that would steal the numbered list back off empty argv (**case 3**).
+This file remains on disk so agents do **not** recreate an Active Type N always-help owner that would steal the numbered boards back off empty argv (**case 3**).
 
 ### 1.1 Human-facing
 
-**In one sentence:** This page is retired. Typing only `folder-backup` at a real terminal now opens the numbered work list; a pipe or script still gets help.
+**In one sentence:** This page is retired. Typing only `folder-backup` at a real terminal now opens the numbered boards; a pipe or script still gets help.
 
 | Box | Meaning | Example |
 |-----|---------|---------|
-| You / this login | Bare run at a prompt is the work list | `folder-backup` then `1` |
+| You / this login | Bare run at a prompt is the numbered boards | `folder-backup` then `1` |
 | The other role | Scripts must not hang | `folder-backup </dev/null` → help |
-| Not this file | Numbered list membership and TTY rules | `requirement-shell-cli-default-interaction` |
+| Not this file | Numbered-board membership and TTY rules | `requirement-shell-cli-default-interaction` |
 
 | Includes | Excludes |
 |----------|----------|
@@ -36,9 +36,9 @@ This file remains on disk so agents do **not** recreate an Active Type N always-
 
 | You do… | What it means | What you type |
 |---------|---------------|---------------|
-| Open the work list | No command word. Real terminal. | `folder-backup` |
+| Open the numbered boards | No command word. Real terminal. | `folder-backup` |
 | See the full catalog | Help is still a named command. | `folder-backup help` |
-| Run in CI | No prompt. Help, not the list. | `folder-backup </dev/null` |
+| Run in CI | No prompt. Help, not the boards. | `folder-backup </dev/null` |
 
 ---
 

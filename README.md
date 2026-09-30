@@ -1,6 +1,6 @@
 # folder-backup - Local folder archive backup and restore with narrow sudo deposit
 
-![Version](https://img.shields.io/badge/Version-1.17.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.18.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Stars](https://img.shields.io/github/stars/cloudgen/folder-backup?style=flat-square)](https://github.com/cloudgen/folder-backup)
@@ -13,13 +13,13 @@
 
 | Includes | Excludes |
 |----------|----------|
-| Local install, numbered work list, backup/restore, grant draft, explicit self-install / self-update | A bare run that downloads |
+| Local install, numbered boards, backup/restore, grant draft, explicit self-install / self-update | A bare run that downloads |
 | Admin-installed narrow grant for `/var/backup` | A normal login writing `/etc` |
 
 | You do… | What it means | What you type |
 |---------|---------------|---------------|
 | Install for yourself | No root. Puts the program on your PATH under `.local/bin`. | `sh src/folder-backup install` |
-| Open the work list | On a real terminal, a bare run shows backup, restore, grant/drafts, then Exit. | `folder-backup` |
+| Open the boards | On a real terminal, a bare run shows client-side, self-management, and Exit. | `folder-backup` |
 | Write a grant you can read | JSON under your config folder. An admin still installs it. | `folder-backup generate-sudoer-request` |
 | Pack a folder after the grant exists | Copies the archive into `/var/backup/folder-backup/`. | `folder-backup backup /path/to/project` |
 
@@ -28,7 +28,7 @@
 - **Install for yourself**: copy this program into `~/.local/bin` (`install`); remove it (`uninstall`); ask where it lives (`where-is-me`)
 - **Channel, when you ask**: `self-install` places a copy or a download; `version-check` and `self-update` use the GitHub raw URL for this repository; `self-uninstall` removes that placed binary. A bare `folder-backup` does not do this.
 - **Scratch stays with this login and this run**: temporary files live in a private folder named for you and this process. `about` prints the folder in use, the preferred folder, and the fallbacks. A folder that cannot be used is skipped quietly. Notes that must survive a reboot stay in `~/.local/folder-backup`
-- **Numbered work list**: on a real terminal, a bare `folder-backup` (or `menu` / `main`) shows backup, restore, grant/drafts, then Exit
+- **Numbered boards**: on a real terminal, a bare `folder-backup` (or `menu` / `main`) shows client-side, self-management, and Exit. Server-side stays hidden. **1** then **11** packs a folder. **1** then **17** opens grant and drafts (submit and remove). **8** opens install, version, and update. A finished command returns to the front. **0** steps back.
 - **Backup a folder**: pack it to a dated gzip under `/var/backup/folder-backup/`, check counts, then keep at most **5** same-day and **30** total copies per project name
 - **Restore**: put an archive back onto the hard-disk projects tree (or a path you name)
 - **Restore dest guard**: allow `/etc/<your-login>`; refuse `/etc/passwd` and other system paths
@@ -116,22 +116,62 @@ After install, on a terminal:
 
 ```text
 $ folder-backup
-[INFO] **folder-backup**(*1.17.0*) — numbered list of live work commands
-1. backup: *Pack a named folder into a dated gzip archive under /var/backup/folder-backup*
-2. restore: *Put an archive back onto the hard-disk projects tree*
-3. sudoers: *Grant and drafts*
+[INFO] **folder-backup**(*1.18.0*) — numbered list
+[INFO] server-side is hidden: this program does not run a host service. Number 2 stays reserved.
+1. **client-side**: *this login's folders: pack, restore, and grants*
+8. **self-management**: *this CLI install, version, update, uninstall*
+9. Exit
+Choice: 1
+[INFO] **folder-backup**(*1.18.0*) — client-side
+11. **backup**: *Pack a named folder into a dated gzip archive under /var/backup/folder-backup*
+12. **restore**: *Put an archive back onto the hard-disk projects tree*
+17. **sudoers**: *Grant and drafts*
+0. Back
+Choice: 17
+[INFO] **folder-backup**(*1.18.0*) — sudoers (grant and drafts)
+[INFO] Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 171, 173, and 174 stay reserved.
+172. **submit-sudoer-request**: *Hand the JSON grant to the approval queue*
+175. **remove-project-sudoers**: *Remove the local grant draft only*
+0. Back
+Choice: 0
+[INFO] **folder-backup**(*1.18.0*) — client-side
+11. **backup**: *Pack a named folder into a dated gzip archive under /var/backup/folder-backup*
+12. **restore**: *Put an archive back onto the hard-disk projects tree*
+17. **sudoers**: *Grant and drafts*
+0. Back
+Choice: 0
+[INFO] **folder-backup**(*1.18.0*) — numbered list
+[INFO] server-side is hidden: this program does not run a host service. Number 2 stays reserved.
+1. **client-side**: *this login's folders: pack, restore, and grants*
+8. **self-management**: *this CLI install, version, update, uninstall*
+9. Exit
+Choice: 8
+[INFO] **folder-backup**(*1.18.0*) — self-management
+81. **install**: *Copy this program into your bin or /usr/local/bin*
+82. **version**: *Show the local version*
+83. **about**: *Show diagnostics including sudoers trust tier*
+84. **version-check**: *Compare this version with the channel*
+85. **self-update**: *Replace the placed binary from the channel*
+86. **self-uninstall**: *Remove the channel-placed binary*
+87. **self-install**: *Copy this file, or download it when the shell is a pipe*
+0. Back
+Choice: 0
+[INFO] **folder-backup**(*1.18.0*) — numbered list
+[INFO] server-side is hidden: this program does not run a host service. Number 2 stays reserved.
+1. **client-side**: *this login's folders: pack, restore, and grants*
+8. **self-management**: *this CLI install, version, update, uninstall*
 9. Exit
 Choice: 9
 ```
 
-Choose a number, or type the command name. `3` opens grant/draft setup (JSON grant, inbound submit, sudoers text, admin install script, remove draft — each is also a typed command). On that list, **`8. Back`** returns to the start list. `9` exits. `folder-backup sudoers` is not a command. In a script or pipe, `folder-backup` with no arguments prints help instead.
+Choose a number, or type a command name. **1** opens this login’s folders. **17** opens grant and drafts: queue a JSON grant, or remove the local draft. `generate-sudoer-request`, `print-sudoers`, and `print-sudoers-install-script` stay typed commands. **8** opens install, version, and update. **0** steps back. **9** leaves. A finished command shows the front board again. `folder-backup sudoers` is not a command. In a script or pipe, `folder-backup` with no arguments prints help instead.
 
 ## Usage
 
 ```sh
-folder-backup                               # TTY numbered work list; off-TTY is help
+folder-backup                               # TTY numbered boards; off-TTY is help
 folder-backup help
-folder-backup menu                          # same list as a bare TTY run; off-TTY is help
+folder-backup menu                          # same boards as a bare TTY run; off-TTY is help
 folder-backup about
 folder-backup --json about
 
@@ -192,7 +232,7 @@ folder-backup restore genesis-template-20260803-3.tar.gz /tmp/genesis-restore
 - [folder-backup](https://github.com/cloudgen/folder-backup) — this product
 - [CIAO Defensive Programming](https://github.com/cloudgen/ciao)
 - [CIAO-Lite](https://github.com/cloudgen/ciao-lite)
-- [selfmanaged](https://github.com/cloudgen/selfmanaged) — bootstrap parent. This product keeps that channel and adds backup, restore, and the numbered work list.
+- [selfmanaged](https://github.com/cloudgen/selfmanaged) — bootstrap parent. This product keeps that channel and adds backup, restore, and the numbered boards.
 
 ## Contributing
 
@@ -204,6 +244,7 @@ MIT License — see [`LICENSE.md`](./LICENSE.md).
 
 ## Last Update
 
+2026-09-30 — version **1.18.0** (numbered boards: client-side, hidden server-side, self-management, Exit; sudoers board shows submit and remove; a finished command returns to the front).
 2026-09-30 — version **1.17.0** (rebuilt from selfmanaged; channel verbs explicit; empty argv stays the work list; `install` stays the local copy; automatic SHA-256 companion on download).
 2026-09-27 — version **1.16.5** (scratch folder is per login and per process; `about` prints used, preferred, 1st fallback, and 2nd fallback; a skipped folder is silent).
 2026-09-23 — version **1.16.4** (private cache leaf mode 0700; live cache line in about; multi-draft remove reads the choice in this shell).

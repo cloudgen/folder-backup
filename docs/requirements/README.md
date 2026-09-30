@@ -2,14 +2,14 @@
 
 Authoritative specialized product law for **folder-backup** lives here.
 
-**Current state (2026-09-30):** Specialized **software-development** product. Left genesis. Bootstrap parent is sibling **selfmanaged**. Channel verbs stay (`self-install`, `version-check`, `self-update`, `self-uninstall`). Empty argv stays the numbered work list. Domain extend: folder archive backup. Registry is populated — see `index.md`.
+**Current state (2026-09-30):** Specialized **software-development** product. Left genesis. Bootstrap parent is sibling **selfmanaged**. Channel verbs stay (`self-install`, `version-check`, `self-update`, `self-uninstall`). Empty argv stays the numbered boards. Domain extend: folder archive backup. Registry is populated — see `index.md`.
 
 ## Product identity (summary)
 
 | Field | Value |
 |-------|--------|
 | Product / `APP_NAME` | `folder-backup` |
-| Version SSOT | `1.17.0` (ship unit hard-assign) |
+| Version SSOT | `1.18.0` (ship unit hard-assign) |
 | Ship unit | `src/folder-backup` |
 | Default install | `~/.local/bin/folder-backup` |
 | Install mode | **Dual and explicit.** `install` copies this file (mode `0755`). `self-install` is the channel place. Empty argv is neither. |

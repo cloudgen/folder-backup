@@ -4,7 +4,7 @@ Durable failure modes. **Always re-check on product review.**
 
 | ID | Mode | Prevention | Status |
 |----|------|------------|--------|
-| L-MENU-SUDOERS-01 | Family token `sudoers` wired as a live command, or grant/draft setup verbs dropped from the dispatcher | Family row is menu-only; five setup verbs stay live CLI commands; TP-CLI-13 | open watch |
+| L-MENU-SUDOERS-01 | Family token `sudoers` wired as a live command, or operational grant verbs dropped from the dispatcher, or test-purpose verbs put back on a numbered board | Family row is menu-only (client **17**); **172**/**175** stay on the sudoers board; **171**/**173**/**174** stay reserved; five names stay live CLI commands; TP-CLI-13 | open watch |
 | L-TYPE-N-01 | Empty argv becomes install-ensure (parent Type O leak) | case 2 off-TTY help + never ensure; TP-CLI-07 | open watch |
 | L-CASE2-01 | Empty argv on TTY stays help after case 2 (always-help leak) | `requirement-shell-cli-default-interaction` 1.3.0; TP-CLI-13 empty argv | open watch |
 | L-ONLINE-01 | Channel verbs dropped, or empty argv turned into install-ensure | User order 2026-09-30 keeps self-install / version-check / self-update / self-uninstall. Empty argv stays case 2. TP-CLI-04/07/10 | closed by that order; watch the empty-argv split |
@@ -29,4 +29,4 @@ Durable failure modes. **Always re-check on product review.**
 | L-TEST-REVIEW-01 | Green emit TP-22 + stub TP-20 + S14 Pass miss sibling decode drop | Assert inbound after **real** sudoer-cli; pretty + compact fixtures; do not treat `tests/run.sh` PASS as grant fidelity; INC-20260817-001 | open watch |
 | L-SAFE-RM-01 | Host `safe-rm` success text lands inside sudoer-cli `$(sr_render_sudoers)` and visudo rejects line 4 | Tests that call real sudoer-cli put a quiet `rm` first on `PATH`. The guard still runs. Production submit on this host fails the same way until sudoer-cli stops capturing `rm` stdout. | open watch |
 
-**Bootstrap parent is selfmanaged (2026-09-30).** Keep its output SSOT, no basename gate, storage leaf, and channel verbs. Empty argv stays the folder-backup work list (case 2), not the parent’s off-TTY install. `install` stays the local copy (mode 0755).
+**Bootstrap parent is selfmanaged (2026-09-30).** Keep its output SSOT, no basename gate, storage leaf, and channel verbs. Empty argv stays the folder-backup numbered boards (case 2), not the parent’s off-TTY install. `install` stays the local copy (mode 0755) and self-board row **81**.

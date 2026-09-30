@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-class-software-dev.md  
-**Status**: Active (Version 1.1.3 – origin selfmanaged; channel verbs kept)  
+**Status**: Active (Version 1.1.4 – origin selfmanaged; channel verbs kept)  
 **Area**: class  
 **Key**: `requirement-class-software-dev`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -101,7 +101,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | **Architectures supported** | any arch with POSIX sh and the external tools the script invokes |
 | **Git surface** | used when product is published |
 | **Ship unit / install** | yes — `src/folder-backup`. Day-to-day `install` copies to `${USER_BIN}/folder-backup` (default `~/.local/bin`, mode 0755). Channel place is explicit `self-install`. |
-| **Product version SSOT** | `VERSION="1.17.0"` hard-assign in `src/folder-backup` |
+| **Product version SSOT** | ship unit `VERSION=` in `src/folder-backup` (do not pin a stale number here) |
 | **Bootstrap origin** | sibling product **selfmanaged** (`{{PROJECTS_ROOT}}/selfmanaged`) — channel verbs kept; domain extend on B; empty argv stays case 2 |
 
 **Residual ownership table:**
@@ -220,6 +220,7 @@ This file says the workspace is a **shippable program** (folder-backup) — **pr
 | 2026-08-28 | Active (1.1.1) | Residual pointer: empty argv → default-interaction case 2 (zero-arguments Withdrawn) |
 | 2026-09-06 | Active (1.1.2) | Residual pointers: `requirement-shell-script-coding` · `requirement-shell-sudo-command`. §1.1 says **project nature**. |
 | 2026-09-30 | Active (1.1.3) | Origin is selfmanaged again. Channel verbs kept. Empty argv stays case 2. |
+| 2026-09-30 | Active (1.1.4) | Product version cell points at the ship unit hard-assign. |
 
 ---
 

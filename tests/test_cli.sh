@@ -60,7 +60,7 @@ run_test_cli() {
     assert_contains "TP-CLI-04 help SUDOER_PUBLIC_ROOT" "$_out" "SUDOER_PUBLIC_ROOT"
     assert_contains "TP-CLI-04 help hard-disk default" "$_out" "hard-disk"
     assert_contains "TP-CLI-04 help --json" "$_out" "--json"
-    assert_contains "TP-CLI-04 help menu" "$_out" "Numbered list of live work commands"
+    assert_contains "TP-CLI-04 help menu" "$_out" "Numbered boards: client-side, self-management, and Exit"
     assert_contains "TP-CLI-04 help main" "$_out" "Same as menu"
     assert_contains "TP-CLI-04 help self-install" "$_out" "self-install"
     assert_contains "TP-CLI-04 help self-update" "$_out" "self-update"
@@ -307,45 +307,58 @@ run_test_cli() {
     assert_eq "TP-CLI-15 menu --quiet off-TTY exit 0" 0 "$_ec"
     assert_contains "TP-CLI-15 menu --quiet off-TTY still help" "$_out" "Usage:"
 
-    assert_contains "TP-CLI-15 help lists menu" "$(sh "${SCRIPT}" help 2>/dev/null)" "Numbered list of live work commands"
+    _out=$(sh "${SCRIPT}" self-management 2>/dev/null)
+    _ec=$?
+    assert_eq "TP-CLI-15 self-management off-TTY exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-15 self-management off-TTY is help" "$_out" "Usage:"
+    assert_not_contains "TP-CLI-15 self-management off-TTY not the board" "$_out" "81. install:"
+
+    _out=$(sh "${SCRIPT}" --json self-management 2>/dev/null)
+    _ec=$?
+    assert_eq "TP-CLI-15 self-management --json off-TTY exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-15 self-management --json off-TTY JSON help" "$_out" '"type":"success"'
+    assert_not_contains "TP-CLI-15 self-management --json off-TTY not the board" "$_out" "81. install:"
+
+    assert_contains "TP-CLI-15 help lists menu" "$(sh "${SCRIPT}" help 2>/dev/null)" "Numbered boards: client-side, self-management, and Exit"
     assert_contains "TP-CLI-15 help lists main" "$(sh "${SCRIPT}" help 2>/dev/null)" "Same as menu"
 
     if command -v python3 >/dev/null 2>&1; then
         _esc=$(printf '\033')
         _out=$(PTY_IN="9" ci_pty_run)
         _plain=$(ci_strip_ansi "$_out")
-        assert_contains "TP-CLI-13 TTY empty argv backup row" "$_plain" "1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
-        assert_contains "TP-CLI-13 TTY empty argv restore row" "$_plain" "2. restore: Put an archive back onto the hard-disk projects tree"
-        assert_contains "TP-CLI-13 TTY empty argv family sudoers" "$_plain" "3. sudoers: Grant and drafts"
+        assert_contains "TP-CLI-13 TTY empty argv client row" "$_plain" "1. client-side: this login's folders: pack, restore, and grants"
+        assert_contains "TP-CLI-13 TTY empty argv server hidden" "$_plain" "server-side is hidden: this program does not run a host service. Number 2 stays reserved."
+        assert_contains "TP-CLI-13 TTY empty argv self row" "$_plain" "8. self-management: this CLI install, version, update, uninstall"
         assert_contains "TP-CLI-13 TTY empty argv Exit 9" "$_plain" "9. Exit"
         assert_contains "TP-CLI-13 TTY empty argv ident token" "$_plain" "${APP_NAME}(${PRODUCT_VERSION})"
-        assert_not_contains "TP-CLI-13 TTY empty argv hides generate row" "$_plain" "1. generate-sudoer-request:"
-        assert_not_contains "TP-CLI-13 TTY empty argv no remove on main" "$_plain" "3. remove-project-sudoers:"
+        assert_not_contains "TP-CLI-13 TTY empty argv hides generate row" "$_plain" "generate-sudoer-request:"
+        assert_not_contains "TP-CLI-13 TTY empty argv no backup on front" "$_plain" "11. backup:"
 
         _out=$(PTY_IN="9" ci_pty_run menu)
         _plain=$(ci_strip_ansi "$_out")
-        assert_contains "TP-CLI-13 TTY menu backup row" "$_plain" "1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
-        assert_contains "TP-CLI-13 TTY menu restore row" "$_plain" "2. restore: Put an archive back onto the hard-disk projects tree"
-        assert_contains "TP-CLI-13 TTY menu family sudoers" "$_plain" "3. sudoers: Grant and drafts"
+        assert_contains "TP-CLI-13 TTY menu client row" "$_plain" "1. client-side: this login's folders: pack, restore, and grants"
+        assert_contains "TP-CLI-13 TTY menu self row" "$_plain" "8. self-management: this CLI install, version, update, uninstall"
         assert_contains "TP-CLI-13 TTY menu Exit 9" "$_plain" "9. Exit"
         _out=$(PTY_IN="9" ci_pty_run main)
         _plain=$(ci_strip_ansi "$_out")
-        assert_contains "TP-CLI-13 TTY main backup row" "$_plain" "1. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
+        assert_contains "TP-CLI-13 TTY main client row" "$_plain" "1. client-side: this login's folders: pack, restore, and grants"
         assert_contains "TP-CLI-13 TTY main Exit 9" "$_plain" "9. Exit"
-        _out=$(PTY_IN="$(printf '%s\n' '1' '/tmp/does-not-exist-fb-menu')" ci_pty_run menu)
-        assert_contains "TP-CLI-13 TTY pick 1 uses typed folder" "$_out" "Source is not a directory: /tmp/does-not-exist-fb-menu"
-        assert_not_contains "TP-CLI-13 TTY pick 1 path not polluted by prompt" "$_out" "Source is not a directory: Folder to pack:"
+        _out=$(PTY_IN="$(printf '%s\n' 'backup' '/tmp/does-not-exist-fb-menu')" ci_pty_run menu)
+        assert_contains "TP-CLI-13 TTY typed backup uses typed folder" "$_out" "Source is not a directory: /tmp/does-not-exist-fb-menu"
+        assert_not_contains "TP-CLI-13 TTY typed backup path not polluted by prompt" "$_out" "Source is not a directory: Folder to pack:"
         _out=$(PTY_IN="$(printf '%s\n' '12' '9')" ci_pty_run menu)
         assert_contains "TP-CLI-13 TTY pick 12 not a menu choice" "$_out" "Not a menu choice"
-        _out=$(PTY_IN="$(printf '%s\n' '3' '8' '9')" ci_pty_run menu)
+        _out=$(PTY_IN="$(printf '%s\n' '1' '17' '0' '0' '9')" ci_pty_run menu)
         _plain=$(ci_strip_ansi "$_out")
-        assert_contains "TP-CLI-13 TTY submenu generate row" "$_plain" "1. generate-sudoer-request: Write a local JSON grant you can read without sudo"
-        assert_contains "TP-CLI-13 TTY submenu submit row" "$_plain" "2. submit-sudoer-request: Hand the JSON grant to the approval queue"
-        assert_contains "TP-CLI-13 TTY submenu print row" "$_plain" "3. print-sudoers: Write a grant file an admin can install"
-        assert_contains "TP-CLI-13 TTY submenu install-script row" "$_plain" "4. print-sudoers-install-script: Write an admin script to install or remove the grant"
-        assert_contains "TP-CLI-13 TTY submenu remove row" "$_plain" "5. remove-project-sudoers: Remove the local grant draft only"
-        assert_contains "TP-CLI-13 TTY submenu Back 8" "$_plain" "8. Back"
-        assert_contains "TP-CLI-13 TTY submenu Exit 9" "$_plain" "9. Exit"
+        assert_contains "TP-CLI-13 TTY client backup row" "$_plain" "11. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
+        assert_contains "TP-CLI-13 TTY client restore row" "$_plain" "12. restore: Put an archive back onto the hard-disk projects tree"
+        assert_contains "TP-CLI-13 TTY client sudoers row" "$_plain" "17. sudoers: Grant and drafts"
+        assert_contains "TP-CLI-13 TTY sudoers submit row" "$_plain" "172. submit-sudoer-request: Hand the JSON grant to the approval queue"
+        assert_contains "TP-CLI-13 TTY sudoers remove row" "$_plain" "175. remove-project-sudoers: Remove the local grant draft only"
+        assert_contains "TP-CLI-13 TTY sudoers hides test commands" "$_plain" "Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 171, 173, and 174 stay reserved."
+        assert_not_contains "TP-CLI-13 TTY sudoers omits generate row" "$_plain" "171. generate-sudoer-request:"
+        assert_contains "TP-CLI-13 TTY sudoers Back 0" "$_plain" "0. Back"
+        assert_not_contains "TP-CLI-13 TTY sudoers has no Back 8" "$_plain" "8. Back"
         _err=$(sh "${SCRIPT}" sudoers 2>&1 >/dev/null)
         assert_eq "TP-CLI-13 sudoers not a live command" 1 "$?"
         assert_contains "TP-CLI-13 sudoers unknown" "$_err" "Unknown command"
@@ -370,8 +383,20 @@ run_test_cli() {
         _out=$(PTY_IN="9" ci_pty_run --json menu)
         _plain=$(ci_strip_ansi "$_out")
         assert_contains "TP-CLI-14 TTY menu --json still numbered list" "$_plain" "9. Exit"
-        assert_contains "TP-CLI-14 TTY menu --json backup row" "$_plain" "1. backup: Pack a named folder"
+        assert_contains "TP-CLI-14 TTY menu --json client row" "$_plain" "1. client-side: this login's folders"
         assert_not_contains "TP-CLI-14 TTY menu --json ignores JSON help" "$_out" '"type":"success"'
+
+        _out=$(PTY_IN="$(printf '%s\n' '8' '0' '9')" ci_pty_run menu)
+        _plain=$(ci_strip_ansi "$_out")
+        assert_contains "TP-CLI-13 self board install" "$_plain" "81. install: Copy this program into your bin or /usr/local/bin"
+        assert_contains "TP-CLI-13 self board self-install" "$_plain" "87. self-install: Copy this file, or download it when the shell is a pipe"
+        assert_contains "TP-CLI-13 self board back" "$_plain" "0. Back"
+        assert_not_contains "TP-CLI-13 self board no where-is-me row" "$_plain" "where-is-me:"
+
+        _out=$(PTY_IN="0" ci_pty_run --json self-management)
+        _plain=$(ci_strip_ansi "$_out")
+        assert_contains "TP-CLI-14 TTY self-management --json still the board" "$_plain" "81. install:"
+        assert_not_contains "TP-CLI-14 TTY self-management --json ignores JSON help" "$_out" '"type":"success"'
 
         _out=$(PTY_IN="9" ci_pty_run --json)
         assert_contains "TP-CLI-15 TTY flags-only --json is JSON help" "$_out" '"type":"success"'
@@ -396,7 +421,7 @@ run_test_cli() {
         assert_not_contains "TP-CLI-16 no self-update row" "$_plain" "self-update:"
         assert_not_contains "TP-CLI-16 no self-uninstall row" "$_plain" "self-uninstall:"
         assert_not_contains "TP-CLI-16 no version-check row" "$_plain" "version-check:"
-        assert_not_contains "TP-CLI-16 no self-management row" "$_plain" "self-management:"
+        assert_contains "TP-CLI-16 front category self-management" "$_plain" "8. self-management:"
 
         # TP-CLI-18 — default CLI main menu style (product alias of portable TP-CLI-17)
         _out=$(PTY_IN="9" ci_pty_run menu)
@@ -405,13 +430,32 @@ run_test_cli() {
         assert_contains "TP-CLI-18 TTY header bold name" "$_out" "${_esc}[1m${APP_NAME}${_esc}[0m"
         assert_contains "TP-CLI-18 TTY header italic version" "$_out" "(${_esc}[3m${PRODUCT_VERSION}${_esc}[0m)"
         assert_contains "TP-CLI-18 TTY explain SGR 3;37" "$_out" "${_esc}[3;37m"
-        assert_contains "TP-CLI-18 TTY backup name unstyled" "$_out" "1. backup: "
+        assert_contains "TP-CLI-18 TTY short name bold" "$_out" "1. ${_esc}[1mclient-side${_esc}[0m: "
         assert_contains "TP-CLI-18 TTY Exit unstyled" "$_plain" "9. Exit"
-        _out=$(PTY_IN="$(printf '%s\n' '3' '9')" ci_pty_run menu)
+        _out=$(PTY_IN="$(printf '%s\n' '1' '17' '0' '0' '9')" ci_pty_run menu)
         _plain=$(ci_strip_ansi "$_out")
         assert_contains "TP-CLI-18 TTY submenu ident token" "$_plain" "${APP_NAME}(${PRODUCT_VERSION})"
         assert_contains "TP-CLI-18 TTY submenu title" "$_plain" "sudoers (grant and drafts)"
         assert_contains "TP-CLI-18 TTY submenu header bold name" "$_out" "${_esc}[1m${APP_NAME}${_esc}[0m"
+        assert_contains "TP-CLI-18 TTY submenu short bold" "$_out" "172. ${_esc}[1msubmit-sudoer-request${_esc}[0m: "
+        _out=$(PTY_IN="$(printf '%s\n' '12' '9')" ci_pty_run menu)
+        assert_contains "TP-CLI-19 invalid choice retries" "$_out" "Not a menu choice '12'"
+        _plain=$(ci_strip_ansi "$_out")
+        _front_n=$(printf '%s\n' "$_plain" | grep -c "1. client-side:" || true)
+        if [ "${_front_n}" -ge 2 ]; then
+            t_pass "TP-CLI-19 invalid choice reprints this board"
+        else
+            t_fail "TP-CLI-19 invalid choice did not reprint the front board (count=${_front_n})"
+        fi
+        _out=$(PTY_IN="$(printf '%s\n' 'version' '9')" ci_pty_run menu)
+        assert_contains "TP-CLI-21 typed version runs" "$_out" "version ${PRODUCT_VERSION}"
+        _plain=$(ci_strip_ansi "$_out")
+        _front_n=$(printf '%s\n' "$_plain" | grep -c "1. client-side:" || true)
+        if [ "${_front_n}" -ge 2 ]; then
+            t_pass "TP-CLI-21 finished leaf redisplays the front board"
+        else
+            t_fail "TP-CLI-21 finished leaf did not redisplay the front board (count=${_front_n})"
+        fi
         _off=$(sh "${SCRIPT}" menu 2>/dev/null)
         assert_not_contains "TP-CLI-18 off-TTY menu no explain CSI" "$_off" "${_esc}[3;37m"
         assert_not_contains "TP-CLI-18 off-TTY menu no ident CSI" "$_off" "${_esc}[1m${APP_NAME}"

@@ -8,8 +8,8 @@
 # Bootstrap origin: selfmanaged (Type 0, full self-install / version-check /
 # self-update / self-uninstall / channel checksum). Direction A → B only.
 # Specialize: identity folder-backup + domain backup/restore/sudoers.
-# Main menu stays the folder-backup work list (backup, restore, sudoers, Exit 9).
-# Empty argv stays case 2 (TTY work list; off-TTY help) — not Type O install-ensure.
+# Main menu is the numbered tree: 1 client-side, 8 self-management, 9 Exit.
+# Row 2 server-side stays reserved. Empty argv stays case 2 (TTY tree; off-TTY help).
 #
 # Project requirements (docs/requirements/ only — never cite templates here):
 # - requirement-bootstrap-chain.md
@@ -24,7 +24,7 @@
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.17.0"
+# VERSION: hard-assign VERSION="1.18.0"
 # SCRIPT_URL: composed from REPO_USER / REPO_NAME / SCRIPT_RELPATH (selfmanaged channel).
 #
 # =============================================================================
@@ -40,10 +40,10 @@ APP_NAME="folder-backup"
 : "${APP_NAME:=folder-backup}"
 : "${APP_DESC:=Folder archive backup and restore, with self-install, version-check, self-update, and self-uninstall}"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
-: "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered work list.}"
+: "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered boards.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.17.0"
-: "${VERSION:=1.17.0}"
+VERSION="1.18.0"
+: "${VERSION:=1.18.0}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -176,10 +176,10 @@ out_text() {
 
     local extra="${3-}"
     local extra2="${4-}"
-    local RED='' GREEN='' YELLOW='' BLUE='' DESC='' NC=''
+    local RED='' GREEN='' YELLOW='' BLUE='' DESC='' BOLD='' NC=''
     [ "${TTY:-0}" -eq 1 ] && [ "${QUIET}" -eq 0 ] && [ "${JSON}" -eq 0 ] && {
         RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'
-        DESC='\033[3;37m'; NC='\033[0m'
+        DESC='\033[3;37m'; BOLD='\033[1m'; NC='\033[0m'
     }
 
     case "${level}" in
@@ -189,8 +189,8 @@ out_text() {
         out_info)    printf "${GREEN}[INFO]${NC} %s\n" "${msg}" ;;
         out_success) printf "${GREEN}[OK]${NC} %s\n" "${msg}" ;;
         menu_choice)
-            # Number + name plain; explain italic + light gray (folder-backup main menu).
-            printf '%s. %s: %b%s%b\n' "${3-}" "${4-}" "${DESC}" "${5-}" "${NC}"
+            # Number plain; short name bold; explain italic + light gray.
+            printf '%s. %b%s%b: %b%s%b\n' "${3-}" "${BOLD}" "${4-}" "${NC}" "${DESC}" "${5-}" "${NC}"
             ;;
         plain)       printf "%s\n" "${msg}" ;;
         plain_n)     printf "%s" "${msg}" ;;
@@ -319,9 +319,9 @@ out_plain() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Print `n. verb: explain`. On a TTY the explain is italic + light gray.
-# Number and verb stay unstyled. Rows with no explain (Exit / Back) print
-# `n. label` only.
+# Print `n. verb: explain`. On a TTY the short name is bold and the explain
+# is italic + light gray. The number stays plain. Rows with no explain
+# (Exit / Back) print `n. label` only.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
@@ -353,7 +353,7 @@ out_menu_choice() {
 # =============================================================================
 util_app_ident() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.17.0}"
+    : "${VERSION:=1.18.0}"
     : "${TTY:=0}"
     : "${JSON:=0}"
     if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
@@ -3002,7 +3002,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.17.0}"
+    : "${VERSION:=1.18.0}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"
@@ -3200,7 +3200,7 @@ app_about() {
 
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.17.0}"
+    : "${VERSION:=1.18.0}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path
@@ -6003,235 +6003,300 @@ EOF
     return 0
 }
 
-# app_main_menu_print() - Numbered main-menu list (TTY)
+# app_menu_draw_on() / app_menu_draw_off() - Ink while a board is showing
 # =============================================================================
 #
-# GENERAL PURPOSE:
-# Print daily backup work (backup, restore), family sudoers, then Exit 9.
-# Labels are the kept-list human-readable form (verb: explain). Look is
-# default CLI main menu style (header nametag + TTY gray italic explain).
-# Self-managed, diagnostics, and the five sudoers verbs are omitted here.
-#
-# ALIGNMENT:
-# - requirement-shell-cli-default-interaction.md
-# - requirement-shell-output-requirements.md
-#
-# Last updated: 2026-09-03
+# Drawing ignores --json and --quiet so the numbered list stays human.
+# A leaf restores the saved flags before it runs.
 # =============================================================================
-app_main_menu_print() {
-    : "${APP_NAME:=folder-backup}"
-    : "${JSON:=0}"
-    : "${QUIET:=0}"
+app_menu_draw_on() {
+    : "${_menu_json:=0}"
+    : "${_menu_quiet:=0}"
+    JSON=0
+    QUIET=0
+    export JSON QUIET
+}
 
-    out_info "$(util_app_ident) — numbered list of live work commands"
-    out_menu_choice 1 backup "Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
-    out_menu_choice 2 restore "Put an archive back onto the hard-disk projects tree"
-    out_menu_choice 3 sudoers "Grant and drafts"
-    out_menu_choice 9 Exit
+app_menu_draw_off() {
+    : "${_menu_json:=0}"
+    : "${_menu_quiet:=0}"
+    JSON="${_menu_json}"
+    QUIET="${_menu_quiet}"
+    export JSON QUIET
 }
 
 # =============================================================================
-# app_main_menu_print_sudoers() - Sudoers family submenu (TTY)
+# app_menu_run_leaf() - Run one numbered-board leaf by verb token
 # =============================================================================
 #
-# GENERAL PURPOSE:
-# Print the grant/draft list grouped behind main-menu family row sudoers.
-# The five verbs remain live CLI commands; this list is a picker only.
-#
-# ALIGNMENT:
-# - requirement-shell-cli-sudoers-submenu.md
-# - requirement-shell-cli-default-interaction.md (family row on the start list)
-#
-# Last updated: 2026-09-03
-# =============================================================================
-app_main_menu_print_sudoers() {
-    : "${APP_NAME:=folder-backup}"
-    : "${JSON:=0}"
-    : "${QUIET:=0}"
-
-    out_info "$(util_app_ident) — sudoers (grant and drafts)"
-    out_menu_choice 1 generate-sudoer-request "Write a local JSON grant you can read without sudo"
-    out_menu_choice 2 submit-sudoer-request "Hand the JSON grant to the approval queue"
-    out_menu_choice 3 print-sudoers "Write a grant file an admin can install"
-    out_menu_choice 4 print-sudoers-install-script "Write an admin script to install or remove the grant"
-    out_menu_choice 5 remove-project-sudoers "Remove the local grant draft only"
-    out_menu_choice 8 Back
-    out_menu_choice 9 Exit
-}
-
-# =============================================================================
-# app_main_menu_run_pick() - Run one main-menu choice (number or verb)
-# =============================================================================
-#
-# GENERAL PURPOSE:
-# Map a numbered pick or verb token to a live operational handler. Family
-# row sudoers is not handled here (caller opens the submenu). Missing
-# required operands: prompt one field at a time, or print Next: and return.
-# Returns 1 if the pick is not on the list (caller re-prompts).
-# Submenu verbs MAY run as a shortcut from the main pick prompt.
+# Returns 0 after a listed leaf (including Next: when a required field is
+# empty). Returns 1 when the token is not a leaf. Callers map numbers.
+# A finished leaf redisplays the front board. Test-purpose verbs are not
+# leaves. Local uninstall and where-is-me stay typed commands.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
-#
-# Last updated: 2026-09-03
 # =============================================================================
-app_main_menu_run_pick() {
-    _pick="${1-}"
+app_menu_run_leaf() {
+    _leaf="${1-}"
     _a="${2-}"
     _b="${3-}"
     : "${APP_NAME:=folder-backup}"
 
-    case "${_pick}" in
-        1|backup)
+    case "${_leaf}" in
+        backup)
             if [ -z "${_a}" ]; then
                 prompt_line "Folder to pack" || true
                 _a="${_prompt_line}"
             fi
             if [ -z "${_a}" ]; then
                 out_info "Next: ${APP_NAME} backup <source-folder>"
+                unset _leaf _a _b
                 return 0
             fi
             fb_backup "${_a}"
             ;;
-        2|restore)
+        restore)
             if [ -z "${_a}" ]; then
                 prompt_line "Archive or prefix" || true
                 _a="${_prompt_line}"
             fi
             if [ -z "${_a}" ]; then
                 out_info "Next: ${APP_NAME} restore <archive|prefix> [dest]"
+                unset _leaf _a _b
                 return 0
             fi
             fb_restore "${_a}" "${_b}"
             ;;
-        generate-sudoer-request)
-            fb_generate_sudoer_request "${_a}"
-            ;;
         submit-sudoer-request)
             fb_submit_sudoer_request "${_a}"
-            ;;
-        print-sudoers)
-            fb_print_sudoers "${_a}"
-            ;;
-        print-sudoers-install-script)
-            fb_print_sudoers_install_script "${_a}"
             ;;
         remove-project-sudoers)
             fb_remove_project_sudoers "${_a}"
             ;;
-        9|99|exit|quit|Exit|QUIT)
+        install)
+            inst_local_install
+            ;;
+        version)
+            app_version
+            ;;
+        about)
+            app_about
+            ;;
+        version-check)
+            ver_check
+            ;;
+        self-update)
+            inst_self_update
+            ;;
+        self-uninstall)
+            inst_self_uninstall
+            ;;
+        self-install)
+            inst_self_install
             ;;
         *)
+            unset _leaf _a _b
             return 1
             ;;
     esac
+    unset _leaf _a _b
     return 0
 }
 
 # =============================================================================
-# app_main_menu_run_sudoers_pick() - Run one sudoers-submenu choice
+# app_cmd_menu_sudoers() - Grant board under client 17
 # =============================================================================
 #
-# GENERAL PURPOSE:
-# Map a submenu number or member verb to the live handler. Back/Exit are
-# owned by the submenu loop. Returns 1 if the pick is not a member.
+# Operational rows only: 172 submit, 175 remove. Test-purpose numbers
+# 171, 173, and 174 stay reserved. 0 / empty / EOF / exit returns to
+# client-side. A leaf returns 2 so the front board redisplays.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-sudoers-submenu.md
-#
-# Last updated: 2026-09-03
 # =============================================================================
-app_main_menu_run_sudoers_pick() {
-    _pick="${1-}"
-    _a="${2-}"
-
-    case "${_pick}" in
-        1|generate-sudoer-request)
-            fb_generate_sudoer_request "${_a}"
-            ;;
-        2|submit-sudoer-request)
-            fb_submit_sudoer_request "${_a}"
-            ;;
-        3|print-sudoers)
-            fb_print_sudoers "${_a}"
-            ;;
-        4|print-sudoers-install-script)
-            fb_print_sudoers_install_script "${_a}"
-            ;;
-        5|remove-project-sudoers)
-            fb_remove_project_sudoers "${_a}"
-            ;;
-        *)
-            return 1
-            ;;
-    esac
-    return 0
-}
-
-# =============================================================================
-# app_main_menu_sudoers_loop() - Interactive sudoers submenu
-# =============================================================================
-#
-# GENERAL PURPOSE:
-# Show the grant/draft list. Back returns 1 (main list). Exit or a run
-# returns 0 (leave menu). Never hangs off-TTY (caller is TTY-only).
-#
-# ALIGNMENT:
-# - requirement-shell-cli-sudoers-submenu.md
-#
-# Last updated: 2026-09-03
-# =============================================================================
-app_main_menu_sudoers_loop() {
-    : "${APP_NAME:=folder-backup}"
-    : "${_menu_json:=0}"
-    : "${_menu_quiet:=0}"
+app_cmd_menu_sudoers() {
     _a="${1-}"
-
     while true; do
-        JSON=0
-        QUIET=0
-        export JSON QUIET
-        app_main_menu_print_sudoers
+        app_menu_draw_on
+        out_info "$(util_app_ident) — sudoers (grant and drafts)"
+        out_info "Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 171, 173, and 174 stay reserved."
+        out_menu_choice 172 submit-sudoer-request "Hand the JSON grant to the approval queue"
+        out_menu_choice 175 remove-project-sudoers "Remove the local grant draft only"
+        out_menu_choice 0 Back
+        if ! prompt_line "Choice"; then
+            unset _a
+            return 0
+        fi
+        _pick="${_prompt_line}"
+        case "${_pick}" in
+            0|back|Back|""|exit|quit|Exit|QUIT)
+                unset _pick _a
+                return 0
+                ;;
+            172|submit-sudoer-request)
+                app_menu_draw_off
+                app_menu_run_leaf submit-sudoer-request "${_a}"
+                unset _pick _a
+                return 2
+                ;;
+            175|remove-project-sudoers)
+                app_menu_draw_off
+                app_menu_run_leaf remove-project-sudoers "${_a}"
+                unset _pick _a
+                return 2
+                ;;
+        esac
+        out_error "Not a menu choice '${_pick}'. Type 172, 175, or 0, or a listed command name."
+        _a=""
+    done
+}
+
+# =============================================================================
+# app_cmd_menu_client() - Client board under front 1
+# =============================================================================
+#
+# 11 backup, 12 restore, 17 sudoers, 0 Back. A leaf returns 2. Back
+# returns 0. A finished sudoers leaf bubbles 2 so the client board does
+# not stay up.
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+# =============================================================================
+app_cmd_menu_client() {
+    _a="${1-}"
+    _b="${2-}"
+    while true; do
+        app_menu_draw_on
+        out_info "$(util_app_ident) — client-side"
+        out_menu_choice 11 backup "Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
+        out_menu_choice 12 restore "Put an archive back onto the hard-disk projects tree"
+        out_menu_choice 17 sudoers "Grant and drafts"
+        out_menu_choice 0 Back
+        if ! prompt_line "Choice"; then
+            unset _a _b
+            return 0
+        fi
+        _pick="${_prompt_line}"
+        case "${_pick}" in
+            0|back|Back|""|exit|quit|Exit|QUIT)
+                unset _pick _a _b
+                return 0
+                ;;
+            17|sudoers)
+                app_cmd_menu_sudoers "${_a}"
+                _rc=$?
+                _a=""
+                _b=""
+                if [ "${_rc}" -eq 2 ]; then
+                    unset _pick _rc
+                    return 2
+                fi
+                unset _rc
+                continue
+                ;;
+            11|backup)
+                app_menu_draw_off
+                app_menu_run_leaf backup "${_a}" "${_b}"
+                unset _pick _a _b
+                return 2
+                ;;
+            12|restore)
+                app_menu_draw_off
+                app_menu_run_leaf restore "${_a}" "${_b}"
+                unset _pick _a _b
+                return 2
+                ;;
+        esac
+        out_error "Not a menu choice '${_pick}'. Type 11, 12, 17, or 0, or a listed command name."
+        _a=""
+        _b=""
+    done
+}
+
+# =============================================================================
+# app_cmd_menu_self() - Self-management board under front 8
+# =============================================================================
+#
+# Dual place: 81 install is the local copy. 84-87 are the channel.
+# 86 is self-uninstall. Local uninstall and where-is-me stay typed
+# commands. A leaf returns 2. 0 / empty / EOF returns to the caller.
+#
+# ALIGNMENT:
+# - requirement-shell-cli-default-interaction.md
+# =============================================================================
+app_cmd_menu_self() {
+    while true; do
+        app_menu_draw_on
+        out_info "$(util_app_ident) — self-management"
+        out_menu_choice 81 install "Copy this program into your bin or /usr/local/bin"
+        out_menu_choice 82 version "Show the local version"
+        out_menu_choice 83 about "Show diagnostics including sudoers trust tier"
+        out_menu_choice 84 version-check "Compare this version with the channel"
+        out_menu_choice 85 self-update "Replace the placed binary from the channel"
+        out_menu_choice 86 self-uninstall "Remove the channel-placed binary"
+        out_menu_choice 87 self-install "Copy this file, or download it when the shell is a pipe"
+        out_menu_choice 0 Back
         if ! prompt_line "Choice"; then
             return 0
         fi
         _pick="${_prompt_line}"
         case "${_pick}" in
-            8|back|Back)
-                return 1
-                ;;
-            9|99|exit|quit|Exit|QUIT)
+            0|back|Back|""|exit|quit|Exit|QUIT)
+                unset _pick
                 return 0
                 ;;
+            81|install)
+                _verb=install
+                ;;
+            82|version)
+                _verb=version
+                ;;
+            83|about)
+                _verb=about
+                ;;
+            84|version-check)
+                _verb=version-check
+                ;;
+            85|self-update)
+                _verb=self-update
+                ;;
+            86|self-uninstall)
+                _verb=self-uninstall
+                ;;
+            87|self-install)
+                _verb=self-install
+                ;;
+            *)
+                out_error "Not a menu choice '${_pick}'. Type 81-87, 0 back, or a listed command name."
+                continue
+                ;;
         esac
-        JSON="${_menu_json}"
-        QUIET="${_menu_quiet}"
-        export JSON QUIET
-        if app_main_menu_run_sudoers_pick "${_pick}" "${_a}"; then
-            return 0
-        fi
-        out_warn "Not a menu choice. Type 1-5, 8 back, 9 to leave, or a listed command name. Next: ${APP_NAME} menu"
+        app_menu_draw_off
+        app_menu_run_leaf "${_verb}"
+        unset _pick _verb
+        return 2
     done
 }
 
 # =============================================================================
-# app_main_menu() - Default interaction: TTY numbered menu / off-TTY help
+# app_cmd_menu() - Front board (case 2 empty argv and menu / main)
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Commands menu / main, and case-2 empty argv. On a real terminal: ignore
-# --json on menu/main, show the numbered list, run one pick (or open the
-# sudoers submenu). Off-TTY: help (JSON help when --json). Never hang.
-# Never install-ensure. sudoers is not a dispatcher token.
+# On a real terminal: ignore --json while drawing, print client-side and
+# self-management, keep server-side reserved, run a pick. A finished leaf
+# redisplays this board. Off-TTY: help. Never hang. Never install-ensure.
+# sudoers is not a dispatcher token.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
 # - requirement-shell-cli-sudoers-submenu.md
 # - requirement-shell-interactive-vs-noninteractive.md
 #
-# Last updated: 2026-09-03
+# Last updated: 2026-09-30
 # =============================================================================
-app_main_menu() {
+app_cmd_menu() {
     : "${TTY:=0}"
     : "${JSON:=0}"
     : "${QUIET:=0}"
@@ -6247,73 +6312,69 @@ app_main_menu() {
         fi
         app_help
         QUIET="${_menu_quiet}"
+        unset _argv_pick _argv_a _argv_b _menu_quiet
         return 0
     fi
 
     _menu_json="${JSON}"
     _menu_quiet="${QUIET}"
-    JSON=0
-    QUIET=0
-    export JSON QUIET
 
     while true; do
-        app_main_menu_print
+        app_menu_draw_on
+        out_info "$(util_app_ident) — numbered list"
+        out_info "server-side is hidden: this program does not run a host service. Number 2 stays reserved."
+        out_menu_choice 1 client-side "this login's folders: pack, restore, and grants"
+        out_menu_choice 8 self-management "this CLI install, version, update, uninstall"
+        out_menu_choice 9 Exit
         if [ -n "${_argv_pick}" ]; then
             _pick="${_argv_pick}"
             _argv_pick=""
         else
             if ! prompt_line "Choice"; then
-                JSON="${_menu_json}"
-                QUIET="${_menu_quiet}"
-                export JSON QUIET
+                app_menu_draw_off
+                unset _pick _argv_pick _argv_a _argv_b _menu_json _menu_quiet
                 return 0
             fi
             _pick="${_prompt_line}"
         fi
         case "${_pick}" in
             9|99|exit|quit|Exit|QUIT)
-                JSON="${_menu_json}"
-                QUIET="${_menu_quiet}"
-                export JSON QUIET
+                app_menu_draw_off
+                unset _pick _argv_pick _argv_a _argv_b _menu_json _menu_quiet
                 return 0
                 ;;
-            3|sudoers)
-                JSON="${_menu_json}"
-                QUIET="${_menu_quiet}"
-                export JSON QUIET
-                if app_main_menu_sudoers_loop "${_argv_a}"; then
-                    JSON="${_menu_json}"
-                    QUIET="${_menu_quiet}"
-                    export JSON QUIET
-                    return 0
-                fi
-                JSON=0
-                QUIET=0
-                export JSON QUIET
+            1|client-side)
+                app_cmd_menu_client "${_argv_a}" "${_argv_b}"
+                _argv_a=""
+                _argv_b=""
+                continue
+                ;;
+            8|self-management)
+                app_cmd_menu_self
                 _argv_a=""
                 _argv_b=""
                 continue
                 ;;
         esac
-        JSON="${_menu_json}"
-        QUIET="${_menu_quiet}"
-        export JSON QUIET
-        if app_main_menu_run_pick "${_pick}" "${_argv_a}" "${_argv_b}"; then
-            JSON="${_menu_json}"
-            QUIET="${_menu_quiet}"
-            export JSON QUIET
-            return 0
+        app_menu_draw_off
+        if app_menu_run_leaf "${_pick}" "${_argv_a}" "${_argv_b}"; then
+            _argv_a=""
+            _argv_b=""
+            continue
         fi
-        JSON=0
-        QUIET=0
-        export JSON QUIET
-        out_warn "Not a menu choice. Type 1-3, 9 to leave, or a listed command name."
-        out_info "Next: ${APP_NAME} menu"
+        app_menu_draw_on
+        out_error "Not a menu choice '${_pick}'. Type 1, 8, or 9, or a listed name."
         _argv_a=""
         _argv_b=""
     done
 }
 
+# app_main_menu() - Name kept for the dispatcher call sites that still say it
+app_main_menu() {
+    app_cmd_menu "$@"
+}
+
+# =============================================================================
 # =============================================================================
 # app_help() - Usage (selfmanaged lifecycle + folder-backup work list)
 # =============================================================================
@@ -6325,7 +6386,7 @@ app_main_menu() {
 # =============================================================================
 app_help() {
     : "${SHORT_DESCRIPTION:=${APP_DESC:-Folder archive backup and restore, with self-install, version-check, self-update, and self-uninstall}}"
-    : "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered work list.}"
+    : "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered boards.}"
     : "${BACKUP_ROOT:=/var/backup}"
     : "${BACKUP_NOTATION:=folder-backup}"
     : "${RESTORE_HOST_DEFAULT:=hard-disk}"
@@ -6357,7 +6418,7 @@ app_help() {
     out_plain "  version-check        Compare local vs remote version (needs SCRIPT_URL)"
     out_plain "  self-update          Update ${APP_NAME} to a newer remote version"
     out_plain "  self-uninstall       Remove ${APP_NAME} (confirm or --force; PATH cleanup)"
-    out_plain "  self-management      On a terminal, numbered self-management board (82-87). Off a terminal, this help"
+    out_plain "  self-management      On a terminal, numbered self-management board (81-87). Off a terminal, this help"
     out_empty_line
     out_info "Install and self-care (your own login):"
     out_plain "  install              Install ${APP_NAME} by local copy (root→global, user→~/.local/bin, mode 0755)"
@@ -6367,7 +6428,7 @@ app_help() {
     out_plain "  version              Show local version"
     out_plain "  about                Show diagnostics (incl. sudoers trust tier)"
     out_plain "  help                 Show this help"
-    out_plain "  menu                 Numbered list of live work commands (same list as a TTY empty run; off-TTY is help)"
+    out_plain "  menu                 Numbered boards: client-side, self-management, and Exit (same boards as a TTY empty run; off-TTY is help)"
     out_plain "  main                 Same as menu"
     out_empty_line
     out_info "Work commands:"
@@ -6435,7 +6496,7 @@ app_help() {
     out_plain "  SUDOERS_D_DIR           host sudoers.d dir (default /etc/sudoers.d; tests)"
     out_empty_line
     out_info "Examples:"
-    out_plain "  ${APP_NAME}                    # TTY numbered work list; off-TTY is help"
+    out_plain "  ${APP_NAME}                    # TTY numbered boards; off-TTY is help"
     out_plain "  ${APP_NAME} menu"
     out_plain "  ${APP_NAME} install"
     out_plain "  ${APP_NAME} self-install           # copy this file, or download when piped"
@@ -6446,113 +6507,39 @@ app_help() {
     out_plain "  ${APP_NAME} restore genesis-template"
     out_plain "  ${APP_NAME} restore genesis-template --ram"
     out_empty_line
-    out_info "On a real terminal, no arguments shows the numbered work list; in a script, no arguments shows this help."
+    out_info "On a real terminal, no arguments shows the numbered boards; in a script, no arguments shows this help."
     out_info "Channel place/update is explicit: self-install, version-check, self-update, self-uninstall."
     out_info "Restore default destination is hard-disk (not RAM) unless --ram or dest is set."
     out_info "Local install + sudoers is TEST MODE ONLY; prefer global for durable elevation."
 }
 
 # =============================================================================
-# app_default_print_self_menu() - Self-management board under 8
+# app_default_self_loop() - Verb self-management opens the same board as row 8
 # =============================================================================
 #
-# GENERAL PURPOSE:
-# Online script-alone, no payload: 81 install stays reserved and is omitted.
-# Listed rows are 82 version through 87 self-install, then 0 Back.
-#
-# ALIGNMENT:
-# - requirement-shell-cli-default-interaction.md
-#
-# Last updated: 2026-09-27
-# =============================================================================
-app_default_print_self_menu() {
-    out_info "$(util_app_ident) — self-management"
-    out_menu_choice "82" "version" "show current version"
-    out_menu_choice "83" "about" "show detailed diagnostics"
-    out_menu_choice "84" "version-check" "compare local vs remote version"
-    out_menu_choice "85" "self-update" "update ${APP_NAME} to a newer remote version"
-    out_menu_choice "86" "self-uninstall" "remove ${APP_NAME}"
-    out_menu_choice "87" "self-install" "place this CLI only (copy when \$0 is a script; download when piped)"
-    out_menu_choice "0" "Back"
-}
-
-# =============================================================================
-# app_default_run_self_leaf() - Run one self-management verb
-# =============================================================================
-#
-# Returns 0 after a listed leaf. Returns 1 when the pick is not a leaf.
-# install (81) is reserved and is not a leaf. where-is-me is not on this board.
-# =============================================================================
-app_default_run_self_leaf() {
-    _leaf="${1-}"
-    case "${_leaf}" in
-        82|version)
-            app_version
-            ;;
-        83|about)
-            app_about
-            ;;
-        84|version-check)
-            ver_check
-            ;;
-        85|self-update)
-            inst_self_update
-            ;;
-        86|self-uninstall)
-            inst_self_uninstall
-            ;;
-        87|self-install)
-            inst_self_install
-            ;;
-        *)
-            unset _leaf
-            return 1
-            ;;
-    esac
-    unset _leaf
-    return 0
-}
-
-# =============================================================================
-# app_default_self_loop() - Self-management layer
-# =============================================================================
-#
-# A finished leaf returns so the front board redisplays. 0 / back / empty
-# returns to the front board without running a verb. A bad pick reprints
-# this layer. EOF leaves this layer (back to the front board).
+# Off-TTY this verb is help (same as menu). On a TTY it is only the self
+# board: a leaf or Back ends the verb and does not open the front board.
 # =============================================================================
 app_default_self_loop() {
-    : "${_menu_json:=0}"
-    : "${_menu_quiet:=0}"
-    while true; do
-        JSON=0
-        QUIET=0
-        export JSON QUIET
-        app_default_print_self_menu
-        out_msg_n "Choice: "
-        _pick=""
-        if ! read -r _pick; then
-            unset _pick
-            return 0
+    : "${TTY:=0}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+    if [ "${TTY}" -ne 1 ]; then
+        _menu_quiet="${QUIET}"
+        if [ "${JSON}" -ne 1 ]; then
+            QUIET=0
         fi
-        case "${_pick}" in
-            0|back|Back|"")
-                unset _pick
-                return 0
-                ;;
-        esac
-        JSON="${_menu_json}"
+        app_help
         QUIET="${_menu_quiet}"
-        export JSON QUIET
-        if app_default_run_self_leaf "${_pick}"; then
-            unset _pick
-            return 0
-        fi
-        JSON=0
-        QUIET=0
-        export JSON QUIET
-        out_error "Not a menu choice '${_pick}'. Type 82-87, 0 back, or a listed command name."
-    done
+        unset _menu_quiet
+        return 0
+    fi
+    _menu_json="${JSON}"
+    _menu_quiet="${QUIET}"
+    app_cmd_menu_self "$@"
+    _rc=$?
+    unset _menu_json _menu_quiet
+    return "${_rc}"
 }
 
 # =============================================================================
@@ -6562,7 +6549,7 @@ app_default_self_loop() {
 # GENERAL PURPOSE:
 # Single dispatcher. Architecture and self-management verbs come from
 # selfmanaged. Folder-backup verbs and the work-list menu are added here.
-# Empty argv = case 2 (TTY numbered work list; off-TTY help). Not install-ensure.
+# Empty argv = case 2 (TTY numbered boards; off-TTY help). Not install-ensure.
 #
 # ALIGNMENT:
 # - requirement-bootstrap-chain.md
@@ -6593,10 +6580,10 @@ app_main() {
     export EFFECTIVE_STORAGE_DIR STORAGE_DIR PERSISTENT_STORAGE_DIR
     export TMPDIR="${EFFECTIVE_STORAGE_DIR}"
 
-    # Case 2: empty argv → TTY numbered work list; off-TTY help.
+    # Case 2: empty argv → TTY numbered boards; off-TTY help.
     # Self-install stays an explicit verb (full selfmanaged channel, not surprise install).
     if [ $# -eq 0 ]; then
-        app_main_menu
+        app_cmd_menu
         return 0
     fi
 
@@ -6729,7 +6716,7 @@ app_main() {
         remove-project-sudoers) fb_remove_project_sudoers "${_domain_arg}" ;;
         generate-sudoer-request) fb_generate_sudoer_request "${_domain_arg}" ;;
         submit-sudoer-request) fb_submit_sudoer_request "${_domain_arg}" ;;
-        menu|main)    app_main_menu "${_menu_pick}" "${_domain_arg}" "${_domain_arg2}" ;;
+        menu|main)    app_cmd_menu "${_menu_pick}" "${_domain_arg}" "${_domain_arg2}" ;;
         help|*)       app_help ;;
     esac
 }

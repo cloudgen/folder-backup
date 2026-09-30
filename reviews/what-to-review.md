@@ -1,12 +1,12 @@
 # What to review — folder-backup
 
 **Living checklist** (review plan). Product: **folder-backup** local self-managed CLI + domain backup/restore + narrow sudo deposit.  
-**Class:** software-development · domain SSOT present · channel verbs kept from selfmanaged · empty argv is the work list.  
+**Class:** software-development · domain SSOT present · channel verbs kept from selfmanaged · empty argv is the numbered boards.  
 **Always load first:** `reviews/lessons.md`
 
 **Last plan update:** 2026-09-30  
-**Ship unit VERSION:** 1.17.0  
-**Suite baseline:** see `reviews/test-plan.md` (1.17.0 channel verbs kept; empty argv is the work list; 1.16.5 per-login per-process cache kept; compact JSON `--json` twins still todo)
+**Ship unit VERSION:** 1.18.0  
+**Suite baseline:** see `reviews/test-plan.md` (1.18.0 numbered boards; channel verbs on the self board; empty argv is still case 2; compact JSON `--json` twins still todo)
 
 ---
 
@@ -18,7 +18,7 @@
 | P2 | Confirm ship unit `src/folder-backup` | `APP_NAME` / `VERSION` hard-assign (**1.9.0+**) |
 | P3 | Load `reviews/lessons.md` and re-check every open L-* | Mandatory (esp. **L-SUDOERS-01/02** · **L-SUDOERS-06** · **L-OUTPUT-01** · **L-TEST-REVIEW-01**) |
 | P4 | Run `./tests/run.sh` | Record PASS/FAIL/SKIP in report; **must include TP-22e/22f** (not emit-only 22) **and TP-24*/25*** when generate/submit copy is in scope |
-| P5 | Confirm channel verbs are explicit and empty argv is still the work list | Help lists `self-install` and `SCRIPT_URL`. Off-TTY empty argv is help. `install` is the local copy. |
+| P5 | Confirm channel verbs are explicit and empty argv is still the numbered boards | Help lists `self-install` and `SCRIPT_URL`. Off-TTY empty argv is help. `install` is the local copy and self row **81**. |
 | P6 | Privilege law version | three-layer **≥1.10.0** (S13 + AC-21/22 + **independent generate AC-23/24**) · sudoer-json **≥1.2.0** §2.7 item 5 · **operator-readable-error** 1.0.0 |
 | P7 | Host elev posture (if reviewing runtime) | Global vs local binary; trust tier; `/etc/sudoers.d/` status |
 | P8 | **JSON re-encode / inbound fidelity** | Complete section below. **Revise/Block** if skipped when submit or JSON grant is in scope. |
@@ -39,7 +39,7 @@
 | **JSON sudoer file** | `requirement-sudoer-json-file.md` | `folder-backup` backup/**and** restore; §2.7a re-encode; pretty JSON legal; **independent generate dest AC-10** |
 | **Operator-readable error** | `requirement-operator-readable-error.md` | Blocking `[ERROR]` what-happened + next step; no jargon-only |
 | CLI interface | `requirement-shell-cli-interface.md` | Commands, flags, dispatch (incl. **generate-sudoer-request**); test-purpose grant-emit listed **apart** |
-| Default interaction | `requirement-shell-cli-default-interaction.md` | Case 2 TTY empty argv = numbered list; `menu`/`main`; colon labels; no version/about/test-purpose on numbered list |
+| Default interaction | `requirement-shell-cli-default-interaction.md` | Case 2 TTY empty argv = numbered boards; front **1**/**8**/**9**; hidden **2**; client **11**/**12**/**17**; self **81**–**87**; test-purpose off every board |
 | Empty argv (withdrawn Type N) | `requirement-shell-cli-zero-arguments.md` | **Withdrawn** — off-TTY still help; never install-ensure |
 | Local self-management | `requirement-shell-local-self-management.md` | install/uninstall; global preferred for elev |
 | Output SSOT | `requirement-shell-output-requirements.md` | `out_*`; JSON errors |

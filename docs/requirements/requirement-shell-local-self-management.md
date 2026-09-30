@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-local-self-management.md  
-**Status**: Active (Version 1.3.0)  
+**Status**: Active (Version 1.3.1)  
 **Area**: shell  
 **Key**: `requirement-shell-local-self-management`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -8,7 +8,7 @@
 
 This requirement is the **project Single Source of Truth** for **local self-managed lifecycle** of the folder-backup POSIX shell CLI: **`install`**, **`uninstall`**, and **`where-is-me`**, plus the local diagnostics package contract for **`version`**, **`about`**, and **`help`** (wiring owned with CLI interface).
 
-**This file owns the local copy pair.** `install` copies the running file (mode **0755**). `uninstall` removes that managed binary. `where-is-me` reports paths. The channel verbs `self-install`, `version-check`, `self-update`, `self-uninstall`, and `self-management` are live and are owned by `requirement-shell-cli-interface` and `requirement-bootstrap-chain`. Do not alias `install` to `self-install`. Empty argv is the work list, not either install.
+**This file owns the local copy pair.** `install` copies the running file (mode **0755**). `uninstall` removes that managed binary. `where-is-me` reports paths. The channel verbs `self-install`, `version-check`, `self-update`, `self-uninstall`, and `self-management` are live and are owned by `requirement-shell-cli-interface` and `requirement-bootstrap-chain`. Do not alias `install` to `self-install`. Empty argv is the numbered boards, not either install. On a terminal, `install` is also self-board row **81** (`requirement-shell-cli-default-interaction`). `uninstall` and `where-is-me` stay typed commands.
 
 ### 1.1 Human-facing
 
@@ -108,7 +108,7 @@ This product ships as a **POSIX shell script** (interpreted). Execution by any n
 | Variable | Role | Default / note |
 |----------|------|----------------|
 | `APP_NAME` | Binary basename SSOT | hard-assign `folder-backup` |
-| `VERSION` | Local version SSOT | hard-assign in the ship unit (`1.17.0`) |
+| `VERSION` | Local version SSOT | hard-assign in the ship unit (see `src/folder-backup`; do not pin a stale number here) |
 | `GLOBAL_BIN` | System-wide bin | `/usr/local/bin` |
 | `USER_BIN` | Per-user bin | `${HOME}/.local/bin` |
 | `FORCE` | Replace / skip confirm | `0` |
@@ -221,6 +221,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-08-09 | Active 1.2.0 | §2.3.1 mode **0755** multi-user; ban `chmod +x`→`0711` trap; AC-6..8; TP-LC-09/10 |
 | 2026-08-28 | Active 1.2.1 | Empty-argv owner is default-interaction case 2; Type O fence unchanged |
 | 2026-09-30 | Active 1.3.0 | Channel verbs are live beside this pair. `install` stays the local copy. |
+| 2026-09-30 | Active 1.3.1 | Empty argv is the numbered boards. `install` is also self-board row **81**. `uninstall` and `where-is-me` stay typed. Version cell points at the ship unit. |
 
 ---
 

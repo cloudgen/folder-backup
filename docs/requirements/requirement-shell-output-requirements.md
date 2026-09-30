@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-output-requirements.md  
-**Status**: Active (Version 1.1.1)  
+**Status**: Active (Version 1.1.2)  
 **Area**: shell  
 **Key**: `requirement-shell-output-requirements`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -105,7 +105,7 @@ Rules:
 
 When a **human** line **names the running program** (main-menu header, about title, other “who is talking” banners), it **MUST** print live `folder-backup(VERSION)`: **name bold**, **version italic**. Markdown written form: `**folder-backup**(*VERSION*)`. TTY: SGR **1** on the name, SGR **3** on the version. Off-TTY / JSON: **plain** `folder-backup(VERSION)` — **MUST NOT** emit CSI.
 
-Numbered menu rows **MUST** go through `out_menu_choice`. On a TTY the `explain` after the colon is *italic* and light gray (SGR **3** + **37**). Number and command name stay unstyled. Off-TTY / JSON: plain. This is the default CLI main menu style (`requirement-shell-cli-default-interaction`).
+Numbered menu rows **MUST** go through `out_menu_choice`. On a TTY the short name is **bold** (SGR **1**) and the `explain` after the colon is *italic* and light gray (SGR **3** + **37**). The number stays unstyled. Exit and Back have no explain and stay unstyled. Off-TTY / JSON: plain. This is the default CLI main menu style (`requirement-shell-cli-default-interaction`).
 
 | MUST | MUST NOT |
 |------|----------|
@@ -164,7 +164,7 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 4. Log secrets or private key material.  
 5. Remove quiet/json contracts for “simplicity.”  
 6. Print a main-menu (or APP_NAME-led) header as a bare `folder-backup`, or emit CSI off-TTY.  
-7. Bypass `out_menu_choice` for numbered-choice rows, or print TTY `explain` unstyled.
+7. Bypass `out_menu_choice` for numbered-choice rows, print a TTY short name unstyled, or print TTY `explain` unstyled.
 
 **Violating this rule is a critical output SSOT regression.**
 
@@ -178,7 +178,7 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 | AC-2 | JSON mode produces structured success/error without human interleave |
 | AC-3 | Quiet still surfaces errors |
 | AC-4 | Domain backup messaging uses the same SSOT |
-| AC-5 | Menu header uses live `folder-backup(VERSION)` via `util_app_ident`; numbered rows use `out_menu_choice` |
+| AC-5 | Menu header uses live `folder-backup(VERSION)` via `util_app_ident`; numbered rows use `out_menu_choice`; TTY short name is bold; TTY explain is italic and light gray |
 
 ---
 
@@ -216,6 +216,7 @@ When this program runs on Termux, Git Bash, Windows Command Prompt, or the same 
 | 2026-08-03 | Active | Output SSOT for folder-backup |
 | 2026-09-03 | Active 1.1.0 | `util_app_ident` / `out_menu_choice`; default CLI main menu style ink |
 | 2026-09-30 | Active 1.1.1 | Bootstrap parent name is selfmanaged (output family unchanged) |
+| 2026-09-30 | Active 1.1.2 | TTY menu short name is bold (SGR 1). Explain stays italic light gray. Number, Exit, and Back stay unstyled. |
 
 ---
 

@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.17.0  
+**Product VERSION:** 1.18.0  
 **Last plan update:** 2026-09-30  
-**Last suite run:** `sh tests/run.sh` (1.17.0: PASS=418 FAIL=0 SKIP=2)
+**Last suite run:** `sh tests/run.sh` (1.18.0: PASS=436 FAIL=0 SKIP=2)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -18,8 +18,8 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | Syntax `sh -n` | have | TP-CLI-01 |
 | version / help / about human + JSON | have | TP-CLI-02..06 |
 | Off-TTY empty argv = help (not install) | have | TP-CLI-07 |
-| TTY empty argv + `menu`/`main` list / sudoers submenu / off-TTY help | have | TP-CLI-13..16 |
-| TTY main-menu look (nametag + gray italic explain) | have | TP-CLI-18 |
+| TTY empty argv + `menu`/`main` boards / sudoers board / self board / off-TTY help | have | TP-CLI-13..16 · **19** · **21** |
+| TTY main-menu look (nametag + bold short name + gray italic explain) | have | TP-CLI-18 |
 | Unknown + quiet + set -u HOME | have | TP-CLI-08..11 |
 | Per-login per-process cache folder + persistence `${HOME}/.local/folder-backup/` | have | TP-CLI-06 · TP-CLI-12 |
 | Channel verbs listed; offline version-check / self-update fail closed; empty argv is not install | have | TP-CLI-04, TP-CLI-07, TP-CLI-10 |
@@ -61,13 +61,15 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-10 | channel verbs routed; offline version-check / self-update fail closed (non-empty dead URL); self-uninstall with no binary exits 0 | test_cli | requirement-bootstrap-chain | **have** |
 | TP-CLI-11 | env -u HOME version | test_cli | class / defensive | **have** |
 | TP-CLI-12 | Linux / Git Bash / Mac cache chains; silent skip of preferred; leaf mode 0700 owned by this login; persistence `${HOME}/.local/folder-backup` exists | test_cli | requirement-shell-cli-storage | **have** |
-| TP-CLI-13 | interactive empty argv **and** `menu` print backup / restore / family sudoers + `9. Exit`; submenu five grant/draft verbs + Back 8 / Exit 9; `sudoers` not dispatched; members live **without** enqueueing live inbound | test_cli | **shell-cli-default-interaction** AC-3 / AC-10 / AC-11 · **shell-cli-sudoers-submenu** AC-1–AC-4 | **have** |
+| TP-CLI-13 | interactive empty argv **and** `menu` print front **1**/**8**/**9**, hidden server sentence, client **11**/**12**/**17**, sudoers **172**/**175** + hide sentence + Back **0**, self **81**/**87**; `sudoers` not dispatched; members live **without** enqueueing live inbound | test_cli | **shell-cli-default-interaction** AC-3 / AC-10 / AC-11 · **shell-cli-sudoers-submenu** AC-1–AC-5 | **have** |
 | TP-CLI-14 | interactive `menu --json` still prints the list | test_cli | **shell-cli-default-interaction** AC-4 | **have** |
-| TP-CLI-15 | non-interactive `menu` is help; `--json` JSON help; flags-only `--json` JSON help (not the list) | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
-| TP-CLI-16 | numbered **main** list omits help/install/uninstall/where-is-me/version/about/test-purpose/menu and the five sudoers verbs | test_cli | **shell-cli-default-interaction** AC-6 · **shell-cli-sudoers-submenu** AC-5 | **have** |
+| TP-CLI-15 | non-interactive `menu` is help; `--json` JSON help; flags-only `--json` JSON help (not the boards); off-TTY `self-management` is help | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
+| TP-CLI-16 | front board shows **8** self-management and omits help / verb rows that belong on a child board (backup, grant verbs, test-purpose) | test_cli | **shell-cli-default-interaction** AC-6 · **shell-cli-sudoers-submenu** AC-5 | **have** |
 | TP-CLI-17 | help lists test-purpose grant-emit verbs under a heading apart from operational | test_cli | **shell-cli-interface** AC-9 | **have** |
-| TP-CLI-18 | default CLI main menu style: header `APP_NAME(VERSION)` bold/italic; numbered explain italic + light gray; no CSI off-TTY; submenu nametag (portable **TP-CLI-17** alias) | test_cli | **shell-cli-default-interaction** AC-8 · **shell-cli-sudoers-submenu** AC-6 · **shell-output-requirements** AC-5 | **have** |
+| TP-CLI-18 | default CLI main menu style: header `APP_NAME(VERSION)` bold/italic; short name bold; numbered explain italic + light gray; Exit unstyled; no CSI off-TTY; sudoers title (portable **TP-CLI-17** alias) | test_cli | **shell-cli-default-interaction** AC-8 · **shell-cli-sudoers-submenu** AC-6 · **shell-output-requirements** AC-5 | **have** |
+| TP-CLI-19 | child number **12** on the front is invalid and the front reprints | test_cli | **shell-cli-default-interaction** AC-12 | **have** |
 | TP-CLI-20 | ship unit has no `$()` of `prompt_*` helpers | test_cli | **shell-script-coding** · **shell-interactive-vs-noninteractive** AC-4 | **have** |
+| TP-CLI-21 | typing `version` on the front runs it and the front reprints | test_cli | **shell-cli-default-interaction** AC-12 | **have** |
 
 ### TP-LC (local lifecycle)
 

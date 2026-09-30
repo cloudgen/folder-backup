@@ -1,8 +1,8 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-09-30 (1.17.0)  
-**Product VERSION:** 1.17.0  
-**Suite:** `tests/run.sh` (PASS=418 FAIL=0 SKIP=2)
+**Updated:** 2026-09-30 (1.18.0)  
+**Product VERSION:** 1.18.0  
+**Suite:** `tests/run.sh` (1.18.0: PASS=436 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
@@ -18,8 +18,8 @@
 | requirement-shell-script-coding | shell | (indirect) | Specialize-in home; own-or-point |
 | requirement-shell-sudo-command | shell | TP-FOLDER-BACKUP-01, 01c, 26; **27 todo** | Studied allow table; wrap Gap |
 | requirement-shell-cli-zero-arguments | shell | TP-CLI-07 | **Withdrawn** — off-TTY help still covered with default-interaction |
-| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18** | Case 2 TTY empty argv = menu; off-TTY help; `menu`/`main`; family **sudoers** row; submenu body on sudoers-submenu REQ; default CLI main menu style; version/about/self-managed/channel/test-purpose omitted from **main** |
-| requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | Family **sudoers** + five live grant/draft setup verbs; `sudoers` not dispatched; Back 8 / Exit 9; submenu nametag |
+| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18**, **19**, **21** | Case 2 TTY empty argv = numbered boards; off-TTY help; `menu`/`main`; front **1**/**8**/**9**; client **11**/**12**/**17**; self **81**–**87**; sudoers body on sudoers-submenu REQ; bold short name; finished leaf redisplays the front |
+| requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | Client **17**; printed **172**/**175**; **171**/**173**/**174** reserved; `sudoers` not dispatched; Back **0** |
 | requirement-shell-local-self-management | shell | TP-LC-* (incl. **09/10** mode) | install/uninstall/where-is-me; **0755** multi-user; global preferred for elev |
 | requirement-shell-output-requirements | shell | TP-CLI-03,05,08,09, **18** | JSON / quiet / errors; identity token + numbered-row ink |
 | requirement-operator-readable-error | shell | TP-FOLDER-BACKUP-**25**, **25b**, **25c** | Operator-facing `[ERROR]` wording (what happened / next step / no jargon-only) |
