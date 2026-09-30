@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-interface.md  
-**Status**: Active (Version 1.10.1)  
+**Status**: Active (Version 1.11.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-interface`  
 **Philosophy**: CIAO **v2.10.2** / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered / Over-protect)
@@ -125,12 +125,12 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `help` | Type 0 | `app_help` | Full usage in human mode; short JSON note in JSON mode |
 | `backup` | Type 0 (+ Type 1 deposit step) | `fb_backup` (domain) | **Operational.** Tar gzip source folder; stage; elevated copy into `/var/backup/${BACKUP_NOTATION}/` |
 | `restore` | Type 0 (+ Type 1 stage fetch) | `fb_restore` (domain) | **Operational.** Put an archive back onto the hard-disk projects tree |
-| `print-sudoers` | Type 0 | `fb_print_sudoers` (domain) | **Test-purpose.** Emit sudoers fragment for admin to install under `/etc/sudoers.d/` — **does not** write `/etc` itself. Listed apart in help; **off every numbered board**; number **173** stays reserved. Live CLI verb |
-| `print-sudoers-install-script` | Type 0 | `fb_print_sudoers_install_script` (domain) | **Test-purpose.** Write admin handoff script under `/dev/shm` or temp — **does not** write `/etc`. Listed apart in help; **off every numbered board**; number **174** stays reserved. Live CLI verb |
-| `remove-project-sudoers` | Type 0 | `fb_remove_project_sudoers` (domain) | **Operational.** Remove the local grant draft only (not `/etc`). Sudoers board row **175**. Live CLI verb |
-| `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Test-purpose.** **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound. Listed apart in help; **off every numbered board**; number **171** stays reserved. Live CLI verb |
-| `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | **Operational.** Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound. Sudoers board row **172**. Live CLI verb |
-| `menu` | Type 0 | `app_cmd_menu` | Numbered boards: front **1** client-side, hidden **2**, **8** self-management, **9** Exit (`requirement-shell-cli-default-interaction`). Same boards as interactive empty argv. Off a terminal, stops: `menu needs a terminal`. **`sudoers` is not a command** |
+| `print-sudoers` | Type 0 | `fb_print_sudoers` (domain) | **Test-purpose.** Emit sudoers fragment for admin to install under `/etc/sudoers.d/` — **does not** write `/etc` itself. Listed apart in help; **off every numbered board**; number **73** stays reserved. Live CLI verb |
+| `print-sudoers-install-script` | Type 0 | `fb_print_sudoers_install_script` (domain) | **Test-purpose.** Write admin handoff script under `/dev/shm` or temp — **does not** write `/etc`. Listed apart in help; **off every numbered board**; number **74** stays reserved. Live CLI verb |
+| `remove-project-sudoers` | Type 0 | `fb_remove_project_sudoers` (domain) | **Operational.** Remove the local grant draft only (not `/etc`). Sudoers board row **75**. Live CLI verb |
+| `generate-sudoer-request` | Type 0 | `fb_generate_sudoer_request` (domain) | **Test-purpose.** **Independent** generate: write JSON grant to a dest tests/review can read without sudo (compact; verify both verbs; sibling convert when present) — **does not** write `/etc` or inbound. Listed apart in help; **off every numbered board**; number **71** stays reserved. Live CLI verb |
+| `submit-sudoer-request` | Type 0 | `fb_submit_sudoer_request` (domain) | **Operational.** Detect sudoer-cli + sudoer-adm + public inbound; **update** if this user’s `/etc/sudoers.d` fragment exists else **add**; `--add`/`--update` override — **does not** write `/etc` or `mkdir` inbound. Sudoers board row **72**. Live CLI verb |
+| `menu` | Type 0 | `app_cmd_menu` | Numbered boards: front **1** client-side, hidden **2**, **7** sudoers, **8** self-management, **9** Exit (`requirement-shell-cli-default-interaction`). Same boards as interactive empty argv. Off a terminal, stops: `menu needs a terminal`. **`sudoers` is not a command** |
 | `main` | Type 0 | `app_cmd_menu` | Alias of `menu`. **MUST NOT** appear as a choice on its own board. |
 
 #### Global flags (normative wiring)
@@ -208,7 +208,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 6. Put full domain archive semantics only here and omit the domain SSOT.  
 7. Add a second submit verb (`submit-sudoer`) without routing + help, or invent inbound `mkdir` as this CLI’s job.  
 8. Route a non-interactive zero-cli-verb to help, or drop `menu`/`main` routing.  
-9. Mix test-purpose verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on any numbered board (they stay typed commands and help rows; numbers **171**, **173**, and **174** stay reserved).  
+9. Mix test-purpose verbs (`print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request`) into operational help grouping, or put them on any numbered board (they stay typed commands and help rows; numbers **71**, **73**, and **74** stay reserved).  
 10. Wire `sudoers` as a live dispatcher token, or drop a grant/draft setup verb from the dispatcher.
 
 **Violating this rule is a critical CLI interface regression.**
@@ -228,7 +228,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | AC-7 | `generate-sudoer-request` is Type 0, routed, listed in help; independent of submit; dest is invoking-user readable; does not write `/etc` or inbound |
 | AC-8 | `menu` and `main` are routed and listed in help; interactive empty argv opens the same boards (`requirement-shell-cli-default-interaction`) |
 | AC-9 | Help lists test-purpose `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` **apart** from operational verbs; those three are **not** on any numbered board. **have** (`app_help` splits **Work commands** vs **Grant and draft setup**) |
-| AC-10 | Five grant/draft setup verbs remain routed live CLI commands; operational submit and remove are sudoers rows **172** and **175**; `sudoers` is **not** a dispatcher token |
+| AC-10 | Five grant/draft setup verbs remain routed live CLI commands; operational submit and remove are sudoers rows **72** and **75**; `sudoers` is **not** a dispatcher token |
 
 ---
 
@@ -238,7 +238,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 |-----|--------------|
 | `requirement-shell-cli-zero-arguments` | **Active** — non-interactive zero-cli-verb is `inst_self_install` |
 | `requirement-shell-cli-default-interaction` | Case 2 empty argv + claimed `menu`/`main` numbered boards |
-| `requirement-shell-cli-sudoers-submenu` | Client **17** sudoers board; **172**/**175** printed; test-purpose reserved; `sudoers` not dispatched |
+| `requirement-shell-cli-sudoers-submenu` | Front **7** sudoers board; **72**/**75** printed; test-purpose reserved; `sudoers` not dispatched |
 | `requirement-shell-local-self-management` | install/uninstall/where-is-me |
 | `requirement-shell-output-requirements` | `out_*` catalog |
 | `requirement-domain-folder-backup` | Domain four pillars |
@@ -279,6 +279,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.9.1 | Handlers `app_cmd_menu` / `app_cmd_menu_self`. Self board **81**–**87**. Test-purpose verbs off every numbered board. Sudoers rows **172** and **175**. |
 | 2026-09-30 | Active 1.10.0 | Non-interactive zero-cli-verb is `inst_self_install`. Interactive zero-cli-verb stays the boards. Local `install` stays `inst_local_install`. |
 | 2026-09-30 | Active 1.10.1 | Named `menu` and `self-management` off a terminal stop. They do not print help. |
+| 2026-09-30 | Active 1.11.0 | Sudoers board is front **7**. Printed rows **72** and **75**. Reserved **71** / **73** / **74**. |
 
 ---
 

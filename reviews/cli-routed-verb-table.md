@@ -3,7 +3,7 @@
 **Product:** folder-backup  
 **Ship unit:** `src/folder-backup`  
 **Dispatcher:** `app_main`  
-**Scan date:** 2026-09-30 (menu contract re-checked for 1.20.0)  
+**Scan date:** 2026-09-30 (menu contract re-checked for 1.21.0)  
 **Mode:** full (label + purpose refresh)  
 **Copied / re-checked:** 13 live copied · 2 re-checked (`menu`/`main` now routed) · 1 not-yet-wired  
 
@@ -42,10 +42,10 @@ Inventory from dispatcher case, not help. Human-readable is `{{short-descript}}:
 
 Do not list `menu` / `main` as choices on their own menu.
 
-A TTY **front** board prints category rows, not the flat work list. folder-backup is **case 2**. **`sudoers` is not a live dispatcher token.** Front rows are **1** client-side, **8** self-management, **9** Exit. Number **2** stays reserved (no host service). Client rows are **11** backup, **12** restore, **17** sudoers, **0** Back. The sudoers board prints **172** submit-sudoer-request and **175** remove-project-sudoers. Test-purpose verbs stay off every numbered board; **171** / **173** / **174** stay reserved. The self board prints **81**–**87** (local `install` and channel place are both shown). Row **82** and a typed `version` on a board run `about`. Argv `version` stays `app_version`. `uninstall` and `where-is-me` stay typed. A finished leaf redisplays the front. An empty line on the front leaves. Child Back is **0**. Off a terminal, `menu` and `self-management` stop.
+A TTY **front** board prints category rows, not the flat work list. folder-backup is **case 2**. **`sudoers` is not a live dispatcher token.** Front rows are **1** client-side, **7** sudoers, **8** self-management, **9** Exit. Number **2** stays reserved (no host service). Client rows are **11** backup, **12** restore, **0** Back. The sudoers board prints **72** submit-sudoer-request and **75** remove-project-sudoers. Test-purpose verbs stay off every numbered board; **71** / **73** / **74** stay reserved. The self board prints **81**–**87** (local `install` and channel place are both shown). Row **82** and a typed `version` on a board run `about`. Argv `version` stays `app_version`. `uninstall` and `where-is-me` stay typed. A finished leaf redisplays the front. An empty line on the front leaves. Child Back is **0**. Off a terminal, `menu` and `self-management` stop.
 
-**Front:** client-side, self-management, Exit. **Client:** backup, restore, family `sudoers`. **Sudoers board:** submit-sudoer-request, remove-project-sudoers. **Self board:** install, version, about, version-check, self-update, self-uninstall, self-install.
+**Front:** client-side, sudoers, self-management, Exit. **Client:** backup, restore. **Sudoers board:** submit-sudoer-request, remove-project-sudoers. **Self board:** install, version, about, version-check, self-update, self-uninstall, self-install.
 
 ## Honesty
 
-Dispatcher tokens on 2026-09-30: version, about, help, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, self-management, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Empty argv is **not** a token: on a real terminal it calls `app_cmd_menu`; a pipe, `--quiet`, or `--json` with no command calls `inst_self_install`. Named `menu` and `self-management` off a terminal stay help. Channel verbs are live and sit on the self board (front row **8**), not as front rows. `install` is the local copy and self row **81**. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose** (off every numbered board; numbers reserved). **`sudoers` is not a dispatcher token.**
+Dispatcher tokens on 2026-09-30: version, about, help, install, uninstall, where-is-me, self-install, version-check, self-update, self-uninstall, self-management, backup, restore, print-sudoers, print-sudoers-install-script, remove-project-sudoers, generate-sudoer-request, submit-sudoer-request, menu, main. Empty argv is **not** a token: on a real terminal it calls `app_cmd_menu`; a pipe, `--quiet`, or `--json` with no command calls `inst_self_install`. Named `menu` and `self-management` off a terminal stop. Channel verbs are live and sit on the self board (front row **8**), not as front rows. `install` is the local copy and self row **81**. This product classifies `print-sudoers`, `print-sudoers-install-script`, and `generate-sudoer-request` as **test-purpose** (off every numbered board; numbers reserved). **`sudoers` is not a dispatcher token.**

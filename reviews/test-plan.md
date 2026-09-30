@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.20.0  
+**Product VERSION:** 1.21.0  
 **Last plan update:** 2026-09-30  
-**Last suite run:** `sh tests/run.sh` (1.20.0: PASS=473 FAIL=0 SKIP=2)
+**Last suite run:** `sh tests/run.sh` (1.21.0: PASS=481 FAIL=0 SKIP=2)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -19,7 +19,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | version / help / about human + JSON | have | TP-CLI-02..06 |
 | Non-interactive zero-cli-verb = CLI self-install (copy, mode 0700, second run already installed) | have | TP-CLI-07 |
 | Switches with no verb: `--quiet` / `--json` / non-TTY `--debug` place; TTY `--debug` stays the boards; `--debug version` stays version | have | TP-CLI-23 |
-| TTY empty argv + `menu`/`main` boards / sudoers board / self board; named `menu` off a terminal is help | have | TP-CLI-13..16 · **19** · **21** |
+| TTY empty argv + `menu`/`main` boards / front **7** sudoers / self board; named `menu` off a terminal stops | have | TP-CLI-13..16 · **19** · **21** |
 | TTY main-menu look (nametag + bold short name + gray italic explain) | have | TP-CLI-18 |
 | Unknown + quiet + set -u HOME | have | TP-CLI-08..11 |
 | Per-login per-process cache folder + persistence `${HOME}/.local/folder-backup/` | have | TP-CLI-06 · TP-CLI-12 |
@@ -62,7 +62,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-CLI-10 | channel verbs routed; offline version-check / self-update fail closed (non-empty dead URL); self-uninstall with no binary exits 0 | test_cli | requirement-bootstrap-chain | **have** |
 | TP-CLI-11 | env -u HOME version | test_cli | class / defensive | **have** |
 | TP-CLI-12 | Linux / Git Bash / Mac cache chains; silent skip of preferred; leaf mode 0700 owned by this login; persistence `${HOME}/.local/folder-backup` exists | test_cli | requirement-shell-cli-storage | **have** |
-| TP-CLI-13 | interactive empty argv **and** `menu` print front **1**/**8**/**9**, hidden server sentence, client **11**/**12**/**17**, sudoers **172**/**175** + hide sentence + Back **0**, self **81**/**87**; `sudoers` not dispatched; members live **without** enqueueing live inbound | test_cli | **shell-cli-default-interaction** AC-3 / AC-10 / AC-11 · **shell-cli-sudoers-submenu** AC-1–AC-5 | **have** |
+| TP-CLI-13 | interactive empty argv **and** `menu` print front **1**/**7**/**8**/**9**, hidden server sentence, client **11**/**12**, sudoers **72**/**75** + hide sentence + Back **0** to the front, self **81**/**87**; `sudoers` not dispatched; members live **without** enqueueing live inbound | test_cli | **shell-cli-default-interaction** AC-3 / AC-10 / AC-11 · **shell-cli-sudoers-submenu** AC-1–AC-5 | **have** |
 | TP-CLI-14 | interactive `menu --json` still prints the list | test_cli | **shell-cli-default-interaction** AC-4 | **have** |
 | TP-CLI-15 | non-interactive `menu` / `main` / `self-management` exit 1 (`needs a terminal`); `menu --json` off a terminal is a JSON error. Flags-only `--json` is **TP-CLI-23** (self-install), not this row | test_cli | **shell-cli-default-interaction** AC-5 | **have** |
 | TP-CLI-16 | front board shows **8** self-management and omits help / verb rows that belong on a child board (backup, grant verbs, test-purpose) | test_cli | **shell-cli-default-interaction** AC-6 · **shell-cli-sudoers-submenu** AC-5 | **have** |

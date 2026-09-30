@@ -1,8 +1,8 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-09-30 (1.20.0)  
-**Product VERSION:** 1.20.0  
-**Suite:** `tests/run.sh` (1.20.0: PASS=473 FAIL=0 SKIP=2)
+**Updated:** 2026-09-30 (1.21.0)  
+**Product VERSION:** 1.21.0  
+**Suite:** `tests/run.sh` (1.21.0: PASS=481 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
@@ -18,8 +18,8 @@
 | requirement-shell-script-coding | shell | (indirect) | Specialize-in home; own-or-point |
 | requirement-shell-sudo-command | shell | TP-FOLDER-BACKUP-01, 01c, 26; **27 todo** | Studied allow table; wrap Gap |
 | requirement-shell-cli-zero-arguments | shell | TP-CLI-07, **23** | **Active 1.2.1** — interactive boards; non-interactive `inst_self_install`; `--quiet` / `--json` / non-TTY `--debug` place; TTY `--debug` does not; named menu stop is default-interaction |
-| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18**, **19**, **21**, **23** | **Active 1.9.0** — interactive zero-cli-verb = numbered boards; non-interactive place is zero-arguments; named `menu` / `self-management` off a terminal stop; empty front line leaves; row **82** and typed `version` run `about`; front **1**/**8**/**9**; client **11**/**12**/**17**; self **81**–**87**; sudoers body on sudoers-submenu REQ; bold short name; finished leaf redisplays the front |
-| requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | Client **17**; printed **172**/**175**; **171**/**173**/**174** reserved; `sudoers` not dispatched; Back **0** |
+| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18**, **19**, **21**, **23** | **Active 1.10.0** — interactive zero-cli-verb = numbered boards; non-interactive place is zero-arguments; named `menu` / `self-management` off a terminal stop; empty front line leaves; row **82** and typed `version` run `about`; front **1**/**7**/**8**/**9**; client **11**/**12**; self **81**–**87**; sudoers body on sudoers-submenu REQ; bold short name; finished leaf redisplays the front |
+| requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | Front **7**; printed **72**/**75**; **71**/**73**/**74** reserved; `sudoers` not dispatched; Back **0** returns to the front |
 | requirement-shell-local-self-management | shell | TP-LC-* (incl. **09/10** mode) | install/uninstall/where-is-me; **0755** multi-user; global preferred for elev |
 | requirement-shell-output-requirements | shell | TP-CLI-03,05,08,09, **18** | JSON / quiet / errors; identity token + numbered-row ink |
 | requirement-operator-readable-error | shell | TP-FOLDER-BACKUP-**25**, **25b**, **25c** | Operator-facing `[ERROR]` wording (what happened / next step / no jargon-only) |

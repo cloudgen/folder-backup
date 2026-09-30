@@ -5,8 +5,8 @@
 **Always load first:** `reviews/lessons.md`
 
 **Last plan update:** 2026-09-30  
-**Ship unit VERSION:** 1.20.0  
-**Suite baseline:** see `reviews/test-plan.md` (1.20.0: PASS=473 FAIL=0 SKIP=2; numbered boards on a terminal; non-interactive zero-cli-verb is self-install; named menu off a terminal stops; compact JSON `--json` twins still todo)
+**Ship unit VERSION:** 1.21.0  
+**Suite baseline:** see `reviews/test-plan.md` (1.21.0: PASS=481 FAIL=0 SKIP=2; numbered boards on a terminal; sudoers is front **7**; non-interactive zero-cli-verb is self-install; named menu off a terminal stops; compact JSON `--json` twins still todo)
 
 ---
 
@@ -39,7 +39,7 @@
 | **JSON sudoer file** | `requirement-sudoer-json-file.md` | `folder-backup` backup/**and** restore; §2.7a re-encode; pretty JSON legal; **independent generate dest AC-10** |
 | **Operator-readable error** | `requirement-operator-readable-error.md` | Blocking `[ERROR]` what-happened + next step; no jargon-only |
 | CLI interface | `requirement-shell-cli-interface.md` | Commands, flags, dispatch (incl. **generate-sudoer-request**); test-purpose grant-emit listed **apart** |
-| Default interaction | `requirement-shell-cli-default-interaction.md` | Interactive zero-cli-verb = numbered boards; front **1**/**8**/**9**; hidden **2**; client **11**/**12**/**17**; self **81**–**87**; test-purpose off every board; named `menu` off a terminal stays help |
+| Default interaction | `requirement-shell-cli-default-interaction.md` | Interactive zero-cli-verb = numbered boards; front **1**/**7**/**8**/**9**; hidden **2**; client **11**/**12**; sudoers **72**/**75**; self **81**–**87**; test-purpose off every board; named `menu` off a terminal stops |
 | Zero-cli-verb | `requirement-shell-cli-zero-arguments.md` | **Active 1.2.0** — non-interactive zero-cli-verb is `inst_self_install` (not help, not local `install`) |
 | Local self-management | `requirement-shell-local-self-management.md` | install/uninstall; global preferred for elev |
 | Output SSOT | `requirement-shell-output-requirements.md` | `out_*`; JSON errors |

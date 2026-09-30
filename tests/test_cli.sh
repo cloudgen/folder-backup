@@ -61,7 +61,7 @@ run_test_cli() {
     assert_contains "TP-CLI-04 help SUDOER_PUBLIC_ROOT" "$_out" "SUDOER_PUBLIC_ROOT"
     assert_contains "TP-CLI-04 help hard-disk default" "$_out" "hard-disk"
     assert_contains "TP-CLI-04 help --json" "$_out" "--json"
-    assert_contains "TP-CLI-04 help menu" "$_out" "Numbered boards: client-side, self-management, and Exit"
+    assert_contains "TP-CLI-04 help menu" "$_out" "Numbered boards: client-side, sudoers, self-management, and Exit"
     assert_contains "TP-CLI-04 help main" "$_out" "Same as menu"
     assert_contains "TP-CLI-04 help self-install" "$_out" "self-install"
     assert_contains "TP-CLI-04 help self-update" "$_out" "self-update"
@@ -330,7 +330,7 @@ run_test_cli() {
     assert_not_contains "TP-CLI-15 self-management --json off-TTY not JSON help" "$_out" '"type":"success"'
     assert_not_contains "TP-CLI-15 self-management --json off-TTY not the board" "$_out" "81. install:"
 
-    assert_contains "TP-CLI-15 help lists menu" "$(sh "${SCRIPT}" help 2>/dev/null)" "Numbered boards: client-side, self-management, and Exit"
+    assert_contains "TP-CLI-15 help lists menu" "$(sh "${SCRIPT}" help 2>/dev/null)" "Numbered boards: client-side, sudoers, self-management, and Exit"
     assert_contains "TP-CLI-15 help lists main" "$(sh "${SCRIPT}" help 2>/dev/null)" "Same as menu"
     assert_contains "TP-CLI-15 help says a pipe places this program" "$(sh "${SCRIPT}" help 2>/dev/null)" "a pipe places this program"
 
@@ -369,7 +369,8 @@ run_test_cli() {
         _esc=$(printf '\033')
         _out=$(PTY_IN="9" ci_pty_run)
         _plain=$(ci_strip_ansi "$_out")
-        assert_contains "TP-CLI-13 TTY empty argv client row" "$_plain" "1. client-side: this login's folders: pack, restore, and grants"
+        assert_contains "TP-CLI-13 TTY empty argv client row" "$_plain" "1. client-side: this login's folders: pack and restore"
+        assert_contains "TP-CLI-13 TTY empty argv sudoers row" "$_plain" "7. sudoers: Grant and drafts"
         assert_contains "TP-CLI-13 TTY empty argv server hidden" "$_plain" "server-side is hidden: this program does not run a host service. Number 2 stays reserved."
         assert_contains "TP-CLI-13 TTY empty argv self row" "$_plain" "8. self-management: this CLI install, version, update, uninstall"
         assert_contains "TP-CLI-13 TTY empty argv Exit 9" "$_plain" "9. Exit"
@@ -379,29 +380,43 @@ run_test_cli() {
 
         _out=$(PTY_IN="9" ci_pty_run menu)
         _plain=$(ci_strip_ansi "$_out")
-        assert_contains "TP-CLI-13 TTY menu client row" "$_plain" "1. client-side: this login's folders: pack, restore, and grants"
+        assert_contains "TP-CLI-13 TTY menu client row" "$_plain" "1. client-side: this login's folders: pack and restore"
+        assert_contains "TP-CLI-13 TTY menu sudoers row" "$_plain" "7. sudoers: Grant and drafts"
         assert_contains "TP-CLI-13 TTY menu self row" "$_plain" "8. self-management: this CLI install, version, update, uninstall"
         assert_contains "TP-CLI-13 TTY menu Exit 9" "$_plain" "9. Exit"
         _out=$(PTY_IN="9" ci_pty_run main)
         _plain=$(ci_strip_ansi "$_out")
-        assert_contains "TP-CLI-13 TTY main client row" "$_plain" "1. client-side: this login's folders: pack, restore, and grants"
+        assert_contains "TP-CLI-13 TTY main client row" "$_plain" "1. client-side: this login's folders: pack and restore"
+        assert_contains "TP-CLI-13 TTY main sudoers row" "$_plain" "7. sudoers: Grant and drafts"
         assert_contains "TP-CLI-13 TTY main Exit 9" "$_plain" "9. Exit"
         _out=$(PTY_IN="$(printf '%s\n' 'backup' '/tmp/does-not-exist-fb-menu')" ci_pty_run menu)
         assert_contains "TP-CLI-13 TTY typed backup uses typed folder" "$_out" "Source is not a directory: /tmp/does-not-exist-fb-menu"
         assert_not_contains "TP-CLI-13 TTY typed backup path not polluted by prompt" "$_out" "Source is not a directory: Folder to pack:"
         _out=$(PTY_IN="$(printf '%s\n' '12' '9')" ci_pty_run menu)
         assert_contains "TP-CLI-13 TTY pick 12 not a menu choice" "$_out" "Not a menu choice"
-        _out=$(PTY_IN="$(printf '%s\n' '1' '17' '0' '0' '9')" ci_pty_run menu)
+        _out=$(PTY_IN="$(printf '%s\n' '1' '0' '9')" ci_pty_run menu)
         _plain=$(ci_strip_ansi "$_out")
         assert_contains "TP-CLI-13 TTY client backup row" "$_plain" "11. backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
         assert_contains "TP-CLI-13 TTY client restore row" "$_plain" "12. restore: Put an archive back onto the hard-disk projects tree"
-        assert_contains "TP-CLI-13 TTY client sudoers row" "$_plain" "17. sudoers: Grant and drafts"
-        assert_contains "TP-CLI-13 TTY sudoers submit row" "$_plain" "172. submit-sudoer-request: Hand the JSON grant to the approval queue"
-        assert_contains "TP-CLI-13 TTY sudoers remove row" "$_plain" "175. remove-project-sudoers: Remove the local grant draft only"
-        assert_contains "TP-CLI-13 TTY sudoers hides test commands" "$_plain" "Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 171, 173, and 174 stay reserved."
-        assert_not_contains "TP-CLI-13 TTY sudoers omits generate row" "$_plain" "171. generate-sudoer-request:"
+        assert_not_contains "TP-CLI-13 TTY client has no sudoers row" "$_plain" "17. sudoers:"
+        _out=$(PTY_IN="$(printf '%s\n' '1' 'sudoers' '0' '9')" ci_pty_run menu)
+        assert_contains "TP-CLI-13 TTY client sudoers word is not a row" "$_out" "Not a menu choice 'sudoers'"
+        _out=$(PTY_IN="$(printf '%s\n' '7' '0' '9')" ci_pty_run menu)
+        _plain=$(ci_strip_ansi "$_out")
+        assert_contains "TP-CLI-13 TTY front sudoers row" "$_plain" "7. sudoers: Grant and drafts"
+        assert_contains "TP-CLI-13 TTY sudoers submit row" "$_plain" "72. submit-sudoer-request: Hand the JSON grant to the approval queue"
+        assert_contains "TP-CLI-13 TTY sudoers remove row" "$_plain" "75. remove-project-sudoers: Remove the local grant draft only"
+        assert_contains "TP-CLI-13 TTY sudoers hides test commands" "$_plain" "Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 71, 73, and 74 stay reserved."
+        assert_not_contains "TP-CLI-13 TTY sudoers omits generate row" "$_plain" "71. generate-sudoer-request:"
+        assert_not_contains "TP-CLI-13 TTY sudoers omits old 172 row" "$_plain" "172. submit-sudoer-request:"
         assert_contains "TP-CLI-13 TTY sudoers Back 0" "$_plain" "0. Back"
         assert_not_contains "TP-CLI-13 TTY sudoers has no Back 8" "$_plain" "8. Back"
+        _front7=$(printf '%s\n' "$_plain" | grep -c "7. sudoers:" || true)
+        if [ "${_front7}" -ge 2 ]; then
+            t_pass "TP-CLI-13 sudoers Back returns to the front"
+        else
+            t_fail "TP-CLI-13 sudoers Back did not return to the front (count=${_front7})"
+        fi
         _err=$(sh "${SCRIPT}" sudoers 2>&1 >/dev/null)
         assert_eq "TP-CLI-13 sudoers not a live command" 1 "$?"
         assert_contains "TP-CLI-13 sudoers unknown" "$_err" "Unknown command"
@@ -490,12 +505,13 @@ run_test_cli() {
         assert_contains "TP-CLI-18 TTY explain SGR 3;37" "$_out" "${_esc}[3;37m"
         assert_contains "TP-CLI-18 TTY short name bold" "$_out" "1. ${_esc}[1mclient-side${_esc}[0m: "
         assert_contains "TP-CLI-18 TTY Exit unstyled" "$_plain" "9. Exit"
-        _out=$(PTY_IN="$(printf '%s\n' '1' '17' '0' '0' '9')" ci_pty_run menu)
+        _out=$(PTY_IN="$(printf '%s\n' '7' '0' '9')" ci_pty_run menu)
         _plain=$(ci_strip_ansi "$_out")
         assert_contains "TP-CLI-18 TTY submenu ident token" "$_plain" "${APP_NAME}(${PRODUCT_VERSION})"
         assert_contains "TP-CLI-18 TTY submenu title" "$_plain" "sudoers (grant and drafts)"
         assert_contains "TP-CLI-18 TTY submenu header bold name" "$_out" "${_esc}[1m${APP_NAME}${_esc}[0m"
-        assert_contains "TP-CLI-18 TTY submenu short bold" "$_out" "172. ${_esc}[1msubmit-sudoer-request${_esc}[0m: "
+        assert_contains "TP-CLI-18 TTY submenu short bold" "$_out" "72. ${_esc}[1msubmit-sudoer-request${_esc}[0m: "
+        assert_contains "TP-CLI-18 TTY front sudoers short bold" "$_out" "7. ${_esc}[1msudoers${_esc}[0m: "
         _out=$(PTY_IN="$(printf '%s\n' '12' '9')" ci_pty_run menu)
         assert_contains "TP-CLI-19 invalid choice retries" "$_out" "Not a menu choice '12'"
         _plain=$(ci_strip_ansi "$_out")

@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-default-interaction.md  
-**Status**: Active (Version 1.9.0)  
+**Status**: Active (Version 1.10.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-default-interaction`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-DEFAULT-INTERACTION`  
@@ -13,7 +13,7 @@ Channel verbs exist (`self-install`, `version-check`, `self-update`, `self-unins
 
 ### 1.1 Human-facing
 
-**In one sentence:** At a real terminal, type `folder-backup` with no command to see numbered boards — client-side, self-management, and Exit — with server-side hidden; pick **1** then **17** for grant and drafts. A pipe with no command places this program (`requirement-shell-cli-zero-arguments`). Naming `menu` off a terminal stops.
+**In one sentence:** At a real terminal, type `folder-backup` with no command to see numbered boards — client-side, sudoers, self-management, and Exit — with server-side hidden; pick **7** for grant and drafts. A pipe with no command places this program (`requirement-shell-cli-zero-arguments`). Naming `menu` off a terminal stops.
 
 | Box | Meaning | Example |
 |-----|---------|---------|
@@ -23,9 +23,9 @@ Channel verbs exist (`self-install`, `version-check`, `self-update`, `self-unins
 
 | Includes | Excludes |
 |----------|----------|
-| Front rows **1** client-side, **8** self-management, **9** Exit | A printed server-side row |
+| Front rows **1** client-side, **7** sudoers, **8** self-management, **9** Exit | A printed server-side row |
 | One hide sentence before the numbers: server-side stays reserved | An empty server loop |
-| Client rows **11** backup, **12** restore, **17** sudoers, **0** Back | Restarting a child board at **1** |
+| Client rows **11** backup, **12** restore, **0** Back | Restarting a child board at **1** |
 | Self rows **81**–**87** and **0** Back | `help`, `menu`, or `main` as a choice |
 | Sudoers board body (owned next door) | A live `sudoers` CLI command |
 | Bare run on a real terminal | Install-ensure on empty argv |
@@ -42,7 +42,7 @@ Channel verbs exist (`self-install`, `version-check`, `self-update`, `self-unins
 | Open the boards at a prompt | The program prints **folder-backup**(*live version*) then the front board. On a real terminal the name is bold, the version italic, each short name is bold, and each “what it does” line after the colon is italic and light gray. `--json` on `menu`/`main` is ignored on a real terminal. | `folder-backup` or `folder-backup menu` |
 | Pack a folder | Client row **11**, then the folder (one field at a time) or read Next. A finished pick returns to the front board. | `1` then `11` then a source folder path |
 | Put an archive back | Client row **12**. | `1` then `12` |
-| Set up a grant or draft | Client row **17** opens the sudoers board. Operational rows only. Test commands stay typed. | `1` then `17` |
+| Set up a grant or draft | Front row **7** opens the sudoers board. Operational rows only. Test commands stay typed. | `7` |
 | Install, version, or update this program | Front row **8**. Local copy is **81**. Channel place is **87**. | `8` then `81` |
 | Step back one board | Back on a child board | `0` |
 | Leave the menu | Exit on the front board | `9` |
@@ -93,7 +93,7 @@ While a board is **drawing**, saved `JSON` and `QUIET` **MUST** be forced off, t
 6. **0** / `back` / `Back` / empty line / EOF on a **child** board is **Back** to the parent. `exit` / `quit` on a child board is the same Back. Child boards **MUST NOT** print Exit **9** and **MUST NOT** print Back **8**.  
 7. Front Exit is **9**, **99**, `exit`, `quit`, `q`, an empty line, or EOF, and returns 0. `q` on a **child** board is Back.  
 8. After a valid leaf opened from the front (or from a child of the front), the front board **MUST** redisplay. **MUST NOT** exit the menu on success. **MUST NOT** stay on the launching child board. A leaf that calls `out_die` still ends the process. An empty required backup/restore field prints `Next:` and the front redisplays.  
-9. Typing a **listed leaf verb** at the front pick prompt **MUST** run that leaf, then redisplay the front. Typing `sudoers` at the front **MUST** be invalid (open client **1**, then **17**). Typing a child number on the wrong layer **MUST** be invalid.  
+9. Typing a **listed leaf verb** at the front pick prompt **MUST** run that leaf, then redisplay the front. Typing `sudoers` or **7** at the front **MUST** open the sudoers board. Typing `sudoers` at the client **MUST** be an invalid choice. Typing a child number on the wrong layer **MUST** be invalid.  
 10. **`sudoers` is not a live CLI command.** `folder-backup sudoers` **MUST** remain unknown.
 
 #### 2.3.1 Front board
@@ -106,11 +106,14 @@ Hide sentence (exact): `server-side is hidden: this program does not run a host 
 |---|-------|-------|
 | *(header)* | — | `**folder-backup**(*VERSION*) — numbered list` |
 | *(hide)* | — | server-side sentence above |
-| 1 | category `client-side` | `client-side: this login's folders: pack, restore, and grants` |
+| 1 | category `client-side` | `client-side: this login's folders: pack and restore` |
+| 7 | family `sudoers` | `sudoers: Grant and drafts` |
 | 8 | category `self-management` | `self-management: this CLI install, version, update, uninstall` |
 | **9** | **Exit** | leave the menu |
 
-Front rows **MUST NOT** be `help`, `menu`, `main`, `uninstall`, `where-is-me`, `backup`, `restore`, the five grant/draft verbs, or a test-purpose verb. Channel verbs and diagnostics are board **8**, not front rows. Invalid front text: `Not a menu choice '<pick>'. Type 1, 8, or 9, or a listed name.`
+Front rows **MUST NOT** be `help`, `menu`, `main`, `uninstall`, `where-is-me`, `backup`, `restore`, the five grant/draft verbs, or a test-purpose verb. Channel verbs and diagnostics are board **8**, not front rows. The family row **7** is the grant board, not those five verbs. Invalid front text: `Not a menu choice '<pick>'. Type 1, 7, 8, or 9, or a listed name.`
+
+Choosing **7** or typing `sudoers` **on this board** **MUST** open the sudoers board (`requirement-shell-cli-sudoers-submenu`). A sudoers **leaf** returns to **this** front board. Sudoers **Back** reprints **this** front board.
 
 #### 2.3.2 Client board (front **1**)
 
@@ -120,10 +123,9 @@ Header title: `client-side`.
 |---|-------|-------|
 | 11 | `backup` | `backup: Pack a named folder into a dated gzip archive under /var/backup/folder-backup` |
 | 12 | `restore` | `restore: Put an archive back onto the hard-disk projects tree` |
-| 17 | family `sudoers` | `sudoers: Grant and drafts` |
 | **0** | **Back** | return to the front board |
 
-Choosing **17** or typing `sudoers` **on this board** **MUST** open the sudoers board (`requirement-shell-cli-sudoers-submenu`). A sudoers **leaf** returns to the **front** board. Sudoers **Back** reprints **this** client board. A backup or restore leaf returns to the **front**. Invalid client text: `Not a menu choice '<pick>'. Type 11, 12, 17, or 0, or a listed command name.`
+A backup or restore leaf returns to the **front**. Invalid client text: `Not a menu choice '<pick>'. Type 11, 12, or 0, or a listed command name.` Number **17** is not a row on this board.
 
 #### 2.3.3 Self board (front **8**, and verb `self-management`)
 
@@ -146,7 +148,7 @@ Opened from the front, Back **and** a finished leaf both return to the front. Op
 
 ### 2.4 Sudoers board (owned elsewhere)
 
-Client row **17** / `sudoers` **MUST** open the grant/draft board. Membership, reserved numbers **171** / **173** / **174**, Back **0**, the hide sentence, and the live-verb rule **MUST** follow **`requirement-shell-cli-sudoers-submenu`**. This file **MUST NOT** restate that table as a second SSOT.
+Front row **7** / `sudoers` **MUST** open the grant/draft board. Membership, reserved numbers **71** / **73** / **74**, Back **0**, the hide sentence, and the live-verb rule **MUST** follow **`requirement-shell-cli-sudoers-submenu`**. This file **MUST NOT** restate that table as a second SSOT.
 
 ### 2.5 Implementation Notes (this product)
 
@@ -159,12 +161,12 @@ Client row **17** / `sudoers` **MUST** open the grant/draft board. Membership, r
 | **Menu verbs** | empty argv on TTY; `menu` (preferred named); `main` alias |
 | **Handlers** | `app_cmd_menu` · `app_cmd_menu_client` · `app_cmd_menu_self` · `app_cmd_menu_sudoers` |
 | **Aliases** | `app_main_menu` → `app_cmd_menu`; `app_default_self_loop` → `app_cmd_menu_self` |
-| **Family row** | client **17** `sudoers` — menu-only; **not** dispatched; body **`requirement-shell-cli-sudoers-submenu`** |
+| **Family row** | front **7** `sudoers` — menu-only; **not** dispatched; body **`requirement-shell-cli-sudoers-submenu`** |
 | **Ship unit** | Implemented — `app_main` empty argv and `menu` / `main` call `app_cmd_menu` |
 | **Kept list** | `reviews/cli-routed-verb-table.md` |
 | **Look** | Default CLI main menu style — header `folder-backup(VERSION)`; TTY bold short name; TTY italic + light-gray explain; `out_menu_choice` / `util_app_ident` |
 | **Choice read** | Current-shell `prompt_line` → `_prompt_line` (not `$()`) |
-| **Front** | **1** / **8** / **9**; number **2** reserved and hidden |
+| **Front** | **1** / **7** / **8** / **9**; number **2** reserved and hidden |
 | **Exit** | **9** on the front only |
 | **Back** | **0** on child boards |
 | **Test-purpose (this product)** | `print-sudoers`, `print-sudoers-install-script`, `generate-sudoer-request` — off **every** numbered board |
@@ -177,7 +179,8 @@ Client row **17** / `sudoers` **MUST** open the grant/draft board. Membership, r
 ```text
 [INFO] **folder-backup**(*VERSION*) — numbered list
 [INFO] server-side is hidden: this program does not run a host service. Number 2 stays reserved.
-1. **client-side**: *this login's folders: pack, restore, and grants*
+1. **client-side**: *this login's folders: pack and restore*
+7. **sudoers**: *Grant and drafts*
 8. **self-management**: *this CLI install, version, update, uninstall*
 9. Exit
 ```
@@ -266,15 +269,15 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 |----|-----------|
 | AC-1 | A non-interactive zero-cli-verb does not draw these boards (place is `requirement-shell-cli-zero-arguments`) |
 | AC-2 | Case 2 recorded for the interactive line; `menu` / `main` named and routed to `app_cmd_menu` |
-| AC-3 | Interactive empty argv **and** interactive `menu` draw the front board: hide sentence, **1** client-side, **8** self-management, **9** Exit; row **2** is not printed |
+| AC-3 | Interactive empty argv **and** interactive `menu` draw the front board: hide sentence, **1** client-side, **7** sudoers, **8** self-management, **9** Exit; row **2** is not printed |
 | AC-4 | Interactive `menu --json` still draws the front board |
 | AC-5 | Non-interactive `menu` / `main` / `self-management` exit 1 with `needs a terminal` (JSON error when `--json`). `--json` **with no command** is self-install, not JSON help |
 | AC-6 | No numbered board lists `help`, `menu`, `main`, `uninstall`, `where-is-me`, or a test-purpose verb. The front board does not list backup, restore, or the five grant/draft verbs |
 | AC-7 | Leaf labels match kept-list human-readable `verb: explain`; category explains are this file’s tables |
 | AC-8 | TTY header is live `folder-backup(VERSION)` with bold name and italic version; short name is bold; numbered `explain` is italic and light gray; number, Exit, and Back stay unstyled; no CSI off-TTY |
 | AC-9 | Menu choice is current-shell `prompt_line` / `_prompt_line`; **MUST NOT** `$()` a `read` helper |
-| AC-10 | Client **1** lists **11** / **12** / **17** / **0** Back. Choosing **17** opens the sudoers board (**`requirement-shell-cli-sudoers-submenu`**). Self **8** lists **81**–**87** and **0** Back |
-| AC-11 | `folder-backup sudoers` is unknown. Typing `sudoers` on the front is invalid. The five grant/draft names remain live CLI verbs |
+| AC-10 | Client **1** lists **11** / **12** / **0** Back. Front **7** opens the sudoers board (**`requirement-shell-cli-sudoers-submenu`**). Self **8** lists **81**–**87** and **0** Back |
+| AC-11 | `folder-backup sudoers` is unknown. Typing `sudoers` or **7** on the front opens the sudoers board. Typing `sudoers` on the client is invalid. The five grant/draft names remain live CLI verbs |
 | AC-12 | A finished leaf redisplays the front board. An invalid child number reprints the front board. Typing **2** is an invalid retry. An empty line on the front leaves |
 | AC-13 | Row **82** and a typed `version` on a board run `about`. Argv `folder-backup version` stays the thin version line |
 
@@ -286,7 +289,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 |-----|--------------|
 | `requirement-shell-cli-zero-arguments` | **Active** owner of the non-interactive zero-cli-verb (`inst_self_install`) |
 | `requirement-shell-cli-interface` | Dual mention: empty argv row + `menu` / `main` + self board on the command table |
-| `requirement-shell-cli-sudoers-submenu` | Client row **17** / `sudoers`; sudoers-board membership and live-verb rule |
+| `requirement-shell-cli-sudoers-submenu` | Front row **7** / `sudoers`; sudoers-board membership and live-verb rule |
 | `requirement-shell-interactive-vs-noninteractive` | `TTY`; no hang |
 | `requirement-shell-output-requirements` | `out_*`; bold short name; reuse `app_help` |
 | `requirement-shell-local-self-management` | `install` is self row **81**; `uninstall` / `where-is-me` stay typed |
@@ -300,7 +303,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | TP family / ID | Suite | Status |
 |----------------|-------|--------|
 | **TP-CLI-07** | `tests/test_cli.sh` | **have** — off-TTY empty argv places the CLI, not these boards (AC-1) |
-| **TP-CLI-13** | `tests/test_cli.sh` | **have** — front board, client **11**/**12**/**17**, sudoers **172**/**175**, hide sentences, `sudoers` not dispatched (AC-3 / AC-10 / AC-11) |
+| **TP-CLI-13** | `tests/test_cli.sh` | **have** — front board, client **11**/**12**, sudoers **72**/**75**, hide sentences, `sudoers` not dispatched (AC-3 / AC-10 / AC-11) |
 | **TP-CLI-14** | same | **have** — interactive `menu --json` still prints the front board (AC-4) |
 | **TP-CLI-15** | same | **have** — non-interactive `menu` and `self-management` stop (`needs a terminal`, exit 1) (AC-5) |
 | **TP-CLI-23** | same | **have** — `--json` / `--quiet` with no verb place; TTY `--debug` draws the front (AC-5 / AC-3) |
@@ -327,6 +330,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.7.0 | Hierarchical boards: front **1** / hidden **2** / **8** / **9**; client **11**/**12**/**17**; self **81**–**87**; child Back **0**; finished leaf redisplays the front; short name bold |
 | 2026-09-30 | Active 1.8.0 | Non-interactive zero-cli-verb moves to `requirement-shell-cli-zero-arguments` (self-install). This file keeps the interactive boards. Named `menu` off-TTY stays help. |
 | 2026-09-30 | Active 1.9.0 | Named `menu` / `main` / `self-management` off a terminal stop (`needs a terminal`). Empty Enter on the front leaves. Row **82** and a typed `version` on a board run `about`. Argv `version` stays the thin line. Interactive `menu --json` still draws. |
+| 2026-09-30 | Active 1.10.0 | Sudoers moves from client **17** to front **7**. Client is **11** / **12**. Sudoers children are **72** and **75**. Reserved **71** / **73** / **74**. Back from sudoers returns to the front. |
 
 ---
 

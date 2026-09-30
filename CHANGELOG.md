@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.21.0] - 2026-09-30
+
+### Changed
+
+- **Sudoers is front row 7.** On a terminal, the front board lists client-side (**1**), sudoers (**7**), self-management (**8**), and Exit (**9**). Server-side stays hidden and number **2** stays reserved. Client-side lists backup (**11**) and restore (**12**). The sudoers board lists `submit-sudoer-request` (**72**) and `remove-project-sudoers` (**75**). Test commands stay typed; numbers **71**, **73**, and **74** stay reserved. **0** on the sudoers board returns to the front. `folder-backup sudoers` stays unknown.
+- **Suite.** `sh tests/run.sh`: PASS=481 FAIL=0 SKIP=2. Proof **TP-CLI-13** · **TP-CLI-18**.
+- Law: **requirement-shell-cli-default-interaction** **1.10.0**, **requirement-shell-cli-sudoers-submenu** **1.2.0**, **requirement-shell-cli-interface** **1.11.0**, **requirement-domain-folder-backup** **1.6.8**.
+
 ## [1.20.0] - 2026-09-30
 
 ### Changed

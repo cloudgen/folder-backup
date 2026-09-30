@@ -8,8 +8,8 @@
 # Bootstrap origin: selfmanaged (Type 0, full self-install / version-check /
 # self-update / self-uninstall / channel checksum). Direction A → B only.
 # Specialize: identity folder-backup + domain backup/restore/sudoers.
-# Main menu is the numbered tree: 1 client-side, 8 self-management, 9 Exit.
-# Row 2 server-side stays reserved. A zero-cli-verb line is the tree on a
+# Main menu is the numbered tree: 1 client-side, 7 sudoers, 8 self-management,
+# 9 Exit. Row 2 server-side stays reserved. A zero-cli-verb line is the tree on a
 # terminal and CLI self-install off a terminal (not help, not local install).
 #
 # Project requirements (docs/requirements/ only — never cite templates here):
@@ -26,7 +26,7 @@
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.20.0"
+# VERSION: hard-assign VERSION="1.21.0"
 # SCRIPT_URL: composed from REPO_USER / REPO_NAME / SCRIPT_RELPATH (selfmanaged channel).
 #
 # =============================================================================
@@ -44,8 +44,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered boards.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.20.0"
-: "${VERSION:=1.20.0}"
+VERSION="1.21.0"
+: "${VERSION:=1.21.0}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -355,7 +355,7 @@ out_menu_choice() {
 # =============================================================================
 util_app_ident() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.20.0}"
+    : "${VERSION:=1.21.0}"
     : "${TTY:=0}"
     : "${JSON:=0}"
     if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
@@ -3004,7 +3004,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.20.0}"
+    : "${VERSION:=1.21.0}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"
@@ -3202,7 +3202,7 @@ app_about() {
 
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.20.0}"
+    : "${VERSION:=1.21.0}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path
@@ -6109,12 +6109,12 @@ app_menu_run_leaf() {
 }
 
 # =============================================================================
-# app_cmd_menu_sudoers() - Grant board under client 17
+# app_cmd_menu_sudoers() - Grant board under front 7
 # =============================================================================
 #
-# Operational rows only: 172 submit, 175 remove. Test-purpose numbers
-# 171, 173, and 174 stay reserved. 0 / empty / EOF / exit returns to
-# client-side. A leaf returns 2 so the front board redisplays.
+# Operational rows only: 72 submit, 75 remove. Test-purpose numbers
+# 71, 73, and 74 stay reserved. 0 / empty / EOF / exit returns to
+# the front. A leaf returns 2 so the front board redisplays.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-sudoers-submenu.md
@@ -6124,9 +6124,9 @@ app_cmd_menu_sudoers() {
     while true; do
         app_menu_draw_on
         out_info "$(util_app_ident) — sudoers (grant and drafts)"
-        out_info "Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 171, 173, and 174 stay reserved."
-        out_menu_choice 172 submit-sudoer-request "Hand the JSON grant to the approval queue"
-        out_menu_choice 175 remove-project-sudoers "Remove the local grant draft only"
+        out_info "Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 71, 73, and 74 stay reserved."
+        out_menu_choice 72 submit-sudoer-request "Hand the JSON grant to the approval queue"
+        out_menu_choice 75 remove-project-sudoers "Remove the local grant draft only"
         out_menu_choice 0 Back
         if ! prompt_line "Choice"; then
             unset _a
@@ -6138,20 +6138,20 @@ app_cmd_menu_sudoers() {
                 unset _pick _a
                 return 0
                 ;;
-            172|submit-sudoer-request)
+            72|submit-sudoer-request)
                 app_menu_draw_off
                 app_menu_run_leaf submit-sudoer-request "${_a}"
                 unset _pick _a
                 return 2
                 ;;
-            175|remove-project-sudoers)
+            75|remove-project-sudoers)
                 app_menu_draw_off
                 app_menu_run_leaf remove-project-sudoers "${_a}"
                 unset _pick _a
                 return 2
                 ;;
         esac
-        out_error "Not a menu choice '${_pick}'. Type 172, 175, or 0, or a listed command name."
+        out_error "Not a menu choice '${_pick}'. Type 72, 75, or 0, or a listed command name."
         _a=""
     done
 }
@@ -6160,9 +6160,8 @@ app_cmd_menu_sudoers() {
 # app_cmd_menu_client() - Client board under front 1
 # =============================================================================
 #
-# 11 backup, 12 restore, 17 sudoers, 0 Back. A leaf returns 2. Back
-# returns 0. A finished sudoers leaf bubbles 2 so the client board does
-# not stay up.
+# 11 backup, 12 restore, 0 Back. A leaf returns 2. Back returns 0.
+# Sudoers is front row 7, not a row on this board.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
@@ -6175,7 +6174,6 @@ app_cmd_menu_client() {
         out_info "$(util_app_ident) — client-side"
         out_menu_choice 11 backup "Pack a named folder into a dated gzip archive under /var/backup/folder-backup"
         out_menu_choice 12 restore "Put an archive back onto the hard-disk projects tree"
-        out_menu_choice 17 sudoers "Grant and drafts"
         out_menu_choice 0 Back
         if ! prompt_line "Choice"; then
             unset _a _b
@@ -6186,18 +6184,6 @@ app_cmd_menu_client() {
             0|back|Back|""|exit|quit|Exit|QUIT|q|Q)
                 unset _pick _a _b
                 return 0
-                ;;
-            17|sudoers)
-                app_cmd_menu_sudoers "${_a}"
-                _rc=$?
-                _a=""
-                _b=""
-                if [ "${_rc}" -eq 2 ]; then
-                    unset _pick _rc
-                    return 2
-                fi
-                unset _rc
-                continue
                 ;;
             11|backup)
                 app_menu_draw_off
@@ -6212,7 +6198,7 @@ app_cmd_menu_client() {
                 return 2
                 ;;
         esac
-        out_error "Not a menu choice '${_pick}'. Type 11, 12, 17, or 0, or a listed command name."
+        out_error "Not a menu choice '${_pick}'. Type 11, 12, or 0, or a listed command name."
         _a=""
         _b=""
     done
@@ -6288,10 +6274,11 @@ app_cmd_menu_self() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# On a real terminal: ignore --json while drawing, print client-side and
-# self-management, keep server-side reserved, run a pick. A finished leaf
-# redisplays this board. An empty line leaves. Off a terminal: stop.
-# Zero-cli-verb place lives in app_main. sudoers is not a dispatcher token.
+# On a real terminal: ignore --json while drawing, print client-side,
+# sudoers, and self-management, keep server-side reserved, run a pick.
+# A finished leaf redisplays this board. An empty line leaves. Off a
+# terminal: stop. Zero-cli-verb place lives in app_main. sudoers is not
+# a dispatcher token.
 #
 # ALIGNMENT:
 # - requirement-shell-cli-default-interaction.md
@@ -6320,7 +6307,8 @@ app_cmd_menu() {
         app_menu_draw_on
         out_info "$(util_app_ident) — numbered list"
         out_info "server-side is hidden: this program does not run a host service. Number 2 stays reserved."
-        out_menu_choice 1 client-side "this login's folders: pack, restore, and grants"
+        out_menu_choice 1 client-side "this login's folders: pack and restore"
+        out_menu_choice 7 sudoers "Grant and drafts"
         out_menu_choice 8 self-management "this CLI install, version, update, uninstall"
         out_menu_choice 9 Exit
         if [ -n "${_argv_pick}" ]; then
@@ -6346,6 +6334,12 @@ app_cmd_menu() {
                 _argv_b=""
                 continue
                 ;;
+            7|sudoers)
+                app_cmd_menu_sudoers "${_argv_a}"
+                _argv_a=""
+                _argv_b=""
+                continue
+                ;;
             8|self-management)
                 app_cmd_menu_self
                 _argv_a=""
@@ -6360,7 +6354,7 @@ app_cmd_menu() {
             continue
         fi
         app_menu_draw_on
-        out_error "Not a menu choice '${_pick}'. Type 1, 8, or 9, or a listed name."
+        out_error "Not a menu choice '${_pick}'. Type 1, 7, 8, or 9, or a listed name."
         _argv_a=""
         _argv_b=""
     done
@@ -6425,7 +6419,7 @@ app_help() {
     out_plain "  version              Show local version"
     out_plain "  about                Show diagnostics (incl. sudoers trust tier)"
     out_plain "  help                 Show this help"
-    out_plain "  menu                 Numbered boards: client-side, self-management, and Exit (same boards as a TTY empty run; off a terminal, stops: menu needs a terminal)"
+    out_plain "  menu                 Numbered boards: client-side, sudoers, self-management, and Exit (same boards as a TTY empty run; off a terminal, stops: menu needs a terminal)"
     out_plain "  main                 Same as menu"
     out_empty_line
     out_info "Work commands:"
