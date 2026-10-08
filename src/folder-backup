@@ -27,7 +27,7 @@
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.23.0"
+# VERSION: hard-assign VERSION="1.24.0"
 # SCRIPT_URL: composed from REPO_USER / REPO_NAME / SCRIPT_RELPATH (selfmanaged channel).
 #
 # =============================================================================
@@ -45,8 +45,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered boards.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.23.0"
-: "${VERSION:=1.23.0}"
+VERSION="1.24.0"
+: "${VERSION:=1.24.0}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -356,7 +356,7 @@ out_menu_choice() {
 # =============================================================================
 util_app_ident() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.23.0}"
+    : "${VERSION:=1.24.0}"
     : "${TTY:=0}"
     : "${JSON:=0}"
     if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
@@ -3006,7 +3006,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.23.0}"
+    : "${VERSION:=1.24.0}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"
@@ -3230,7 +3230,7 @@ app_about() {
 
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.23.0}"
+    : "${VERSION:=1.24.0}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path
@@ -3652,11 +3652,38 @@ fb_tar_list_stream() {
 }
 
 # =============================================================================
+# fb_tar_verbose_stream() - Verbose member list when the archive is readable
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Stream `tar -tvzf` for a .tar.gz the caller can read, or when euid is 0.
+# The type character is how regular files are distinguished from symlinks.
+# `tar -tzf` has no type. Sudoers allow `tar -tzf` only, so this function
+# does not call sudo and does not pass -h / --dereference.
+#
+# Class B: verbose lines on stdout. Exit non-zero when the archive cannot be read.
+# =============================================================================
+fb_tar_verbose_stream() {
+    _arc="${1:-}"
+    if [ -z "${_arc}" ]; then
+        return 1
+    fi
+    if [ ! -r "${_arc}" ] && [ "$(id -u 2>/dev/null || echo 1)" -ne 0 ]; then
+        return 1
+    fi
+    tar -tvzf "${_arc}"
+    return $?
+}
+
+# =============================================================================
 # fb_count_tar_members / fb_count_tar_files - Archive inventory (Class B)
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Count tar members and non-directory members (no trailing /) for verification.
+# Count tar members (`tar -tzf` lines) and regular-file members.
+# Regular files are verbose type '-' plus hard-link type 'h' (`tar -tvzf`).
+# Symlinks, directories, fifos, sockets, and device nodes are not regular files.
+# Do not pass -h. Do not call sudo for the verbose list (allowlist is tar -tzf).
 # =============================================================================
 fb_count_tar_members() {
     _arc="${1:-}"
@@ -3673,7 +3700,8 @@ fb_count_tar_members() {
 
 fb_count_tar_files() {
     _arc="${1:-}"
-    _list=$(fb_tar_list_stream "${_arc}" 2>/dev/null) || {
+    # Verbose type, not tar -tzf. A non-directory -tzf line includes symlinks.
+    _list=$(fb_tar_verbose_stream "${_arc}" 2>/dev/null) || {
         printf '%s' ""
         return 1
     }
@@ -3681,8 +3709,9 @@ fb_count_tar_files() {
         printf '%s' "0"
         return 0
     fi
-    # Members whose path does not end with / are non-directory entries (files, links)
-    printf '%s\n' "${_list}" | awk '!/\/$/ { n++ } END { print n+0 }'
+    # '-' regular file content; 'h' another name of a regular file (hard link).
+    # find -type f counts both. 'l' symlink, 'd' directory, 'p' fifo stay out.
+    printf '%s\n' "${_list}" | awk 'substr($0,1,1)=="-" || substr($0,1,1)=="h" { n++ } END { print n+0 }'
 }
 
 # =============================================================================
@@ -4183,7 +4212,9 @@ fb_backup() {
     _verify_mode="stage_counts+dest_size"
     _dest_members="${_stage_members}"
     _dest_files="${_stage_files}"
-    # Prefer re-list deposited archive (direct read or Type 1 sudo tar -tzf)
+    # Member re-list: direct read or Type 1 sudo tar -tzf.
+    # Regular-file re-count: tar -tvzf only when this process can read the deposit.
+    # Do not treat non-directory tar -tzf lines as archive files.
     _rel_members=$(fb_count_tar_members "${_dest_file}" 2>/dev/null) || _rel_members=""
     _rel_files=$(fb_count_tar_files "${_dest_file}" 2>/dev/null) || _rel_files=""
     if [ -n "${_rel_members}" ] && [ -n "${_rel_files}" ]; then
@@ -4200,6 +4231,16 @@ fb_backup() {
         _dest_files="${_rel_files}"
         _verify_mode="dest_tar_list+size"
         out_info "Deposited re-list OK: members=${_dest_members} files=${_dest_files} size=${_dest_size}"
+    elif [ -n "${_rel_members}" ]; then
+        if [ "${_rel_members}" -ne "${_stage_members}" ]; then
+            out_die "Verification failed: deposited members ${_rel_members} != staged ${_stage_members}"
+        fi
+        if [ "${_rel_members}" -ne "${_src_entries}" ]; then
+            out_die "Verification failed: deposited members ${_rel_members} != source entries ${_src_entries}"
+        fi
+        _dest_members="${_rel_members}"
+        out_info "Deposited member re-list OK: members=${_dest_members} size=${_dest_size}"
+        out_info "Regular-file re-count unavailable (deposit is not directly readable; tar -tzf cannot classify type). Using staged file count: files=${_dest_files}"
     else
         # Re-list may need allowlisted: sudo -n tar -tzf under deposit dir
         # Stage was already verified against source; size match proves deposit bytes.

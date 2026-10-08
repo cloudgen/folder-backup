@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-folder-archive-backup.md  
-**Status**: Active (Version 1.2.1)  
+**Status**: Active (Version 1.3.0)  
 **Area**: backup  
 **Key**: `requirement-folder-archive-backup`  
 **Optional RQ-ID**: `RQ-FOLDER-ARCHIVE-BACKUP`  
@@ -131,10 +131,16 @@ Backup is **not complete** until verification rules below pass (or explicit fail
 | Metric | Definition |
 |--------|------------|
 | **Source entries** | Count of paths from `find <source>` (includes the source root directory) |
-| **Source files** | Count of regular files under source (`find -type f`) |
-| **Archive members** | Lines from `tar -tzf` (all members) |
-| **Archive files** | Members whose path does **not** end with `/` (non-directory entries) |
+| **Source files** | Count of regular files under source (`find -type f`, no follow) |
+| **Archive members** | Lines from `tar -tzf` (all members, including symlinks) |
+| **Archive files** | Regular-file members from `tar -tvzf`: type character `-` (file content) and `h` (another name of a regular file). Symlinks (`l`), directories (`d`), fifos (`p`), sockets (`s`), and device nodes (`c`, `b`) are **excluded**. The member stays in the archive |
 | **Archive size** | Byte size of the archive file |
+
+**MUST NOT** define archive files as `tar -tzf` lines that do not end in `/`. That set includes symlink members, so the file check fails by the symlink count on a complete archive.
+
+**MUST NOT** make the file counts match by deleting symlinks, or by creating the archive with `-h` / `--dereference`.
+
+A directory symlink is not walked on either side.
 
 #### 2.6.2 Stages of verification
 
@@ -142,15 +148,16 @@ Backup is **not complete** until verification rules below pass (or explicit fail
 |-------|-----------------|-------------|
 | **A — Staged archive** | Members == source entries; archive files == source files; size > 0 | **Yes** |
 | **B — After deposit** | Durable path exists; size == staged size | **Yes** |
-| **C — Deposited re-list** (when possible) | Members/files match stage (and thus source) via direct read or Type 1 `tar -tzf` | **Yes** when re-list succeeds with counts; see 2.6.3 if re-list unavailable |
+| **C — Deposited re-list** (when possible) | Members match stage via direct read or Type 1 `tar -tzf`. Regular-file re-count matches stage when `tar -tvzf` can read the deposit | **Yes** when an available count mismatches; see 2.6.3 when a list is unavailable |
 
 #### 2.6.3 Deposited re-list availability
 
 1. Deposited archives may be unreadable to the invoking user (e.g. `root:root` `0640`).  
-2. Re-list **MAY** use allowlisted `sudo -n tar -tzf <deposit-dir>/*` only (list; **no extract**). Sudoers content SSOT: `requirement-three-layer-privilege-model`.  
-3. If re-list is **unavailable**, success is allowed **only** when stage verification (A) and deposited size match (B) passed; human output **MUST** state that re-list was unavailable and that installing `tar -tzf` allowlist enables full re-verify.  
-4. If re-list **is** available, **MUST** fail closed on member/file count mismatch.  
-5. **MUST NOT** mark `verified=true` if stage verify or size match failed.
+2. Member re-list **MAY** use allowlisted `sudo -n tar -tzf <deposit-dir>/*` only (list; **no extract**). Sudoers content SSOT: `requirement-three-layer-privilege-model`. **MUST NOT** widen that allowlist to `tar -tv`.  
+3. If re-list is **unavailable**, success is allowed **only** when stage verification (A) and deposited size match (B) passed; human output **MUST** state that re-list was unavailable and that installing `tar -tzf` allowlist enables full member re-verify.  
+4. Regular-file re-count uses `tar -tvzf` only when this process can read the deposit (or euid is 0). When that list is unavailable, member re-list and size match still apply, and the report **MUST** say the regular-file re-count used the staged file count. **MUST NOT** substitute `tar -tzf` non-directory lines for that count.  
+5. When a count **is** available, **MUST** fail closed if it mismatches the staged count or the source count.  
+6. **MUST NOT** mark `verified=true` if stage verify or size match failed.
 
 #### 2.6.4 Operator-visible verification
 
@@ -275,7 +282,7 @@ Successful backup JSON **SHOULD** include:
 | `source_entries` | Source entry count |
 | `source_files` | Source regular-file count |
 | `archive_members` | Member count used for verify report |
-| `archive_files` | Non-directory member count |
+| `archive_files` | Regular-file member count (verbose type `-` and `h`) |
 | `archive_size` | Bytes |
 | `verified` | `true` when §2.6 passed |
 | `verify_mode` | `dest_tar_list+size` or `stage_counts+dest_size` |
@@ -317,7 +324,7 @@ Errors **MUST** use structured error emission with stable codes when feasible (e
 |------|--------|
 | **Product / APP_NAME** | `folder-backup` |
 | **Ship unit** | `src/folder-backup` |
-| **VERSION** | `1.6.1` |
+| **VERSION** | `1.24.0` |
 | **CLI verbs** | `backup` → `fb_backup`; `restore` → `fb_restore` |
 | **Handlers** | `fb_deposit_archive`, `fb_verify_archive_counts`, `fb_count_*`, `fb_tar_list_stream`, `fb_fetch_archive_readable` |
 | **BACKUP_ROOT** | `/var/backup` |
@@ -384,7 +391,9 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 7. Cite templates/skills as product-source behavioral authority.  
 8. Implement restore dest as a pure prefix ban on all `/etc/*` **without** whitelist **W-ETC-USER** (`/etc/{{username}}` for the invoking user).  
 9. Whitelist **all** of `/etc` or `/etc/*`, allow restore into **`/etc/passwd`**, or allow `/etc/<other-user>` for a different account.  
-10. “Fix” W-ETC-USER writability by adding Type 1 extract/`cp` into arbitrary `/etc` paths.
+10. “Fix” W-ETC-USER writability by adding Type 1 extract/`cp` into arbitrary `/etc` paths.  
+11. Count symlink, fifo, socket, or device members as archive files, or force a file-count match by deleting those nodes or by `tar -h` / `--dereference`.  
+12. Widen sudoers from `tar -tzf` to `tar -tv` so a root-owned deposit can classify type.
 
 **Violating this rule is a critical backup regression.**
 
@@ -445,6 +454,7 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | **TP-FOLDER-BACKUP-10** | same | have | Leaf basename |
 | **TP-FOLDER-BACKUP-11..13** | same | have | Restore missing / explicit dest / hard-disk default |
 | **TP-FOLDER-BACKUP-16** | same | **have** | W-ETC-USER: allow `/etc/{{username}}`; refuse `/etc/passwd` and `/etc/<other>` |
+| **TP-FOLDER-BACKUP-28** | same | **have** | Symlink and fifo tree: archive files equal `find -type f`; members keep the links |
 
 **Matrix:** `reviews/requirement-test-matrix.md`  
 **Map:** `reviews/test-plan.md`
@@ -457,9 +467,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-08-03 | Active 1.1.0 | **Restore** feature; default dest host = hard-disk (reverse of ram-drive-first) |
 | 2026-08-12 | Active 1.2.0 | Restore dest **whitelist** §2.6b.2a: **W-ETC-USER** = `/etc/{{username}}` (invoker); hard-deny `/etc` and **`/etc/passwd`** (INC-20260812-001) |
 | 2026-09-27 | Active 1.2.1 | Stage root follows per-login per-process cache (`requirement-shell-cli-storage` 1.4.0) |
+| 2026-10-08 | Active 1.3.0 | Archive files are verbose regular-file members (type `-` and hard-link type `h`). Symlinks stay in the archive and in the member check. `tar -tzf` non-directory lines are not the file tally |
 
 ---
 
-**Last Updated**: 2026-09-27  
+**Last Updated**: 2026-10-08  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; INC-20260812-001; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

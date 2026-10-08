@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.24.0] - 2026-10-08
+
+### Fixed
+
+- **Archive file count is regular files.** Stage verify compares `find -type f` with `tar -tvzf` members whose type is `-` or hard-link `h`. Symlinks, directories, fifos, sockets, and device nodes stay in the archive and in the member check. They are not archive files. The archive is still created without `-h`. A root-owned deposit that this process cannot read still re-lists members with allowlisted `tar -tzf` and does not pretend those lines are the file count. Law: `requirement-folder-archive-backup` **1.3.0**. Suite: **TP-FOLDER-BACKUP-28**.
+
 ## [1.23.0] - 2026-09-30
 
 ### Changed

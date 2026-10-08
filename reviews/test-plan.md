@@ -3,9 +3,9 @@
 Maps **TP-*** coverage to `tests/`.  
 **Suite entry:** `./tests/run.sh`  
 **Ship unit:** `src/folder-backup`  
-**Product VERSION:** 1.23.0  
-**Last plan update:** 2026-09-30  
-**Last suite run:** `sh tests/run.sh` (1.23.0: PASS=596 FAIL=0 SKIP=2)
+**Product VERSION:** 1.24.0  
+**Last plan update:** 2026-10-08  
+**Last suite run:** `sh tests/run.sh` (1.24.0: PASS=610 FAIL=0 SKIP=2)
 
 Status: **have** = automated today · **todo** = needed · **optional** · **n/a** · **skip** (environment)
 
@@ -133,6 +133,7 @@ Status: **have** = automated today · **todo** = needed · **optional** · **n/a
 | TP-FOLDER-BACKUP-26 | print-sudoers text + JSON emit `backup *` / `restore *`; verb-only **Fail** | test_domain | three-layer AC-25 · **sudoer-json-file** AC-3/AC-8 · INC-20260823-001 | **have** |
 | TP-FOLDER-BACKUP-26b | generate compact JSON `args` include `*` after each verb | test_domain | **sudoer-json-file** AC-3 · three-layer AC-25 | **have** |
 | TP-FOLDER-BACKUP-27 | compact/pretty JSON includes `--json` twins; text dual matches; `"*"` not cwd names | test_domain | **sudoer-json-file** AC-8/AC-26 · three-layer AC-26 | **todo** (compact JSON emit Gap) |
+| TP-FOLDER-BACKUP-28 | symlink, hard link, and fifo tree: archive files equal `find -type f`; members keep the links; restore keeps the links | test_domain | **folder-archive-backup** §2.6.1 · AC-5 | **have** |
 | TP-FOLDER-BACKUP-15 | remove-project-sudoers: force remove draft; refuse `/etc`; already absent; host elev probe | test_domain | three-layer §2.3.3b · project-sudoers-file | **have** |
 | TP-FOLDER-BACKUP-15b | multi-draft: list + non-interactive requires path; explicit path removes one only | test_domain | three-layer AC-15 · L-SUDOERS-04 | **have** |
 | TP-FOLDER-BACKUP-15c | TTY multi-draft picker: choice 2 removes the second draft; prompt text is not glued onto the number | test_domain | **shell-interactive-vs-noninteractive** AC-4 | **have** |

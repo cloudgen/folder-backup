@@ -1,8 +1,8 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-09-30 (1.23.0)  
-**Product VERSION:** 1.23.0  
-**Suite:** `tests/run.sh` (1.23.0: PASS=596 FAIL=0 SKIP=2)
+**Updated:** 2026-10-08 (1.24.0)  
+**Product VERSION:** 1.24.0  
+**Suite:** `tests/run.sh` (1.24.0: PASS=610 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
@@ -11,7 +11,7 @@
 | requirement-project-folder | architecture | TP-LC-01, TP-FOLDER-BACKUP-06 | src ship unit; deposit path naming |
 | requirement-three-layer-privilege-model | architecture | TP-FOLDER-BACKUP-01, **01b**, 01c, 02, 05, **14**, **15**, **15b**, **19**, **20**, **21**, **21b**, **22e**, **23**, **23b**, **23c**, **24**, **24b**, **24c**, **24d**, **26**, **26b**; **27 todo** | Trust tiers **S13**; submit workflow AC-16–22; independent generate AC-23/24; inbound fidelity; host-probe add/update; other-user dest ignored; **backup \*** emit AC-25; `--json` twins AC-26 (text have; compact JSON Gap) |
 | requirement-sudoer-json-file | architecture | TP-FOLDER-BACKUP-**22**, **22b**, **22c**, **22d**, **22e**, **22f**, **24**, **24c**, **24d**, **26**, **26b**; **27 todo** | JSON grant is `folder-backup` backup/restore plus `*` **and** `--json` twins (AC-26); compact JSON emit **Gap**; pretty emit + inbound body keep both verbs; independent generate dest readable; OS-tool submit refuse |
-| requirement-folder-archive-backup | backup | TP-FOLDER-BACKUP-03..08, 10..13, **16** | Source/name/deposit/verify/next-N/**restore** + dest whitelist W-ETC-USER (ops SSOT) |
+| requirement-folder-archive-backup | backup | TP-FOLDER-BACKUP-03..08, 10..13, **16**, **28** | Source/name/deposit/verify/next-N/**restore** + dest whitelist W-ETC-USER; archive files exclude symlinks (ops SSOT) |
 | requirement-folder-archive-backup-retention-total | backup | TP-FOLDER-BACKUP-17, 17b, **17c** | Max **30** per basename; oldest-first prune; failed backup does not prune |
 | requirement-folder-archive-backup-retention-daily | backup | TP-FOLDER-BACKUP-18, 18b, **18c** | Max **5** per basename per day; lowest-`N` same-day prune; failed backup does not prune |
 | requirement-shell-cli-interface | shell | TP-CLI-* | Commands, flags, dispatch (incl. new sudoers verbs); **menu/main** TP-CLI-13..16; test-purpose grant-emit apart (**TP-CLI-17 have**) |

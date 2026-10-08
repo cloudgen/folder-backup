@@ -845,6 +845,63 @@ STUB25
     assert_contains "TP-FOLDER-BACKUP-21b env inbound wins" "${_j21c}" "${_env21}"
     assert_not_contains "TP-FOLDER-BACKUP-21b env beats public" "${_j21c}" "${_pub21}/sudoer-request"
 
+    # TP-FOLDER-BACKUP-28 archive files are regular files. Symlinks and fifos stay members.
+    _broot28="${CI_HOME}/symlink-count-root"
+    _dep28="${_broot28}/folder-backup"
+    mkdir -p "${_dep28}"
+    _src28="${CI_HOME}/symlink-count-src"
+    mkdir -p "${_src28}/sub"
+    printf 'one\n' > "${_src28}/sub/reg.txt"
+    printf 'two\n' > "${_src28}/sub/other.txt"
+    ln "${_src28}/sub/reg.txt" "${_src28}/sub/hard.lnk"
+    ln -s reg.txt "${_src28}/sub/rel.lnk"
+    ln -s sub "${_src28}/dirlink"
+    mkfifo "${_src28}/sub/fifo.p"
+    _exp_entries=$(find "${_src28}" | wc -l | tr -d ' ')
+    _exp_files=$(find "${_src28}" -type f | wc -l | tr -d ' ')
+    _out28=$(HOME="${CI_HOME}" BACKUP_ROOT="${_broot28}" BACKUP_NOTATION="folder-backup" \
+        sh "${SCRIPT}" backup "${_src28}" 2>&1)
+    _ec28=$?
+    assert_eq "TP-FOLDER-BACKUP-28 symlink tree backup exit 0" 0 "${_ec28}"
+    assert_contains "TP-FOLDER-BACKUP-28 source inventory" "${_out28}" "Source inventory: entries=${_exp_entries} files=${_exp_files}"
+    assert_contains "TP-FOLDER-BACKUP-28 staged counts" "${_out28}" "Staged OK: members=${_exp_entries} files=${_exp_files} "
+    assert_contains "TP-FOLDER-BACKUP-28 verified files" "${_out28}" "source_files=${_exp_files} archive_files=${_exp_files} "
+    assert_not_contains "TP-FOLDER-BACKUP-28 no file-count miss" "${_out28}" "file count"
+    _arc28=$(find "${_dep28}" -name 'symlink-count-src-*.tar.gz' 2>/dev/null | head -n 1)
+    assert_file_exists "TP-FOLDER-BACKUP-28 archive deposited" "${_arc28}"
+    if [ -n "${_arc28}" ] && [ -f "${_arc28}" ]; then
+        _listed28=$(tar -tzf "${_arc28}")
+        assert_contains "TP-FOLDER-BACKUP-28 archive keeps symlink" "${_listed28}" "symlink-count-src/sub/rel.lnk"
+        assert_contains "TP-FOLDER-BACKUP-28 archive keeps directory symlink" "${_listed28}" "symlink-count-src/dirlink"
+        assert_contains "TP-FOLDER-BACKUP-28 archive keeps fifo" "${_listed28}" "symlink-count-src/sub/fifo.p"
+    else
+        t_fail "TP-FOLDER-BACKUP-28 archive keeps symlink"
+        t_fail "TP-FOLDER-BACKUP-28 archive keeps directory symlink"
+        t_fail "TP-FOLDER-BACKUP-28 archive keeps fifo"
+    fi
+    _rdest28="${CI_HOME}/symlink-count-restore"
+    mkdir -p "${_rdest28}"
+    _out28r=$(HOME="${CI_HOME}" BACKUP_ROOT="${_broot28}" \
+        sh "${SCRIPT}" restore symlink-count-src "${_rdest28}/symlink-count-src" 2>&1)
+    _ec28r=$?
+    assert_eq "TP-FOLDER-BACKUP-28 restore exit 0" 0 "${_ec28r}"
+    assert_contains "TP-FOLDER-BACKUP-28 restore verified files" "${_out28r}" "files=${_exp_files}"
+    if [ -L "${_rdest28}/symlink-count-src/sub/rel.lnk" ]; then
+        t_pass "TP-FOLDER-BACKUP-28 restored symlink"
+    else
+        t_fail "TP-FOLDER-BACKUP-28 restored symlink"
+    fi
+    if [ -L "${_rdest28}/symlink-count-src/dirlink" ]; then
+        t_pass "TP-FOLDER-BACKUP-28 restored directory symlink"
+    else
+        t_fail "TP-FOLDER-BACKUP-28 restored directory symlink"
+    fi
+    if [ -p "${_rdest28}/symlink-count-src/sub/fifo.p" ]; then
+        t_pass "TP-FOLDER-BACKUP-28 restored fifo"
+    else
+        t_fail "TP-FOLDER-BACKUP-28 restored fifo"
+    fi
+
     # cleanup remaining drafts
     HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force "${CI_HOME}/.config/folder-backup/sudoers.fragment" >/dev/null 2>&1 || true
     HOME="${CI_HOME}" sh "${SCRIPT}" remove-project-sudoers --force "${CI_HOME}/.config/folder-backup/sudoers.fragment-otheruser" >/dev/null 2>&1 || true
