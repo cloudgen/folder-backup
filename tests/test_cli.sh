@@ -374,7 +374,7 @@ run_test_cli() {
         _plain=$(ci_strip_ansi "$_out")
         assert_contains "TP-CLI-13 TTY empty argv client row" "$_plain" "1. client-side: this login's folders: pack and restore"
         assert_contains "TP-CLI-13 TTY empty argv sudoers row" "$_plain" "7. sudoers: Grant and drafts"
-        assert_contains "TP-CLI-13 TTY empty argv server hidden" "$_plain" "server-side is hidden: this program does not run a host service. Number 2 stays reserved."
+        assert_contains "TP-CLI-13 TTY empty argv server hidden" "$_plain" "server-side is not available: this program does not run a host service. Number 2 stays reserved."
         assert_contains "TP-CLI-13 TTY empty argv self row" "$_plain" "8. self-management: this CLI install, version, update, uninstall"
         assert_contains "TP-CLI-13 TTY empty argv language row" "$_plain" "6. language: display language for this menu"
         assert_contains "TP-CLI-13 TTY empty argv Exit 9" "$_plain" "9. Exit"
@@ -412,7 +412,7 @@ run_test_cli() {
         assert_contains "TP-CLI-13 TTY front sudoers row" "$_plain" "7. sudoers: Grant and drafts"
         assert_contains "TP-CLI-13 TTY sudoers submit row" "$_plain" "72. submit-sudoer-request: Hand the JSON grant to the approval queue"
         assert_contains "TP-CLI-13 TTY sudoers remove row" "$_plain" "75. remove-project-sudoers: Remove the local grant draft only"
-        assert_contains "TP-CLI-13 TTY sudoers hides test commands" "$_plain" "Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 71, 73, and 74 stay reserved."
+        assert_contains "TP-CLI-13 TTY sudoers hides test commands" "$_plain" "test commands are not available: type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 71, 73, and 74 stay reserved."
         assert_not_contains "TP-CLI-13 TTY sudoers omits generate row" "$_plain" "71. generate-sudoer-request:"
         assert_not_contains "TP-CLI-13 TTY sudoers omits old 172 row" "$_plain" "172. submit-sudoer-request:"
         assert_contains "TP-CLI-13 TTY sudoers Back 0" "$_plain" "0. Back"

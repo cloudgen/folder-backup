@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.25.0] - 2026-10-10
+
+### Changed
+
+- **Not-available lines use one sentence shape.** On a terminal, the front board says `server-side is not available: this program does not run a host service. Number 2 stays reserved.` The sudoers board says `test commands are not available: type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 71, 73, and 74 stay reserved.` The other seven display languages use the same shape. Row **2** stays unprinted. Numbers **71**, **73**, and **74** stay unprinted.
+- **Suite.** `sh tests/run.sh`: PASS=610 FAIL=0 SKIP=2. Proof **TP-CLI-13**.
+- Law: **requirement-shell-cli-default-interaction** **1.12.0**, **requirement-shell-cli-sudoers-submenu** **1.3.0**, **requirement-shell-cli-language** **1.1.1**.
+
 ## [1.24.0] - 2026-10-08
 
 ### Fixed

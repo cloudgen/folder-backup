@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-sudoers-submenu.md  
-**Status**: Active (Version 1.2.1)  
+**Status**: Active (Version 1.3.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-sudoers-submenu`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-SUDOERS-SUBMENU`  
@@ -67,7 +67,7 @@ Choosing front **7** / `sudoers` **MUST** print this board. Header **MUST** use 
 
 Print this hide sentence **before** the numbers (exact):
 
-`Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 71, 73, and 74 stay reserved.`
+`test commands are not available: type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 71, 73, and 74 stay reserved.`
 
 | # | Command | Label | Setup kind |
 |---|---------|-------|------------|
@@ -208,9 +208,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.1.0 | Opened as client **17**. Printed rows **172** and **175** only. **171**/**173**/**174** reserved. Back **0**. A leaf returns to the front |
 | 2026-09-30 | Active 1.2.0 | Opened as front **7**. Printed rows **72** and **75**. **71**/**73**/**74** reserved. Back **0** returns to the front |
 | 2026-09-30 | Active 1.2.1 | Header, longs, hide sentence, and invalid text follow `APP_LANG`. English strings stay this table. Numbers stay **72** / **75**. |
+| 2026-10-10 | Active 1.3.0 | Hide sentence matches the front board: test commands are not available, then the typed names, then numbers **71** / **73** / **74** stay reserved. |
 
 ---
 
-**Last Updated**: 2026-09-30  
+**Last Updated**: 2026-10-10  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

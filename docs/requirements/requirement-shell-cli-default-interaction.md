@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-default-interaction.md  
-**Status**: Active (Version 1.11.0)  
+**Status**: Active (Version 1.12.0)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-default-interaction`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-DEFAULT-INTERACTION`  
@@ -101,7 +101,7 @@ While a board is **drawing**, saved `JSON` and `QUIET` **MUST** be forced off, t
 
 Print the hide sentence **before** the numbers, then the rows below. Row **2** is **not** printed. Typing **2** is an invalid-choice retry. **MUST NOT** add `app_cmd_menu_server`.
 
-Hide sentence (exact): `server-side is hidden: this program does not run a host service. Number 2 stays reserved.`
+Hide sentence (exact): `server-side is not available: this program does not run a host service. Number 2 stays reserved.`
 
 | # | Token | Label |
 |---|-------|-------|
@@ -181,7 +181,7 @@ Front row **7** / `sudoers` **MUST** open the grant/draft board. Membership, res
 
 ```text
 [INFO] **folder-backup**(*VERSION*) — numbered list
-[INFO] server-side is hidden: this program does not run a host service. Number 2 stays reserved.
+[INFO] server-side is not available: this program does not run a host service. Number 2 stays reserved.
 1. **client-side**: *this login's folders: pack and restore*
 6. **language**: *display language for this menu*
 7. **sudoers**: *Grant and drafts*
@@ -338,9 +338,10 @@ Detect (typical): Termux — `PREFIX` contains `com.termux` or `TERMUX_VERSION` 
 | 2026-09-30 | Active 1.9.0 | Named `menu` / `main` / `self-management` off a terminal stop (`needs a terminal`). Empty Enter on the front leaves. Row **82** and a typed `version` on a board run `about`. Argv `version` stays the thin line. Interactive `menu --json` still draws. |
 | 2026-09-30 | Active 1.10.0 | Sudoers moves from client **17** to front **7**. Client is **11** / **12**. Sudoers children are **72** and **75**. Reserved **71** / **73** / **74**. Back from sudoers returns to the front. |
 | 2026-09-30 | Active 1.11.0 | Front **6** language. English catalog stays this file. Other languages and the language file are `requirement-shell-cli-language`. Menu boards read the choose-prompt in the current shell. |
+| 2026-10-10 | Active 1.12.0 | Front hide sentence says server-side is not available. Number **2** stays reserved. |
 
 ---
 
-**Last Updated**: 2026-09-30  
+**Last Updated**: 2026-10-10  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).

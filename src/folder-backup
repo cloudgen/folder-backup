@@ -27,7 +27,7 @@
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
 # APP NAME: hard-assign APP_NAME="folder-backup"
-# VERSION: hard-assign VERSION="1.24.0"
+# VERSION: hard-assign VERSION="1.25.0"
 # SCRIPT_URL: composed from REPO_USER / REPO_NAME / SCRIPT_RELPATH (selfmanaged channel).
 #
 # =============================================================================
@@ -45,8 +45,8 @@ APP_NAME="folder-backup"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=POSIX /bin/sh program: self-install, version-check, self-update, self-uninstall, local install, backup, restore, and the numbered boards.}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="1.24.0"
-: "${VERSION:=1.24.0}"
+VERSION="1.25.0"
+: "${VERSION:=1.25.0}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -356,7 +356,7 @@ out_menu_choice() {
 # =============================================================================
 util_app_ident() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.24.0}"
+    : "${VERSION:=1.25.0}"
     : "${TTY:=0}"
     : "${JSON:=0}"
     if [ "${TTY}" -eq 1 ] && [ "${JSON}" -eq 0 ]; then
@@ -3006,7 +3006,7 @@ app_about() {
     : "${JSON:=0}"
     : "${QUIET:=0}"
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.24.0}"
+    : "${VERSION:=1.25.0}"
     : "${REPO_USER:=cloudgen}"
     : "${REPO_NAME:=folder-backup}"
     : "${SCRIPT_URL:=}"
@@ -3230,7 +3230,7 @@ app_about() {
 
 app_version() {
     : "${APP_NAME:=folder-backup}"
-    : "${VERSION:=1.24.0}"
+    : "${VERSION:=1.25.0}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path
@@ -6356,14 +6356,14 @@ app_menu_text() {
             ;;
         front_hide)
             case "${_mt_lang}" in
-                zh-Hant) _mt_out='伺服器端已隱藏：這個程式不執行主機服務。編號 2 保留。' ;;
-                es) _mt_out='servidor está oculto: este programa no ejecuta un servicio del equipo. El número 2 queda reservado.' ;;
-                fr) _mt_out='serveur est masqué : ce programme ne lance pas un service de l'\''hôte. Le numéro 2 reste réservé.' ;;
-                de) _mt_out='Server bleibt ausgeblendet: dieses Programm startet keinen Host-Dienst. Nummer 2 bleibt reserviert.' ;;
-                zh-Hans) _mt_out='服务器端已隐藏：这个程序不运行主机服务。编号 2 保留。' ;;
-                ja) _mt_out='サーバーは非表示です。このプログラムはホストのサービスを実行しません。番号 2 は予約です。' ;;
-                ko) _mt_out='서버는 숨겨져 있습니다. 이 프로그램은 호스트 서비스를 실행하지 않습니다. 번호 2는 예약입니다.' ;;
-                *) _mt_out='server-side is hidden: this program does not run a host service. Number 2 stays reserved.' ;;
+                zh-Hant) _mt_out='伺服器端無法使用：這個程式不執行主機服務。編號 2 保留。' ;;
+                es) _mt_out='servidor no está disponible: este programa no ejecuta un servicio del equipo. El número 2 queda reservado.' ;;
+                fr) _mt_out='serveur n'\''est pas disponible : ce programme ne lance pas un service de l'\''hôte. Le numéro 2 reste réservé.' ;;
+                de) _mt_out='Server ist nicht verfügbar: dieses Programm startet keinen Host-Dienst. Nummer 2 bleibt reserviert.' ;;
+                zh-Hans) _mt_out='服务器端无法使用：这个程序不运行主机服务。编号 2 保留。' ;;
+                ja) _mt_out='サーバーは使えません。このプログラムはホストのサービスを実行しません。番号 2 は予約です。' ;;
+                ko) _mt_out='서버는 사용할 수 없습니다. 이 프로그램은 호스트 서비스를 실행하지 않습니다. 번호 2는 예약입니다.' ;;
+                *) _mt_out='server-side is not available: this program does not run a host service. Number 2 stays reserved.' ;;
             esac
             ;;
         front_client_long)
@@ -6548,14 +6548,14 @@ app_menu_text() {
             ;;
         sudoers_hide)
             case "${_mt_lang}" in
-                zh-Hant) _mt_out='測試指令不在這份清單。請輸入 generate-sudoer-request、print-sudoers 或 print-sudoers-install-script。編號 71、73、74 保留。' ;;
-                es) _mt_out='Los comandos de prueba no están en esta lista. Escriba generate-sudoer-request, print-sudoers o print-sudoers-install-script. Los números 71, 73 y 74 quedan reservados.' ;;
-                fr) _mt_out='Les commandes de test restent hors de cette liste. Saisissez generate-sudoer-request, print-sudoers ou print-sudoers-install-script. Les numéros 71, 73 et 74 restent réservés.' ;;
-                de) _mt_out='Testbefehle stehen nicht auf dieser Liste. Geben Sie generate-sudoer-request, print-sudoers oder print-sudoers-install-script ein. Die Nummern 71, 73 und 74 bleiben reserviert.' ;;
-                zh-Hans) _mt_out='测试命令不在这份清单。请输入 generate-sudoer-request、print-sudoers 或 print-sudoers-install-script。编号 71、73、74 保留。' ;;
-                ja) _mt_out='テスト用のコマンドはこの一覧に出ません。generate-sudoer-request、print-sudoers、print-sudoers-install-script と入力します。番号 71、73、74 は予約です。' ;;
-                ko) _mt_out='테스트 명령은 이 목록에 없습니다. generate-sudoer-request, print-sudoers 또는 print-sudoers-install-script 를 입력하세요. 번호 71, 73, 74 는 예약입니다.' ;;
-                *) _mt_out='Test commands stay off this list. Type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 71, 73, and 74 stay reserved.' ;;
+                zh-Hant) _mt_out='測試指令無法使用：請輸入 generate-sudoer-request、print-sudoers 或 print-sudoers-install-script。編號 71、73、74 保留。' ;;
+                es) _mt_out='los comandos de prueba no están disponibles: escriba generate-sudoer-request, print-sudoers o print-sudoers-install-script. Los números 71, 73 y 74 quedan reservados.' ;;
+                fr) _mt_out='les commandes de test ne sont pas disponibles : saisissez generate-sudoer-request, print-sudoers ou print-sudoers-install-script. Les numéros 71, 73 et 74 restent réservés.' ;;
+                de) _mt_out='Testbefehle sind nicht verfügbar: geben Sie generate-sudoer-request, print-sudoers oder print-sudoers-install-script ein. Die Nummern 71, 73 und 74 bleiben reserviert.' ;;
+                zh-Hans) _mt_out='测试命令无法使用：请输入 generate-sudoer-request、print-sudoers 或 print-sudoers-install-script。编号 71、73、74 保留。' ;;
+                ja) _mt_out='テスト用のコマンドは使えません。generate-sudoer-request、print-sudoers、print-sudoers-install-script と入力します。番号 71、73、74 は予約です。' ;;
+                ko) _mt_out='테스트 명령은 사용할 수 없습니다. generate-sudoer-request, print-sudoers 또는 print-sudoers-install-script 를 입력하세요. 번호 71, 73, 74 는 예약입니다.' ;;
+                *) _mt_out='test commands are not available: type generate-sudoer-request, print-sudoers, or print-sudoers-install-script. Numbers 71, 73, and 74 stay reserved.' ;;
             esac
             ;;
         sudoers_72_long)

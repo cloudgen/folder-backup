@@ -1,8 +1,8 @@
 # Requirement ↔ test matrix — folder-backup
 
-**Updated:** 2026-10-08 (1.24.0)  
-**Product VERSION:** 1.24.0  
-**Suite:** `tests/run.sh` (1.24.0: PASS=610 FAIL=0 SKIP=2)
+**Updated:** 2026-10-10 (1.25.0)  
+**Product VERSION:** 1.25.0  
+**Suite:** `tests/run.sh` (1.25.0: PASS=610 FAIL=0 SKIP=2)
 
 | Requirement key | Area | TP families | Coverage notes |
 |-----------------|------|-------------|----------------|
@@ -18,9 +18,9 @@
 | requirement-shell-script-coding | shell | (indirect) | Specialize-in home; own-or-point |
 | requirement-shell-sudo-command | shell | TP-FOLDER-BACKUP-01, 01c, 26; **27 todo** | Studied allow table; wrap Gap |
 | requirement-shell-cli-zero-arguments | shell | TP-CLI-07, **23** | **Active 1.2.1** — interactive boards; non-interactive `inst_self_install`; `--quiet` / `--json` / non-TTY `--debug` place; TTY `--debug` does not; named menu stop is default-interaction |
-| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18**, **19**, **21**, **23**, **24** | **Active 1.11.0** — interactive zero-cli-verb = numbered boards; non-interactive place is zero-arguments; named `menu` / `self-management` off a terminal stop; empty front line leaves; row **82** and typed `version` run `about`; front **1**/**6**/**7**/**8**/**9**; client **11**/**12**; self **81**–**87**; sudoers body on sudoers-submenu REQ; language body on language REQ; bold short name; finished leaf redisplays the front |
-| requirement-shell-cli-language | shell | TP-CLI-**24**, **04**, **13** | **Active 1.1.0** — eight codes; file mode 0600; env does not rewrite; human help and about follow the code; JSON about and argv version stay English; English front row **6** |
-| requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | Front **7**; printed **72**/**75**; **71**/**73**/**74** reserved; `sudoers` not dispatched; header follows `APP_LANG`; Back **0** returns to the front |
+| requirement-shell-cli-default-interaction | shell | TP-CLI-07, **13**, **14**, **15**, **16**, **18**, **19**, **21**, **23**, **24** | **Active 1.12.0** — interactive zero-cli-verb = numbered boards; non-interactive place is zero-arguments; named `menu` / `self-management` off a terminal stop; empty front line leaves; row **82** and typed `version` run `about`; front **1**/**6**/**7**/**8**/**9**; front hide sentence says server-side is not available; client **11**/**12**; self **81**–**87**; sudoers body on sudoers-submenu REQ; language body on language REQ; bold short name; finished leaf redisplays the front |
+| requirement-shell-cli-language | shell | TP-CLI-**24**, **04**, **13** | **Active 1.1.1** — eight codes; file mode 0600; env does not rewrite; human help and about follow the code; JSON about and argv version stay English; English front row **6**; front hide sentence says not available |
+| requirement-shell-cli-sudoers-submenu | shell | TP-CLI-**13**, **16**, **18** | **Active 1.3.0** — front **7**; printed **72**/**75**; **71**/**73**/**74** reserved; hide sentence matches the front not-available shape; `sudoers` not dispatched; header follows `APP_LANG`; Back **0** returns to the front |
 | requirement-shell-local-self-management | shell | TP-LC-* (incl. **09/10** mode) | install/uninstall/where-is-me; **0755** multi-user; global preferred for elev |
 | requirement-shell-output-requirements | shell | TP-CLI-03,05,08,09, **18** | JSON / quiet / errors; identity token + numbered-row ink |
 | requirement-operator-readable-error | shell | TP-FOLDER-BACKUP-**25**, **25b**, **25c** | Operator-facing `[ERROR]` wording (what happened / next step / no jargon-only) |

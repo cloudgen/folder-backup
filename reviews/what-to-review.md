@@ -4,9 +4,9 @@
 **Class:** software-development · domain SSOT present · channel verbs kept from selfmanaged · a terminal with no command is the numbered boards; a pipe or `--quiet` / `--json` with no command is CLI self-install.  
 **Always load first:** `reviews/lessons.md`
 
-**Last plan update:** 2026-09-30  
-**Ship unit VERSION:** 1.24.0  
-**Suite baseline:** see `reviews/test-plan.md` (1.24.0: PASS=610 FAIL=0 SKIP=2; archive files are regular-file members, **TP-FOLDER-BACKUP-28**; numbered boards on a terminal; front **1**/**6**/**7**/**8**/**9**; human help and about follow the display language; language file is not cache; non-interactive zero-cli-verb is self-install; named menu off a terminal stops; compact JSON `--json` twins still todo)
+**Last plan update:** 2026-10-10  
+**Ship unit VERSION:** 1.25.0  
+**Suite baseline:** see `reviews/test-plan.md` (1.25.0: PASS=610 FAIL=0 SKIP=2; front and sudoers hide sentences say not available; archive files are regular-file members, **TP-FOLDER-BACKUP-28**; numbered boards on a terminal; front **1**/**6**/**7**/**8**/**9**; human help and about follow the display language; language file is not cache; non-interactive zero-cli-verb is self-install; named menu off a terminal stops; compact JSON `--json` twins still todo)
 
 ---
 

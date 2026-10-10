@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-cli-language.md  
-**Status**: Active (Version 1.1.0)  
+**Status**: Active (Version 1.1.1)  
 **Area**: shell  
 **Key**: `requirement-shell-cli-language`  
 **Optional RQ-ID**: `RQ-SHELL-CLI-LANGUAGE`  
@@ -269,7 +269,7 @@ English front (markdown emphasis stands in for TTY ink; the choose-prompt’s tr
 
 ```text
 [INFO] **folder-backup**(*VERSION*) — numbered list
-[INFO] server-side is hidden: this program does not run a host service. Number 2 stays reserved.
+[INFO] server-side is not available: this program does not run a host service. Number 2 stays reserved.
 1. **client-side**: *this login's folders: pack and restore*
 6. **language**: *display language for this menu*
 7. **sudoers**: *Grant and drafts*
@@ -282,7 +282,7 @@ Traditional Chinese front after **62**:
 
 ```text
 [INFO] **folder-backup**(*VERSION*) — 編號清單
-[INFO] 伺服器端已隱藏：這個程式不執行主機服務。編號 2 保留。
+[INFO] 伺服器端無法使用：這個程式不執行主機服務。編號 2 保留。
 1. **用戶端**: *這個登入的資料夾：打包與還原*
 6. **語言**: *這個選單的顯示語言*
 7. **sudoers**: *授權與草稿*
@@ -367,9 +367,10 @@ Japanese help opens with `使い方:` and the work heading `作業コマンド:`
 |------|--------|------|
 | 2026-09-30 | Active 1.0.0 | Front **6**, eight codes, persistence leaf, `FOLDER_BACKUP_LANG`. Help and about translate the heading, menu sentence, catalog, title, and cache-used label. |
 | 2026-09-30 | Active 1.1.0 | Human `help` and human `about` follow `APP_LANG`. JSON about and argv `version` stay English. Sentences that contain `read` stay `case` arms. |
+| 2026-10-10 | Active 1.1.1 | Front worked samples use the not-available hide sentence. |
 
 ---
 
-**Last Updated**: 2026-09-30  
+**Last Updated**: 2026-10-10  
 **Owner**: project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; **CIAO** (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
